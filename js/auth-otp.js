@@ -203,10 +203,11 @@ otpForm.addEventListener('submit', async (e) => {
     verifyOtpSpinner.style.display = 'block';
 
     try {
+        let authData = null;
         const { data, error } = await db.auth.verifyOtp({
             email: targetEmail,
             token: token,
-            type: 'signup' // or 'magiclink' / 'recovery' depending on intent
+            type: 'signup'
         });
 
         if (error) {
@@ -217,13 +218,34 @@ otpForm.addEventListener('submit', async (e) => {
                 type: 'magiclink'
             });
             if (fallbackResult.error) throw error;
+            authData = fallbackResult.data;
+        } else {
+            authData = data;
         }
+
+        const user = authData.user;
+        if (!user) throw new Error("Auth user session not found");
+
+        // Query profile to see if username and avatar are completed
+        const { data: profile, error: profileError } = await db
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        let redirectUrl = 'form.html';
+        if (profile && profile.username && profile.avatar_url) {
+            redirectUrl = 'dashboard.html';
+        }
+
+        // Attach redirect target URL to continue button metadata
+        continueBtn.dataset.redirect = redirectUrl;
 
         // Show Success screen
         showScreen(successScreen);
 
     } catch (error) {
-        showAlert('error', 'Invalid verification code. Please check your email and try again.');
+        showAlert('error', error.message || 'Invalid verification code. Please check your email and try again.');
         resetOtpGrid();
     } finally {
         verifyOtpBtn.disabled = false;
@@ -236,8 +258,8 @@ backBtn.addEventListener('click', () => {
     showScreen(emailScreen);
 });
 
-// Continue to Dashboard
+// Continue Action
 continueBtn.addEventListener('click', () => {
-    // Redirection target
-    window.location.href = 'dashboard.html';
+    const redirectUrl = continueBtn.dataset.redirect || 'form.html';
+    window.location.href = redirectUrl;
 });

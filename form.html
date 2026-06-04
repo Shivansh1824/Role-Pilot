@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Role-Pilot - AI Interviewer & Career Agent</title>
+    <title>Role-Pilot - Complete Profile</title>
     <!-- Theme Manager Script (must run early to prevent FOUC) -->
     <script src="js/theme.js"></script>
     <!-- FontAwesome for Premium Icons -->
@@ -33,7 +33,7 @@
     </header>
 
     <main class="landing-container">
-        <!-- Left Column: Interactive Feature Previews -->
+        <!-- Left Column: Interactive Feature Previews (Maintains Layout Symmetry) -->
         <div class="landing-content">
             <section class="landing-hero">
                 <div class="hero-badge">
@@ -149,91 +149,103 @@
             </div>
         </div>
 
-        <!-- Right Column: Interactive Frosted Glass Auth Card -->
+        <!-- Right Column: Interactive Onboarding Card -->
         <div class="landing-auth-wrapper">
-            <div class="glass-card">
-                
-                <!-- Card Header -->
-                <div class="auth-header">
-                    <h2>Get Started</h2>
-                    <p id="auth-subtitle">Verify your email to enter the cockpit.</p>
+            <div class="glass-card" style="padding: 2.5rem 2rem;">
+                <div class="auth-header" style="margin-bottom: 1.5rem;">
+                    <h2>Complete Profile</h2>
+                    <p>Let's personalize your career cockpit.</p>
                 </div>
 
-                <!-- Toast Notification Box -->
-                <div id="alert-box" class="alert-box">
-                    <i id="alert-icon" class="fa-solid alert-icon"></i>
-                    <span id="alert-message"></span>
-                </div>
-
-                <!-- Screen 1: Request OTP -->
-                <div id="email-screen" class="auth-screen active">
-                    <form id="email-form">
-                        <div class="form-group">
-                            <label for="email-input">Email Address</label>
-                            <div class="input-wrapper">
-                                <input type="email" id="email-input" class="input-control" placeholder="name@domain.com" required autocomplete="email">
-                                <i class="fa-regular fa-envelope"></i>
-                            </div>
+                <form id="onboarding-form">
+                    <!-- Avatar Selection -->
+                    <div class="form-group">
+                        <label>Choose Your Avatar</label>
+                        <div class="avatar-grid" id="avatar-grid">
+                            <!-- Avatars will be dynamically injected here -->
                         </div>
-                        <button type="submit" id="send-otp-btn" class="btn">
-                            <span>Send Verification Code</span>
-                            <div class="spinner" id="send-otp-spinner"></div>
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Screen 2: Verify OTP (8 Digits) -->
-                <div id="otp-screen" class="auth-screen">
-                    <p class="footer-text" style="margin-top: 0; margin-bottom: 20px; text-align: left;">
-                        We've sent an 8-digit verification code to <strong id="display-email">your email</strong>.
-                    </p>
-                    <form id="otp-form">
-                        <div class="form-group">
-                            <label>Verification Code</label>
-                            <!-- Grid of 8 inputs for the 8-digit code -->
-                            <div class="otp-grid" id="otp-grid">
-                                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
-                                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
-                                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
-                                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
-                                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
-                                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
-                                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
-                                <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
-                            </div>
-                        </div>
-                        
-                        <button type="submit" id="verify-otp-btn" class="btn" disabled>
-                            <span>Verify & Continue</span>
-                            <div class="spinner" id="verify-otp-spinner"></div>
-                        </button>
-                        
-                        <button type="button" id="back-btn" class="btn btn-secondary">
-                            <i class="fa-solid fa-arrow-left"></i> Change Email
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Screen 3: Verification Success -->
-                <div id="success-screen" class="auth-screen" style="text-align: center;">
-                    <div style="font-size: 3.5rem; color: var(--success); margin-bottom: 20px;">
-                        <i class="fa-regular fa-circle-check"></i>
+                        <input type="hidden" id="selected-avatar" required>
                     </div>
-                    <h2 style="font-size: 1.6rem; margin-bottom: 10px;">Verified Successfully!</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 0.95rem;">
-                        Your account is verified. Let's customize your profile and get you job-ready.
-                    </p>
-                    <button type="button" id="continue-btn" class="btn">
-                        <span>Continue Setup</span>
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </div>
 
+                    <!-- Real Name -->
+                    <div class="form-group">
+                        <label for="onboarding-name">Real Name</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="onboarding-name" class="input-control" placeholder="John Doe" required style="padding-left: 16px;">
+                        </div>
+                    </div>
+
+                    <!-- Username -->
+                    <div class="form-group">
+                        <label for="onboarding-username">Username</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="onboarding-username" class="input-control" placeholder="john_doe" required style="padding-left: 16px;">
+                        </div>
+                        <div id="username-status" class="input-status-msg"></div>
+                    </div>
+
+                    <!-- Target Role Dropdown -->
+                    <div class="form-group">
+                        <label>Target Career Role</label>
+                        <div class="custom-dropdown" id="role-dropdown">
+                            <div class="dropdown-selected" id="role-dropdown-selected">
+                                <span class="placeholder">Select target role</span>
+                            </div>
+                            <div class="dropdown-options" id="role-dropdown-options">
+                                <!-- Roles injected via JS -->
+                            </div>
+                        </div>
+                        <input type="hidden" id="selected-role" required>
+                    </div>
+
+                    <!-- Experience Level -->
+                    <div class="form-group">
+                        <label>Experience Level</label>
+                        <div class="experience-level-grid">
+                            <div class="experience-card" data-level="entry">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                                <span>Entry Level</span>
+                                <p>0 - 2 years</p>
+                            </div>
+                            <div class="experience-card" data-level="mid">
+                                <i class="fa-solid fa-briefcase"></i>
+                                <span>Mid Level</span>
+                                <p>2 - 5 years</p>
+                            </div>
+                            <div class="experience-card" data-level="senior">
+                                <i class="fa-solid fa-chess-queen"></i>
+                                <span>Senior Level</span>
+                                <p>5+ years</p>
+                            </div>
+                        </div>
+                        <input type="hidden" id="selected-experience" required>
+                    </div>
+
+                    <!-- Key Skills tagging input -->
+                    <div class="form-group">
+                        <label>Key Skills (Optional)</label>
+                        <div class="skills-selector-wrapper" id="skills-wrapper">
+                            <!-- Tags will be dynamically injected here -->
+                            <input type="text" id="skills-input" placeholder="Type a skill and press Enter">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" id="onboarding-submit" disabled style="margin-top: 1rem;">
+                        <span>Complete & Go to Dashboard</span>
+                        <div class="spinner" id="onboarding-spinner"></div>
+                    </button>
+                    
+                    <div style="text-align: center; margin-top: 1.25rem;">
+                        <button type="button" id="onboarding-signout-btn" style="background: none; border: none; color: var(--text-muted); font-size: 0.85rem; cursor: pointer; text-decoration: underline; transition: var(--transition);">
+                            Cancel & Sign Out
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </main>
 
-    <!-- Main Client Script as ES Module -->
-    <script type="module" src="js/auth-otp.js"></script>
+    <!-- Onboarding Page Script -->
+    <script type="module" src="js/form.js"></script>
 </body>
 </html>
