@@ -131,7 +131,7 @@ function updateFormLayout(signUpState) {
         }
     } else {
         if (authTitle) authTitle.innerHTML = 'Welcome to Role<span>Pilot</span>';
-        if (authSubtitle) authSubtitle.textContent = 'Sign in to access your AI career cockpit.';
+        if (authSubtitle) authSubtitle.innerHTML = 'Sign in to access your<br>AI career navigator.';
         if (sendOtpBtn) {
             const span = sendOtpBtn.querySelector('span');
             if (span) span.textContent = 'Sign In';
