@@ -4,6 +4,7 @@ import { getSupabaseClient } from './supabase-client.js';
 const alertBox = document.getElementById('alert-box');
 const alertIcon = document.getElementById('alert-icon');
 const alertMessage = document.getElementById('alert-message');
+const authError = document.getElementById('auth-error');
 
 const emailScreen = document.getElementById('email-screen');
 const otpScreen = document.getElementById('otp-screen');
@@ -186,7 +187,8 @@ if (emailSuggestion) {
         if (suggestedEmail) {
             emailInput.value = suggestedEmail;
             emailSuggestion.style.display = 'none';
-            emailInput.style.borderColor = '';
+            emailInput.classList.remove('error');
+            if (authError) authError.style.display = 'none';
             hideAlert();
             checkUserStatus();
         }
@@ -200,7 +202,8 @@ async function checkUserStatus() {
 
     if (!email) {
         resetToSignIn();
-        emailInput.style.borderColor = '';
+        emailInput.classList.remove('error');
+        if (authError) authError.style.display = 'none';
         hideAlert();
         if (emailSuggestion) emailSuggestion.style.display = 'none';
         return;
@@ -212,14 +215,18 @@ async function checkUserStatus() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         if (email.length >= 3) {
-            showAlert('error', 'Please enter a valid email address.');
-            emailInput.style.borderColor = 'var(--danger)';
+            if (authError) {
+                authError.innerHTML = 'Please enter a valid email address<br>(e.g., you@example.com).';
+                authError.style.display = 'block';
+            }
+            emailInput.classList.add('error');
         }
         resetToSignIn();
         return;
     }
 
-    emailInput.style.borderColor = '';
+    emailInput.classList.remove('error');
+    if (authError) authError.style.display = 'none';
     hideAlert();
 
     // Prevent checking again if this email has already been validated
@@ -376,9 +383,16 @@ emailForm.addEventListener('submit', async (e) => {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
-        showAlert('error', 'Please enter a valid email address.');
+        if (authError) {
+            authError.innerHTML = 'Please enter a valid email address<br>(e.g., you@example.com).';
+            authError.style.display = 'block';
+        }
+        emailInput.classList.add('error');
         emailInput.focus();
         return;
+    } else {
+        emailInput.classList.remove('error');
+        if (authError) authError.style.display = 'none';
     }
 
     if (isChecking) {

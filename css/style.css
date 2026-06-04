@@ -920,6 +920,15 @@ h1, h2, h3, h4 {
     color: var(--primary);
 }
 
+.input-control.error {
+    border-color: var(--error) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+:root.light-theme .input-control.error {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
 .input-control-clean {
     padding-left: 18px !important;
 }
