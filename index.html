@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role-Pilot - Verification</title>
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase JS Client Library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            
+            <!-- Brand Logo / Header -->
+            <div class="brand">
+                <h1>Role-Pilot</h1>
+                <p>Verify your account to get job-ready</p>
+            </div>
+
+            <!-- Toast / Alert Notification Box -->
+            <div id="alert-box" class="alert-box">
+                <i id="alert-icon" class="fa-solid alert-icon"></i>
+                <span id="alert-message"></span>
+            </div>
+
+            <!-- Screen 1: Request OTP -->
+            <div id="email-screen" class="auth-screen active">
+                <form id="email-form">
+                    <div class="form-group">
+                        <label for="email-input">Email Address</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="email-input" class="input-control" placeholder="name@domain.com" required autocomplete="email">
+                            <i class="fa-regular fa-envelope"></i>
+                        </div>
+                    </div>
+                    <button type="submit" id="send-otp-btn" class="btn">
+                        <span>Send Verification Code</span>
+                        <div class="spinner" id="send-otp-spinner"></div>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Screen 2: Verify OTP (8 Digits) -->
+            <div id="otp-screen" class="auth-screen">
+                <p class="footer-text" style="margin-top: 0; margin-bottom: 20px; text-align: left;">
+                    We've sent an 8-digit verification code to <strong id="display-email">your email</strong>. Please enter it below.
+                </p>
+                <form id="otp-form">
+                    <div class="form-group">
+                        <label>Verification Code</label>
+                        <!-- Grid of 8 inputs for the 8-digit code -->
+                        <div class="otp-grid" id="otp-grid">
+                            <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-digit" inputmode="numeric" pattern="[0-9]" required autocomplete="off">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" id="verify-otp-btn" class="btn" disabled>
+                        <span>Verify & Continue</span>
+                        <div class="spinner" id="verify-otp-spinner"></div>
+                    </button>
+                    
+                    <button type="button" id="back-btn" class="btn btn-secondary">
+                        <i class="fa-solid fa-arrow-left"></i> Change Email
+                    </button>
+                </form>
+            </div>
+
+            <!-- Screen 3: Verification Success -->
+            <div id="success-screen" class="auth-screen" style="text-align: center;">
+                <div style="font-size: 4rem; color: var(--success); margin-bottom: 20px;">
+                    <i class="fa-regular fa-circle-check"></i>
+                </div>
+                <h2 style="font-size: 1.8rem; margin-bottom: 10px;">Verification Successful!</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 30px;">
+                    Your account is verified. You are ready to build your career roadmap and prepare for interviews.
+                </p>
+                <button type="button" id="continue-btn" class="btn">
+                    <span>Go to Dashboard</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Main Client Script as ES Module -->
+    <script type="module" src="js/auth-otp.js"></script>
+</body>
+</html>
