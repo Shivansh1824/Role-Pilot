@@ -181,22 +181,23 @@ h1, h2, h3, h4 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem 3.5rem;
-    border-bottom: 1px solid var(--glass-border);
-    background: rgba(10, 16, 32, 0.1);
+    padding: 1.1rem 3.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(11, 15, 25, 0.2);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    transition: border-color 0.5s ease, background-color 0.5s ease;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
 }
 
 @media (max-width: 768px) {
     .landing-header {
-        padding: 1rem 1.5rem;
+        padding: 0.8rem 1.5rem;
     }
 }
 
 :root.light-theme .landing-header {
-    background: rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .logo-wrapper {
@@ -215,10 +216,16 @@ h1, h2, h3, h4 {
 }
 
 .logo-text {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: var(--text-primary);
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff;
     font-family: var(--font-display);
+    transition: color 0.3s ease;
+}
+
+:root.light-theme .logo-text {
+    color: #0f172a;
 }
 
 .logo-text span {
@@ -233,25 +240,78 @@ h1, h2, h3, h4 {
 
 /* Theme Toggle Button styling */
 .theme-toggle-btn {
-    background: var(--panel-bg);
-    border: 1px solid var(--glass-border);
-    color: var(--text-primary);
-    width: 46px;
-    height: 46px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.15rem;
+    font-size: 1.2rem;
     cursor: pointer;
-    transition: var(--transition);
-    box-shadow: var(--shadow-layered), var(--glass-inner-shadow);
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease;
 }
 
 .theme-toggle-btn:hover {
-    border-color: var(--glass-border-hover);
+    background: rgba(255, 255, 255, 0.2);
     transform: scale(1.05);
 }
+
+:root.light-theme .theme-toggle-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #0f172a;
+}
+
+:root.light-theme .theme-toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.theme-toggle-btn i.fa-moon {
+    transform: rotate(-20deg);
+}
+
+/* Header Sign In Button */
+.header-signin-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 0 20px;
+    height: 44px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: var(--font-body);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.header-signin-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.35);
+    transform: translateY(-1px);
+    color: #fff;
+}
+
+:root.light-theme .header-signin-btn {
+    background: rgba(15, 23, 42, 0.03);
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    color: #0f172a;
+}
+
+:root.light-theme .header-signin-btn:hover {
+    background: rgba(15, 23, 42, 0.06);
+    border-color: rgba(15, 23, 42, 0.25);
+    color: #0f172a;
+}
+
+
 
 /* Main Container Layout */
 .landing-container {

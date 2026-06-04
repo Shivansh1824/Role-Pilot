@@ -55,6 +55,18 @@ async function initDb() {
 }
 initDb();
 
+// Header Sign In Button functionality
+const headerSignInBtn = document.getElementById('header-signin-btn');
+if (headerSignInBtn) {
+    headerSignInBtn.addEventListener('click', () => {
+        if (emailInput) {
+            emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Add a small delay before focusing to allow scrolling
+            setTimeout(() => emailInput.focus(), 300);
+        }
+    });
+}
+
 /* --- Screen Navigation --- */
 
 function showScreen(screen) {

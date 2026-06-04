@@ -14,13 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Sync button state with current class
     const isLight = document.documentElement.classList.contains('light-theme');
-    themeToggleBtn.innerHTML = isLight ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+    themeToggleBtn.innerHTML = isLight ? '<i class="fa-regular fa-moon"></i>' : '<i class="fa-regular fa-sun"></i>';
 
     themeToggleBtn.addEventListener('click', () => {
         document.documentElement.classList.toggle('light-theme');
         
         const isLightNow = document.documentElement.classList.contains('light-theme');
-        themeToggleBtn.innerHTML = isLightNow ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+        themeToggleBtn.innerHTML = isLightNow ? '<i class="fa-regular fa-moon"></i>' : '<i class="fa-regular fa-sun"></i>';
         const theme = isLightNow ? 'light' : 'dark';
         localStorage.setItem('theme', theme);
         
