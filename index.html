@@ -224,9 +224,15 @@
 
                 <!-- Screen 2: Verify OTP (8 Digits) -->
                 <div id="otp-screen" class="auth-screen">
-                    <p class="footer-text" style="margin-top: 0; margin-bottom: 20px; text-align: left;">
-                        We've sent an 8-digit verification code to <strong id="display-email">your email</strong>.
-                    </p>
+                    <div class="otp-header" style="text-align: center; margin-bottom: 2rem;">
+                        <div class="otp-icon" style="font-size: 3rem; color: var(--text-primary); margin-bottom: 1rem;">
+                            <i class="fa-regular fa-envelope"></i>
+                        </div>
+                        <h2 style="font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Verify Your Account</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">
+                            We sent an 8-digit confirmation code to <br><strong style="color: var(--text-primary); font-weight: 600;" id="display-email">your email</strong>.
+                        </p>
+                    </div>
                     <form id="otp-form">
                         <div class="form-group">
                             <label>Verification Code</label>

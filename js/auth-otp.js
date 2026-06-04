@@ -300,6 +300,16 @@ function showScreen(screen) {
     successScreen.classList.remove('active');
     
     screen.classList.add('active');
+    
+    // Manage main header visibility (hide when showing OTP or Success screens)
+    const authHeader = document.querySelector('.auth-header');
+    if (authHeader) {
+        if (screen === emailScreen) {
+            authHeader.style.display = 'block';
+        } else {
+            authHeader.style.display = 'none';
+        }
+    }
 }
 
 /* --- 8-Digit OTP Input Grid Enhancements --- */
@@ -439,7 +449,6 @@ emailForm.addEventListener('submit', async (e) => {
                     displayEmail.textContent = targetEmail;
                     showScreen(otpScreen);
                     resetOtpGrid();
-                    showAlert('success', 'Confirmation code sent! Please check your email.');
                 }
             } catch (error) {
                 showAlert('error', error.message || 'Failed to sign up. Please try again.');
