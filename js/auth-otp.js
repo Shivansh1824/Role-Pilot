@@ -10,7 +10,12 @@ const otpScreen = document.getElementById('otp-screen');
 const successScreen = document.getElementById('success-screen');
 
 const emailForm = document.getElementById('email-form');
+const nameGroup = document.getElementById('name-group');
+const nameInput = document.getElementById('name-input');
 const emailInput = document.getElementById('email-input');
+const passwordInput = document.getElementById('password-input');
+const emailSuggestion = document.getElementById('email-suggestion');
+const suggestionLink = document.getElementById('suggestion-link');
 const sendOtpBtn = document.getElementById('send-otp-btn');
 const sendOtpSpinner = document.getElementById('send-otp-spinner');
 
@@ -22,7 +27,126 @@ const backBtn = document.getElementById('back-btn');
 const displayEmail = document.getElementById('display-email');
 const continueBtn = document.getElementById('continue-btn');
 
+const authTitle = document.getElementById('auth-title');
+const authSubtitle = document.getElementById('auth-subtitle');
+const authSwitchText = document.getElementById('auth-switch-text');
+const authSwitchAction = document.getElementById('auth-switch-action');
+const googleSigninBtn = document.getElementById('google-signin-btn');
+
 let targetEmail = '';
+let isSignUp = false;
+let checkedEmail = '';
+let isChecking = false;
+
+// Debounce helper to avoid slamming the database on every keystroke
+function debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+// Popular email providers
+const POPULAR_DOMAINS = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com'];
+
+// Helper function to calculate Levenshtein distance
+function getLevenshteinDistance(a, b) {
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1, // substitution
+                    matrix[i][j - 1] + 1,     // insertion
+                    matrix[i - 1][j] + 1      // deletion
+                );
+            }
+        }
+    }
+    return matrix[b.length][a.length];
+}
+
+function checkEmailTypos(email) {
+    if (!emailSuggestion || !suggestionLink) return null;
+    
+    const parts = email.split('@');
+    if (parts.length !== 2) {
+        emailSuggestion.style.display = 'none';
+        return null;
+    }
+
+    const username = parts[0];
+    const domain = parts[1].toLowerCase();
+
+    if (POPULAR_DOMAINS.includes(domain)) {
+        emailSuggestion.style.display = 'none';
+        return null;
+    }
+
+    let closestDomain = null;
+    let minDistance = 3; // Maximum 2 differences allowed
+
+    for (const popDomain of POPULAR_DOMAINS) {
+        const distance = getLevenshteinDistance(domain, popDomain);
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestDomain = popDomain;
+        }
+    }
+
+    if (closestDomain && minDistance <= 2) {
+        const suggestion = `${username}@${closestDomain}`;
+        suggestionLink.textContent = suggestion;
+        emailSuggestion.style.display = 'block';
+        return suggestion;
+    } else {
+        emailSuggestion.style.display = 'none';
+        return null;
+    }
+}
+
+// Layout Toggle Helper
+function updateFormLayout(signUpState) {
+    isSignUp = signUpState;
+    if (isSignUp) {
+        if (authTitle) authTitle.innerHTML = 'Create Account';
+        if (authSubtitle) authSubtitle.textContent = "Welcome! We didn't find an account for this email. Let's create one.";
+        if (sendOtpBtn) {
+            const span = sendOtpBtn.querySelector('span');
+            if (span) span.textContent = 'Create Account';
+        }
+        if (authSwitchText) authSwitchText.textContent = 'Already have an account?';
+        if (authSwitchAction) authSwitchAction.textContent = 'Sign in';
+        
+        if (nameGroup) nameGroup.classList.add('expanded');
+        if (nameInput) {
+            nameInput.setAttribute('required', 'true');
+            nameInput.setAttribute('tabindex', '0');
+        }
+    } else {
+        if (authTitle) authTitle.innerHTML = 'Welcome to Role<span>Pilot</span>';
+        if (authSubtitle) authSubtitle.textContent = 'Sign in to access your AI career cockpit.';
+        if (sendOtpBtn) {
+            const span = sendOtpBtn.querySelector('span');
+            if (span) span.textContent = 'Sign In';
+        }
+        if (authSwitchText) authSwitchText.textContent = "Don't have an account?";
+        if (authSwitchAction) authSwitchAction.textContent = 'Create one';
+        
+        if (nameGroup) nameGroup.classList.remove('expanded');
+        if (nameInput) {
+            nameInput.removeAttribute('required');
+            nameInput.setAttribute('tabindex', '-1');
+            nameInput.value = '';
+        }
+    }
+}
 
 // Helper: Show custom alert banner
 function showAlert(type, message) {
@@ -55,20 +179,113 @@ async function initDb() {
 }
 initDb();
 
+// Suggestion click listener
+if (emailSuggestion) {
+    emailSuggestion.addEventListener('click', () => {
+        const suggestedEmail = suggestionLink.textContent;
+        if (suggestedEmail) {
+            emailInput.value = suggestedEmail;
+            emailSuggestion.style.display = 'none';
+            emailInput.style.borderColor = '';
+            hideAlert();
+            checkUserStatus();
+        }
+    });
+}
+
+// Dynamic email lookup function
+async function checkUserStatus() {
+    if (!db) return;
+    const email = emailInput.value.trim();
+
+    if (!email) {
+        resetToSignIn();
+        emailInput.style.borderColor = '';
+        hideAlert();
+        if (emailSuggestion) emailSuggestion.style.display = 'none';
+        return;
+    }
+
+    checkEmailTypos(email);
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        if (email.length >= 3) {
+            showAlert('error', 'Please enter a valid email address.');
+            emailInput.style.borderColor = 'var(--danger)';
+        }
+        resetToSignIn();
+        return;
+    }
+
+    emailInput.style.borderColor = '';
+    hideAlert();
+
+    // Prevent checking again if this email has already been validated
+    if (email.toLowerCase() === checkedEmail.toLowerCase()) {
+        return;
+    }
+
+    isChecking = true;
+
+    try {
+        const { data, error } = await db
+            .from('profiles')
+            .select('id')
+            .eq('email', email.toLowerCase())
+            .maybeSingle();
+
+        isChecking = false;
+
+        if (error) {
+            console.error("Failed to query user status:", error);
+            return; 
+        }
+
+        const exists = !!data;
+        checkedEmail = email;
+
+        updateFormLayout(!exists);
+        
+        if (exists) {
+            if (authSubtitle) authSubtitle.textContent = 'Welcome back! Enter your password to sign in.';
+        } else {
+            if (authSubtitle) authSubtitle.textContent = "Welcome! We didn't find an account for this email. Let's create one.";
+        }
+
+    } catch (err) {
+        console.error(err);
+        isChecking = false;
+    }
+}
+
+function resetToSignIn() {
+    checkedEmail = '';
+    updateFormLayout(false);
+}
+
+// Check triggers
+if (emailInput) {
+    emailInput.addEventListener('input', debounce(checkUserStatus, 600));
+    emailInput.addEventListener('blur', checkUserStatus);
+}
+if (passwordInput) {
+    passwordInput.addEventListener('focus', checkUserStatus);
+}
+
 // Header Sign In Button functionality
 const headerSignInBtn = document.getElementById('header-signin-btn');
 if (headerSignInBtn) {
     headerSignInBtn.addEventListener('click', () => {
         if (emailInput) {
             emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            // Add a small delay before focusing to allow scrolling
             setTimeout(() => emailInput.focus(), 300);
         }
     });
 }
 
 /* --- Screen Navigation --- */
-
 function showScreen(screen) {
     hideAlert();
     emailScreen.classList.remove('active');
@@ -78,9 +295,7 @@ function showScreen(screen) {
     screen.classList.add('active');
 }
 
-/* --- 8-Digit OTP Input Grid Enhancements (Premium UX) --- */
-
-// Focus the first OTP box when entering the OTP screen
+/* --- 8-Digit OTP Input Grid Enhancements --- */
 function resetOtpGrid() {
     otpInputs.forEach(input => {
         input.value = '';
@@ -90,18 +305,14 @@ function resetOtpGrid() {
 }
 
 otpInputs.forEach((input, index) => {
-    // 1. Move focus to next input on digit entry
     input.addEventListener('input', (e) => {
-        // Allow only numeric input
         input.value = input.value.replace(/[^0-9]/g, '');
-        
         if (input.value && index < otpInputs.length - 1) {
             otpInputs[index + 1].focus();
         }
         checkOtpCompletion();
     });
 
-    // 2. Handle backspaces to go to previous input
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Backspace') {
             if (!input.value && index > 0) {
@@ -114,7 +325,6 @@ otpInputs.forEach((input, index) => {
         }
     });
 
-    // 3. Prevent letters and other characters
     input.addEventListener('keypress', (e) => {
         if (e.key < '0' || e.key > '9') {
             e.preventDefault();
@@ -122,12 +332,9 @@ otpInputs.forEach((input, index) => {
     });
 });
 
-// 4. Handle paste events dynamically (distribute code)
 otpInputs[0].addEventListener('paste', (e) => {
     e.preventDefault();
     const pastedData = (e.clipboardData || window.clipboardData).getData('text').trim();
-    
-    // Filter only digits
     const digits = pastedData.replace(/[^0-9]/g, '').slice(0, 8);
     
     if (digits.length > 0) {
@@ -136,16 +343,12 @@ otpInputs[0].addEventListener('paste', (e) => {
                 otpInputs[idx].value = char;
             }
         });
-        
-        // Focus the appropriate input
         const nextFocusIndex = Math.min(digits.length, otpInputs.length - 1);
         otpInputs[nextFocusIndex].focus();
-        
         checkOtpCompletion();
     }
 });
 
-// Enable/Disable "Verify & Continue" button based on fill status
 function checkOtpCompletion() {
     let completed = true;
     otpInputs.forEach(input => {
@@ -154,7 +357,6 @@ function checkOtpCompletion() {
     verifyOtpBtn.disabled = !completed;
 }
 
-// Gather the 8 digit OTP value
 function getOtpCode() {
     let code = '';
     otpInputs.forEach(input => {
@@ -163,42 +365,104 @@ function getOtpCode() {
     return code;
 }
 
-/* --- Form Actions --- */
-
-// Request OTP Send
+/* --- Form Submission Actions --- */
 emailForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!db) return;
 
     hideAlert();
-    targetEmail = emailInput.value.trim().toLowerCase();
-    
-    // Loading animation
-    sendOtpBtn.disabled = true;
-    sendOtpSpinner.style.display = 'block';
+    const email = emailInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
 
-    try {
-        const { error } = await db.auth.signInWithOtp({
-            email: targetEmail,
-            options: {
-                // Ensure email confirmation redirect works
-                emailRedirectTo: window.location.origin
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        showAlert('error', 'Please enter a valid email address.');
+        emailInput.focus();
+        return;
+    }
+
+    if (isChecking) {
+        sendOtpBtn.disabled = true;
+        const originalText = sendOtpBtn.querySelector('span').textContent;
+        sendOtpBtn.querySelector('span').textContent = 'Verifying...';
+        
+        const checkInterval = setInterval(() => {
+            if (!isChecking) {
+                clearInterval(checkInterval);
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.querySelector('span').textContent = originalText;
+                executeAuth();
             }
-        });
+        }, 100);
+        return;
+    }
 
-        if (error) throw error;
+    executeAuth();
 
-        // Transition to OTP verification screen
-        displayEmail.textContent = targetEmail;
-        showScreen(otpScreen);
-        resetOtpGrid();
-        showAlert('success', 'OTP code sent! Please check your mailbox.');
+    async function executeAuth() {
+        sendOtpBtn.disabled = true;
+        sendOtpSpinner.style.display = 'block';
 
-    } catch (error) {
-        showAlert('error', error.message || 'Failed to send OTP code. Please try again.');
-    } finally {
-        sendOtpBtn.disabled = false;
-        sendOtpSpinner.style.display = 'none';
+        if (isSignUp) {
+            const fullName = nameInput.value.trim();
+            try {
+                const { data, error } = await db.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullName
+                        }
+                    }
+                });
+
+                if (error) throw error;
+
+                if (data && data.session) {
+                    window.location.href = 'form.html';
+                } else {
+                    targetEmail = email;
+                    displayEmail.textContent = targetEmail;
+                    showScreen(otpScreen);
+                    resetOtpGrid();
+                    showAlert('success', 'Confirmation code sent! Please check your email.');
+                }
+            } catch (error) {
+                showAlert('error', error.message || 'Failed to sign up. Please try again.');
+            } finally {
+                sendOtpBtn.disabled = false;
+                sendOtpSpinner.style.display = 'none';
+            }
+        } else {
+            try {
+                const { data, error } = await db.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                const user = data.user;
+                if (!user) throw new Error("User session not found");
+
+                const { data: profile } = await db
+                    .from('profiles')
+                    .select('username, avatar_url')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (profile && profile.username && profile.avatar_url) {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    window.location.href = 'form.html';
+                }
+            } catch (error) {
+                showAlert('error', error.message || 'Failed to sign in. Please check your credentials.');
+            } finally {
+                sendOtpBtn.disabled = false;
+                sendOtpSpinner.style.display = 'none';
+            }
+        }
     }
 });
 
@@ -210,7 +474,6 @@ otpForm.addEventListener('submit', async (e) => {
     hideAlert();
     const token = getOtpCode();
 
-    // Loading animation
     verifyOtpBtn.disabled = true;
     verifyOtpSpinner.style.display = 'block';
 
@@ -223,7 +486,6 @@ otpForm.addEventListener('submit', async (e) => {
         });
 
         if (error) {
-            // If signup verification fails, fall back to testing magiclink type (common in email OTP setups)
             const fallbackResult = await db.auth.verifyOtp({
                 email: targetEmail,
                 token: token,
@@ -238,8 +500,7 @@ otpForm.addEventListener('submit', async (e) => {
         const user = authData.user;
         if (!user) throw new Error("Auth user session not found");
 
-        // Query profile to see if username and avatar are completed
-        const { data: profile, error: profileError } = await db
+        const { data: profile } = await db
             .from('profiles')
             .select('username, avatar_url')
             .eq('id', user.id)
@@ -250,14 +511,11 @@ otpForm.addEventListener('submit', async (e) => {
             redirectUrl = 'dashboard.html';
         }
 
-        // Attach redirect target URL to continue button metadata
         continueBtn.dataset.redirect = redirectUrl;
-
-        // Show Success screen
         showScreen(successScreen);
 
     } catch (error) {
-        showAlert('error', error.message || 'Invalid verification code. Please check your email and try again.');
+        showAlert('error', error.message || 'Invalid verification code.');
         resetOtpGrid();
     } finally {
         verifyOtpBtn.disabled = false;
@@ -275,3 +533,31 @@ continueBtn.addEventListener('click', () => {
     const redirectUrl = continueBtn.dataset.redirect || 'form.html';
     window.location.href = redirectUrl;
 });
+
+// Manual Switch Link Click Listener
+if (authSwitchAction) {
+    authSwitchAction.addEventListener('click', (e) => {
+        e.preventDefault();
+        hideAlert();
+        updateFormLayout(!isSignUp);
+    });
+}
+
+// Google Sign-In event listener
+if (googleSigninBtn) {
+    googleSigninBtn.addEventListener('click', async () => {
+        if (!db) return;
+        hideAlert();
+        try {
+            const { error } = await db.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin + '/form.html'
+                }
+            });
+            if (error) throw error;
+        } catch (error) {
+            showAlert('error', error.message || 'Failed to initialize Google Sign In.');
+        }
+    });
+}
