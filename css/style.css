@@ -1,11 +1,11 @@
 /* Role-Pilot Premium Design System */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap');
 
 :root {
     /* Fonts pairing */
-    --font-display: 'Space Grotesk', sans-serif;
-    --font-body: 'Plus Jakarta Sans', sans-serif;
+    --font-display: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
 
     /* Color Palette - Default Dark Mode (Deep Tech Aero Theme) */
     --bg-color: hsl(222, 47%, 4%);
@@ -175,13 +175,14 @@ h1, h2, h3, h4 {
 }
 
 /* Header styling */
-.landing-header {
+.app-header {
     position: relative;
     z-index: 10;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.1rem 3.5rem;
+    padding: 1rem 3rem;
+    width: 100%;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(11, 15, 25, 0.2);
     backdrop-filter: blur(12px);
@@ -190,12 +191,12 @@ h1, h2, h3, h4 {
 }
 
 @media (max-width: 768px) {
-    .landing-header {
+    .app-header {
         padding: 0.8rem 1.5rem;
     }
 }
 
-:root.light-theme .landing-header {
+:root.light-theme .app-header {
     border-bottom: 1px solid rgba(15, 23, 42, 0.08);
     background: rgba(255, 255, 255, 0.3);
 }
@@ -212,15 +213,16 @@ h1, h2, h3, h4 {
     color: var(--primary);
     background: linear-gradient(135deg, var(--primary), var(--accent));
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .logo-text {
+    font-family: 'Outfit', sans-serif;
     font-size: 1.75rem;
     font-weight: 700;
     letter-spacing: -0.5px;
-    color: #fff;
-    font-family: var(--font-display);
+    color: #ffffff;
     transition: color 0.3s ease;
 }
 
@@ -239,10 +241,10 @@ h1, h2, h3, h4 {
 }
 
 /* Theme Toggle Button styling */
-.theme-toggle-btn {
+.theme-toggle-header {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
+    color: #ffffff;
     width: 44px;
     height: 44px;
     border-radius: 50%;
@@ -255,57 +257,46 @@ h1, h2, h3, h4 {
     transition: all 0.2s ease;
 }
 
-.theme-toggle-btn:hover {
+.theme-toggle-header:hover {
     background: rgba(255, 255, 255, 0.2);
     transform: scale(1.05);
 }
 
-:root.light-theme .theme-toggle-btn {
+:root.light-theme .theme-toggle-header {
     background: rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(0, 0, 0, 0.1);
     color: #0f172a;
 }
 
-:root.light-theme .theme-toggle-btn:hover {
-    background: rgba(0, 0, 0, 0.1);
-}
-
-.theme-toggle-btn i.fa-moon {
-    transform: rotate(-20deg);
-}
-
 /* Header Sign In Button */
-.header-signin-btn {
+.btn-secondary-outline {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #fff;
-    padding: 0 20px;
-    height: 44px;
+    color: #ffffff;
+    padding: 8px 20px;
     border-radius: 10px;
     font-size: 0.9rem;
     font-weight: 500;
-    font-family: var(--font-body);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.header-signin-btn:hover {
+.btn-secondary-outline:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.35);
     transform: translateY(-1px);
-    color: #fff;
+    color: #ffffff;
 }
 
-:root.light-theme .header-signin-btn {
+:root.light-theme .btn-secondary-outline {
     background: rgba(15, 23, 42, 0.03);
     border: 1px solid rgba(15, 23, 42, 0.12);
     color: #0f172a;
 }
 
-:root.light-theme .header-signin-btn:hover {
+:root.light-theme .btn-secondary-outline:hover {
     background: rgba(15, 23, 42, 0.06);
     border-color: rgba(15, 23, 42, 0.25);
     color: #0f172a;
@@ -369,6 +360,7 @@ h1, h2, h3, h4 {
 .landing-hero h1 span {
     background: linear-gradient(135deg, var(--primary) 20%, var(--accent) 80%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     display: inline-block;
 }
