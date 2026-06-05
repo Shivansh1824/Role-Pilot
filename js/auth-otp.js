@@ -7,8 +7,6 @@ const alertMessage = document.getElementById('alert-message');
 const authError = document.getElementById('auth-error');
 
 const emailScreen = document.getElementById('email-screen');
-const otpScreen = document.getElementById('otp-screen');
-const successScreen = document.getElementById('success-screen');
 
 const emailForm = document.getElementById('email-form');
 const nameGroup = document.getElementById('name-group');
@@ -20,24 +18,16 @@ const suggestionLink = document.getElementById('suggestion-link');
 const sendOtpBtn = document.getElementById('send-otp-btn');
 const sendOtpSpinner = document.getElementById('send-otp-spinner');
 
-const otpForm = document.getElementById('otp-form');
-const otpInputs = document.querySelectorAll('.otp-digit');
-const verifyOtpBtn = document.getElementById('verify-otp-btn');
-const verifyOtpSpinner = document.getElementById('verify-otp-spinner');
-const backBtn = document.getElementById('back-btn');
-const displayEmail = document.getElementById('display-email');
-const continueBtn = document.getElementById('continue-btn');
-
 const authTitle = document.getElementById('auth-title');
 const authSubtitle = document.getElementById('auth-subtitle');
 const authSwitchText = document.getElementById('auth-switch-text');
 const authSwitchAction = document.getElementById('auth-switch-action');
 const googleSigninBtn = document.getElementById('google-signin-btn');
 
-let targetEmail = '';
 let isSignUp = false;
 let checkedEmail = '';
 let isChecking = false;
+let activeCheckPromise = null;
 
 // Debounce helper to avoid slamming the database on every keystroke
 function debounce(func, delay) {
@@ -101,11 +91,10 @@ function checkEmailTypos(email) {
         }
     }
 
-    if (closestDomain && minDistance <= 2) {
-        const suggestion = `${username}@${closestDomain}`;
-        suggestionLink.textContent = suggestion;
+    if (closestDomain) {
+        suggestionLink.textContent = `${username}@${closestDomain}`;
         emailSuggestion.style.display = 'block';
-        return suggestion;
+        return `${username}@${closestDomain}`;
     } else {
         emailSuggestion.style.display = 'none';
         return null;
@@ -173,6 +162,14 @@ let db = null;
 async function initDb() {
     try {
         db = await getSupabaseClient();
+        
+        // Check for prefilled email in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const prefilledEmail = urlParams.get('email');
+        if (prefilledEmail && emailInput) {
+            emailInput.value = prefilledEmail;
+            checkUserStatus(); // Trigger status check immediately
+        }
     } catch (e) {
         showAlert('error', `Database initialization error: ${e.message}`);
         sendOtpBtn.disabled = true;
@@ -197,7 +194,7 @@ if (emailSuggestion) {
 
 // Dynamic email lookup function
 async function checkUserStatus() {
-    if (!db) return;
+    if (!db) return null;
     const email = emailInput.value.trim();
 
     if (!email) {
@@ -206,7 +203,7 @@ async function checkUserStatus() {
         if (authError) authError.style.display = 'none';
         hideAlert();
         if (emailSuggestion) emailSuggestion.style.display = 'none';
-        return;
+        return null;
     }
 
     checkEmailTypos(email);
@@ -222,53 +219,58 @@ async function checkUserStatus() {
             emailInput.classList.add('error');
         }
         resetToSignIn();
-        return;
+        return null;
     }
 
     emailInput.classList.remove('error');
     if (authError) authError.style.display = 'none';
     hideAlert();
 
-    // Prevent checking again if this email has already been validated
+    // Prevent checking again if this email has already been validated or is in progress
     if (email.toLowerCase() === checkedEmail.toLowerCase()) {
-        return;
+        return activeCheckPromise;
     }
 
+    checkedEmail = email;
     isChecking = true;
 
-    try {
-        const { data, error } = await db
-            .from('profiles')
-            .select('id')
-            .eq('email', email.toLowerCase())
-            .maybeSingle();
+    activeCheckPromise = (async () => {
+        try {
+            const { data, error } = await db
+                .from('profiles')
+                .select('id')
+                .eq('email', email.toLowerCase())
+                .maybeSingle();
 
-        isChecking = false;
+            isChecking = false;
 
-        if (error) {
-            console.error("Failed to query user status:", error);
-            return; 
+            if (error) {
+                console.error("Failed to query user status:", error);
+                return; 
+            }
+
+            const exists = !!data;
+            updateFormLayout(!exists);
+            
+            if (exists) {
+                if (authSubtitle) authSubtitle.textContent = 'Welcome back! Enter your password to sign in.';
+            } else {
+                if (authSubtitle) authSubtitle.textContent = "Welcome! We didn't find an account for this email. Let's create one.";
+            }
+
+        } catch (err) {
+            console.error(err);
+            isChecking = false;
         }
+    })();
 
-        const exists = !!data;
-        checkedEmail = email;
-
-        updateFormLayout(!exists);
-        
-        if (exists) {
-            if (authSubtitle) authSubtitle.textContent = 'Welcome back! Enter your password to sign in.';
-        } else {
-            if (authSubtitle) authSubtitle.textContent = "Welcome! We didn't find an account for this email. Let's create one.";
-        }
-
-    } catch (err) {
-        console.error(err);
-        isChecking = false;
-    }
+    return activeCheckPromise;
 }
 
+// Clean up reset function
 function resetToSignIn() {
     checkedEmail = '';
+    activeCheckPromise = null;
     updateFormLayout(false);
 }
 
@@ -276,9 +278,6 @@ function resetToSignIn() {
 if (emailInput) {
     emailInput.addEventListener('input', debounce(checkUserStatus, 600));
     emailInput.addEventListener('blur', checkUserStatus);
-}
-if (passwordInput) {
-    passwordInput.addEventListener('focus', checkUserStatus);
 }
 
 // Header Sign In Button functionality
@@ -290,96 +289,6 @@ if (headerSignInBtn) {
             setTimeout(() => emailInput.focus(), 300);
         }
     });
-}
-
-/* --- Screen Navigation --- */
-function showScreen(screen) {
-    hideAlert();
-    emailScreen.classList.remove('active');
-    otpScreen.classList.remove('active');
-    successScreen.classList.remove('active');
-    
-    screen.classList.add('active');
-    
-    // Manage main header visibility (hide when showing OTP or Success screens)
-    const authHeader = document.querySelector('.auth-header');
-    if (authHeader) {
-        if (screen === emailScreen) {
-            authHeader.style.display = 'block';
-        } else {
-            authHeader.style.display = 'none';
-        }
-    }
-}
-
-/* --- 8-Digit OTP Input Grid Enhancements --- */
-function resetOtpGrid() {
-    otpInputs.forEach(input => {
-        input.value = '';
-    });
-    verifyOtpBtn.disabled = true;
-    setTimeout(() => otpInputs[0].focus(), 100);
-}
-
-otpInputs.forEach((input, index) => {
-    input.addEventListener('input', (e) => {
-        input.value = input.value.replace(/[^0-9]/g, '');
-        if (input.value && index < otpInputs.length - 1) {
-            otpInputs[index + 1].focus();
-        }
-        checkOtpCompletion();
-    });
-
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Backspace') {
-            if (!input.value && index > 0) {
-                otpInputs[index - 1].value = '';
-                otpInputs[index - 1].focus();
-            } else {
-                input.value = '';
-            }
-            checkOtpCompletion();
-        }
-    });
-
-    input.addEventListener('keypress', (e) => {
-        if (e.key < '0' || e.key > '9') {
-            e.preventDefault();
-        }
-    });
-});
-
-otpInputs[0].addEventListener('paste', (e) => {
-    e.preventDefault();
-    const pastedData = (e.clipboardData || window.clipboardData).getData('text').trim();
-    const digits = pastedData.replace(/[^0-9]/g, '').slice(0, 8);
-    
-    if (digits.length > 0) {
-        digits.split('').forEach((char, idx) => {
-            if (otpInputs[idx]) {
-                otpInputs[idx].value = char;
-            }
-        });
-        const nextFocusIndex = Math.min(digits.length, otpInputs.length - 1);
-        otpInputs[nextFocusIndex].focus();
-        checkOtpCompletion();
-    }
-});
-
-function checkOtpCompletion() {
-    let completed = true;
-    otpInputs.forEach(input => {
-        if (!input.value) completed = false;
-    });
-    verifyOtpBtn.disabled = !completed;
-}
-
-function getOtpCode() {
-    let code = '';
-    otpInputs.forEach(input => {
-        code += input.value;
-    });
-    return code;
 }
 
 /* --- Form Submission Actions --- */
@@ -405,20 +314,19 @@ emailForm.addEventListener('submit', async (e) => {
         if (authError) authError.style.display = 'none';
     }
 
-    if (isChecking) {
+    if (isChecking && activeCheckPromise) {
         sendOtpBtn.disabled = true;
         const originalText = sendOtpBtn.querySelector('span').textContent;
         sendOtpBtn.querySelector('span').textContent = 'Verifying...';
         
-        const checkInterval = setInterval(() => {
-            if (!isChecking) {
-                clearInterval(checkInterval);
-                sendOtpBtn.disabled = false;
-                sendOtpBtn.querySelector('span').textContent = originalText;
-                executeAuth();
-            }
-        }, 100);
-        return;
+        try {
+            await activeCheckPromise;
+        } catch (err) {
+            console.error("Error waiting for user status check:", err);
+        } finally {
+            sendOtpBtn.disabled = false;
+            sendOtpBtn.querySelector('span').textContent = originalText;
+        }
     }
 
     executeAuth();
@@ -445,10 +353,8 @@ emailForm.addEventListener('submit', async (e) => {
                 if (data && data.session) {
                     window.location.href = 'form.html';
                 } else {
-                    targetEmail = email;
-                    displayEmail.textContent = targetEmail;
-                    showScreen(otpScreen);
-                    resetOtpGrid();
+                    // Redirect to the separate OTP page
+                    window.location.href = 'otp.html?email=' + encodeURIComponent(email);
                 }
             } catch (error) {
                 showAlert('error', error.message || 'Failed to sign up. Please try again.');
@@ -487,74 +393,6 @@ emailForm.addEventListener('submit', async (e) => {
             }
         }
     }
-});
-
-// Verify Entered OTP
-otpForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!db || !targetEmail) return;
-
-    hideAlert();
-    const token = getOtpCode();
-
-    verifyOtpBtn.disabled = true;
-    verifyOtpSpinner.style.display = 'block';
-
-    try {
-        let authData = null;
-        const { data, error } = await db.auth.verifyOtp({
-            email: targetEmail,
-            token: token,
-            type: 'signup'
-        });
-
-        if (error) {
-            const fallbackResult = await db.auth.verifyOtp({
-                email: targetEmail,
-                token: token,
-                type: 'magiclink'
-            });
-            if (fallbackResult.error) throw error;
-            authData = fallbackResult.data;
-        } else {
-            authData = data;
-        }
-
-        const user = authData.user;
-        if (!user) throw new Error("Auth user session not found");
-
-        const { data: profile } = await db
-            .from('profiles')
-            .select('username, avatar_url')
-            .eq('id', user.id)
-            .maybeSingle();
-
-        let redirectUrl = 'form.html';
-        if (profile && profile.username && profile.avatar_url) {
-            redirectUrl = 'dashboard.html';
-        }
-
-        continueBtn.dataset.redirect = redirectUrl;
-        showScreen(successScreen);
-
-    } catch (error) {
-        showAlert('error', error.message || 'Invalid verification code.');
-        resetOtpGrid();
-    } finally {
-        verifyOtpBtn.disabled = false;
-        verifyOtpSpinner.style.display = 'none';
-    }
-});
-
-// Back to Email Screen
-backBtn.addEventListener('click', () => {
-    showScreen(emailScreen);
-});
-
-// Continue Action
-continueBtn.addEventListener('click', () => {
-    const redirectUrl = continueBtn.dataset.redirect || 'form.html';
-    window.location.href = redirectUrl;
 });
 
 // Manual Switch Link Click Listener

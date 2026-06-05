@@ -1,6 +1,12 @@
 import { getSupabaseClient } from './supabase-client.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Hide header Sign In button since user is authenticated
+    const headerSigninBtn = document.getElementById('header-signin-btn');
+    if (headerSigninBtn) {
+        headerSigninBtn.style.display = 'none';
+    }
+
     // 1. Initialize Supabase Client & Auth Guard
     let db = null;
     let user = null;
