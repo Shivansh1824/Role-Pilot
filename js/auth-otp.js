@@ -280,13 +280,55 @@ if (emailInput) {
     emailInput.addEventListener('blur', checkUserStatus);
 }
 
-// Header Sign In Button functionality
+// Auth Modal Logic
+const authModal = document.getElementById('auth-modal');
 const headerSignInBtn = document.getElementById('header-signin-btn');
+const heroGetStartedBtn = document.getElementById('hero-get-started');
+const heroExploreBtn = document.getElementById('hero-explore');
+const modalCloseBtn = document.getElementById('modal-close-btn');
+
+function openAuthModal() {
+    if (authModal) {
+        authModal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Disable page scroll
+        setTimeout(() => {
+            if (emailInput) emailInput.focus();
+        }, 300);
+    }
+}
+
+function closeAuthModal() {
+    if (authModal) {
+        authModal.classList.remove('active');
+        document.body.style.overflow = ''; // Re-enable scroll
+    }
+}
+
 if (headerSignInBtn) {
-    headerSignInBtn.addEventListener('click', () => {
-        if (emailInput) {
-            emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setTimeout(() => emailInput.focus(), 300);
+    headerSignInBtn.addEventListener('click', openAuthModal);
+}
+if (heroGetStartedBtn) {
+    heroGetStartedBtn.addEventListener('click', openAuthModal);
+}
+if (modalCloseBtn) {
+    modalCloseBtn.addEventListener('click', closeAuthModal);
+}
+
+// Close modal when clicking outside the card
+if (authModal) {
+    authModal.addEventListener('click', (e) => {
+        if (e.target === authModal) {
+            closeAuthModal();
+        }
+    });
+}
+
+// Smooth scroll to explore features
+if (heroExploreBtn) {
+    heroExploreBtn.addEventListener('click', () => {
+        const dashboardSection = document.querySelector('.landing-dashboard-section');
+        if (dashboardSection) {
+            dashboardSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     });
 }
