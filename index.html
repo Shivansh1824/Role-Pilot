@@ -43,9 +43,10 @@
         </div>
     </header>
 
-    <main class="landing-container">
-        <!-- Left Column: Interactive Feature Previews -->
-        <div class="landing-content">
+    <main class="page-main">
+        <section class="landing-container first-fold">
+            <!-- Left Column: Interactive Feature Previews -->
+            <div class="landing-content">
             <section class="landing-hero">
                 <div class="hero-badge">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> AI Career Copilot
@@ -224,9 +225,219 @@
 
             </div>
         </div>
+        
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator">
+            <div class="mouse">
+                <div class="wheel"></div>
+            </div>
+            <span>Scroll to explore</span>
+        </div>
+        </section>
+
+        <!-- Premium Live Dashboard Section -->
+        <section class="landing-dashboard-section">
+            <div class="section-header">
+                <h2>The Ultimate Edge for <span>Tech Professionals</span></h2>
+                <p>Experience the exact tools you'll use to master interviews, beat the ATS, and outrank the competition.</p>
+            </div>
+            
+            <div class="dashboard-preview-window">
+                <!-- Sidebar -->
+                <div class="dashboard-sidebar">
+                    <div class="sidebar-user">
+                        <div class="user-avatar">JD</div>
+                        <div class="user-info">
+                            <span class="user-name">John Doe</span>
+                            <span class="user-xp"><i class="fa-solid fa-star"></i> 2,450 XP (Level 12)</span>
+                        </div>
+                    </div>
+                    <nav class="sidebar-nav">
+                        <button class="nav-tab active" data-target="ats-tab">
+                            <i class="fa-solid fa-file-shield"></i> ATS Analyzer
+                        </button>
+                        <button class="nav-tab" data-target="coding-tab">
+                            <i class="fa-solid fa-code"></i> Coding Arena
+                        </button>
+                        <button class="nav-tab" data-target="coach-tab">
+                            <i class="fa-solid fa-user-tie"></i> AI Career Coach
+                        </button>
+                        <button class="nav-tab" data-target="leaderboard-tab">
+                            <i class="fa-solid fa-trophy"></i> XP Leaderboard
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="dashboard-content">
+                    
+                    <!-- ATS Tab -->
+                    <div id="ats-tab" class="dashboard-pane active">
+                        <div class="pane-header">
+                            <h3>Resume ATS Diagnostics</h3>
+                            <button class="btn-secondary-outline btn-sm" style="padding: 4px 12px; font-size: 0.8rem;"><i class="fa-solid fa-upload"></i> Upload PDF</button>
+                        </div>
+                        <div class="ats-scan-container">
+                            <div class="ats-doc-preview">
+                                <div class="doc-line title">John Doe - Senior Engineer</div>
+                                <div class="doc-line highlight-red">Skills: HTML, CSS, JS</div>
+                                <div class="doc-line">Experience: Built web apps.</div>
+                                <div class="scan-laser"></div>
+                            </div>
+                            <div class="ats-results">
+                                <div class="ats-score-circle-large">
+                                    <svg viewBox="0 0 36 36"><path class="bg" d="M18 2 a 16 16 0 0 1 0 32 a 16 16 0 0 1 0 -32"/><path class="fill" id="ats-progress-path" d="M18 2 a 16 16 0 0 1 0 32 a 16 16 0 0 1 0 -32" stroke-dasharray="100" stroke-dashoffset="38"/></svg>
+                                    <div class="score-text"><span id="ats-score-num">62</span>%</div>
+                                </div>
+                                <div class="ats-feedback">
+                                    <div class="feedback-item error"><i class="fa-solid fa-circle-xmark"></i> Missing keywords: React, Node.js, System Design</div>
+                                    <div class="feedback-item warning"><i class="fa-solid fa-triangle-exclamation"></i> Action verbs lacking in experience section</div>
+                                </div>
+                                <button class="btn" id="optimize-resume-btn" style="height: 40px; font-size: 0.85rem;">Auto-Tailor Resume</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Coding Arena Tab -->
+                    <div id="coding-tab" class="dashboard-pane">
+                        <div class="pane-header">
+                            <h3>Technical Arena <span class="badge badge-accent">Live Eval</span></h3>
+                            <div class="timer">00:14:23</div>
+                        </div>
+                        <div class="coding-workspace">
+                            <div class="code-editor">
+                                <div class="editor-header">
+                                    <span class="lang-badge">Python 3.10</span>
+                                    <span>two_sum.py</span>
+                                </div>
+                                <pre class="code-lines"><code><span class="keyword">def</span> <span class="function">two_sum</span>(nums, target):
+    seen = {}
+    <span class="keyword">for</span> i, num <span class="keyword">in</span> <span class="function">enumerate</span>(nums):
+        diff = target - num
+        <span class="keyword">if</span> diff <span class="keyword">in</span> seen:
+            <span class="keyword">return</span> [seen[diff], i]
+        seen[num] = i
+    <span class="keyword">return</span> []</code></pre>
+                            </div>
+                            <div class="code-sidebar">
+                                <div class="problem-desc">
+                                    <h4>Two Sum</h4>
+                                    <p>Find two numbers that add up to target. Return their indices.</p>
+                                </div>
+                                <div class="eval-box">
+                                    <div class="eval-title"><i class="fa-solid fa-robot"></i> AI Complexity Eval</div>
+                                    <div class="eval-stat"><span class="label">Time:</span> <span class="value success" id="time-complex">O(N) - Optimal</span></div>
+                                    <div class="eval-stat"><span class="label">Space:</span> <span class="value success">O(N)</span></div>
+                                </div>
+                                <button class="btn" id="run-code-btn" style="background: var(--success); height: 40px;"><i class="fa-solid fa-play"></i> Run & Submit</button>
+                                
+                                <div class="xp-reward-toast" id="xp-toast">
+                                    <i class="fa-solid fa-arrow-trend-up"></i> +50 XP Earned!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Coach Tab -->
+                    <div id="coach-tab" class="dashboard-pane">
+                        <div class="pane-header">
+                            <h3>Live Behavioral Interview</h3>
+                            <span class="status-indicator"><span class="dot pulse"></span> Recording</span>
+                        </div>
+                        <div class="coach-container">
+                            <div class="video-feed">
+                                <img src="images/ai_interviewer.png" alt="AI Coach" class="coach-avatar-feed">
+                                <div class="video-overlay">
+                                    <span class="coach-name">Elara - Senior Tech Recruiter</span>
+                                    <div class="voice-wave">
+                                        <span></span><span></span><span></span><span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-log">
+                                <div class="msg ai-msg">
+                                    <div class="msg-bubble">Tell me about a time you disagreed with a senior engineer on system architecture.</div>
+                                </div>
+                                <div class="msg user-msg">
+                                    <div class="msg-bubble" id="live-transcript">I once suggested a microservices approach but the senior dev wanted a monolith. I proposed we... <span class="typing-cursor">|</span></div>
+                                </div>
+                                <div class="live-comm-score">
+                                    <div class="score-label">Comm & English Eval:</div>
+                                    <div class="score-bar-bg"><div class="score-bar-fill" style="width: 85%;"></div></div>
+                                    <span class="score-val">Good Clarity</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard Tab -->
+                    <div id="leaderboard-tab" class="dashboard-pane">
+                        <div class="pane-header">
+                            <h3>Global Tech Leaderboard</h3>
+                            <div class="season-badge">Season 4</div>
+                        </div>
+                        <div class="leaderboard-list">
+                            <div class="lb-row rank-1">
+                                <div class="lb-rank">1</div>
+                                <div class="lb-user"><div class="ava">AK</div> Alex Kim</div>
+                                <div class="lb-role">Frontend</div>
+                                <div class="lb-xp">14,200 XP</div>
+                            </div>
+                            <div class="lb-row rank-2">
+                                <div class="lb-rank">2</div>
+                                <div class="lb-user"><div class="ava">SJ</div> Sarah J.</div>
+                                <div class="lb-role">Backend</div>
+                                <div class="lb-xp">12,850 XP</div>
+                            </div>
+                            <div class="lb-row rank-3">
+                                <div class="lb-rank">3</div>
+                                <div class="lb-user"><div class="ava">MR</div> Mike R.</div>
+                                <div class="lb-role">Fullstack</div>
+                                <div class="lb-xp">11,400 XP</div>
+                            </div>
+                            <div class="lb-row current-user">
+                                <div class="lb-rank" id="user-lb-rank">142</div>
+                                <div class="lb-user"><div class="ava">JD</div> John Doe (You)</div>
+                                <div class="lb-role">Frontend</div>
+                                <div class="lb-xp" id="user-lb-xp">2,450 XP</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Grid Section -->
+        <section class="landing-features-grid-section">
+            <div class="landing-features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-file-shield"></i></div>
+                    <h3>Beat the ATS</h3>
+                    <p>Upload your resume and get instant diagnostics. We identify missing keywords, formatting errors, and tailor your bullet points to match the exact job description you want.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-code"></i></div>
+                    <h3>Master Tech Interviews</h3>
+                    <p>Practice in our live coding arena. Our AI evaluates not just if your code works, but its time/space complexity (Big-O), ensuring you write optimal, production-ready solutions.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-comments"></i></div>
+                    <h3>Polish Communication</h3>
+                    <p>Tech skills aren't enough. Our AI Coach conducts live behavioral mock interviews, evaluating your English fluency, tone, and STAR method structure to help you close the offer.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fa-solid fa-gamepad"></i></div>
+                    <h3>Gamified Career Growth</h3>
+                    <p>Learning shouldn't be boring. Earn XP for every mock interview, coding challenge, and resume update. Climb the global leaderboard and show employers your dedication.</p>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Main Client Script as ES Module -->
     <script type="module" src="js/auth-otp.js"></script>
+    <script type="module" src="js/dashboard-preview.js"></script>
 </body>
 </html>
