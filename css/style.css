@@ -223,6 +223,51 @@ h1, h2, h3, h4 {
     display: inline-block;
 }
 
+.logo-svg {
+    width: 40px;
+    height: 40px;
+    display: inline-block;
+    vertical-align: middle;
+    transition: var(--transition);
+    overflow: visible;
+}
+
+.logo-svg * {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.logo-wrapper:hover .logo-svg,
+.footer-brand .logo:hover .logo-svg {
+    transform: translateY(-2px);
+}
+
+/* Origami plane dynamic glide hover effect */
+.logo-wrapper:hover .logo-svg .plane-body,
+.logo-wrapper:hover .logo-svg .plane-shade,
+.logo-wrapper:hover .logo-svg .plane-fold,
+.footer-brand .logo:hover .logo-svg .plane-body,
+.footer-brand .logo:hover .logo-svg .plane-shade,
+.footer-brand .logo:hover .logo-svg .plane-fold {
+    transform: translate(3px, -3px);
+}
+
+/* Steps subtle lift hover effect */
+.logo-wrapper:hover .logo-svg .step-1,
+.footer-brand .logo:hover .logo-svg .step-1 {
+    transform: translateY(-1px);
+}
+
+.logo-wrapper:hover .logo-svg .step-2,
+.footer-brand .logo:hover .logo-svg .step-2 {
+    transform: translateY(-2px);
+}
+
+.logo-wrapper:hover .logo-svg .step-3,
+.footer-brand .logo:hover .logo-svg .step-3 {
+    transform: translateY(-3px);
+}
+
+
 .logo-text {
     font-family: 'Outfit', sans-serif;
     font-size: 1.75rem;
