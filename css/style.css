@@ -168,7 +168,7 @@ body::after {
 /* Typography Scale */
 h1, h2, h3, h4 {
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: -0.04em;
     line-height: 1.1;
     text-wrap: balance;
@@ -220,6 +220,7 @@ h1, h2, h3, h4 {
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+    display: inline-block;
 }
 
 .logo-text {
@@ -374,7 +375,7 @@ h1, h2, h3, h4 {
     gap: 2rem;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem 4rem 2rem;
+    padding: 4rem 4rem 2rem;
     align-items: center;
     min-height: 80vh;
 }
@@ -404,7 +405,7 @@ h1, h2, h3, h4 {
     font-size: clamp(2.5rem, 4.5vw, 4.2rem);
     line-height: 1.15;
     margin: 1.25rem 0;
-    font-weight: 900;
+    font-weight: 700;
     letter-spacing: -0.02em;
 }
 
@@ -416,14 +417,22 @@ h1, h2, h3, h4 {
     line-height: 1.6;
 }
 
+.hero-ctas-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 3rem;
+}
+
 .hero-ctas {
     display: flex;
-    gap: 1.5rem;
-    margin-bottom: 3rem;
+    gap: 1.25rem;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .hero-ctas .btn, .hero-ctas .btn-secondary-outline {
+    width: fit-content; /* Override global 100% width to show side-by-side */
     height: 56px;
     padding: 0 36px;
     font-size: 1.05rem;
@@ -431,6 +440,16 @@ h1, h2, h3, h4 {
     align-items: center;
     justify-content: center;
     border-radius: 12px;
+}
+
+.hero-cta-caption {
+    display: block; /* Sits underneath the button container */
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+    margin: 0;
+    font-weight: 400;
+    letter-spacing: 0.02em;
 }
 
 .hero-stats {
@@ -485,10 +504,55 @@ h1, h2, h3, h4 {
     background: var(--panel-bg);
     padding: 12px;
     box-shadow: 0 30px 60px -15px rgba(0,0,0,0.5);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+                border-color 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :root.light-theme .image-glass-wrapper {
     box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.15);
+}
+
+@media (min-width: 1025px) {
+    .marketing-hero {
+        align-items: flex-start; /* Let columns align to the top for precision positioning */
+        gap: 5rem; /* Increase gap to prevent connection to left text */
+    }
+
+    .hero-text-content {
+        padding-top: 1rem; /* Tiny buffer on text column */
+    }
+
+    .hero-visual-content {
+        align-self: flex-start;
+        margin-top: 4.5rem; /* Align top of the image wrapper with "Master the technical" */
+        justify-content: flex-end; /* Push to right margin boundary */
+    }
+    
+    .image-glass-wrapper {
+        transform: translate(35px, 0); /* Move wrapper further to the right */
+    }
+}
+
+/* Unique Hover Effect: 3D-Like Parallax Lift & Glow */
+.image-glass-wrapper:hover {
+    transform: translate(35px, -8px) scale(1.025); /* Lift slightly higher & scale up relative to desktop shift */
+    border-color: rgba(168, 85, 247, 0.35); /* Glow highlight border */
+    box-shadow: 0 45px 85px -20px rgba(0, 0, 0, 0.75), 
+                0 0 35px rgba(168, 85, 247, 0.18); /* Deep shadow & backglow */
+}
+
+/* On mobile/tablet where translation is reset, make hover lift normal */
+@media (max-width: 1024px) {
+    .image-glass-wrapper:hover {
+        transform: scale(1.025) translateY(-8px);
+    }
+}
+
+:root.light-theme .image-glass-wrapper:hover {
+    border-color: rgba(168, 85, 247, 0.25);
+    box-shadow: 0 45px 85px -20px rgba(15, 23, 42, 0.25), 
+                0 0 35px rgba(168, 85, 247, 0.1);
 }
 
 .hero-main-img {
@@ -516,6 +580,12 @@ h1, h2, h3, h4 {
     color: #fff;
     box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     animation: float 6s ease-in-out infinite;
+    transition: top 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+                bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+                left 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+                right 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.3s ease, 
+                border-color 0.3s ease;
 }
 
 .badge-top-left {
@@ -528,6 +598,17 @@ h1, h2, h3, h4 {
     bottom: 40px;
     right: -30px;
     animation-delay: 3s;
+}
+
+/* Hover-triggered parallax offset for the badges */
+.image-glass-wrapper:hover .badge-top-left {
+    top: 15px;      /* Move 25px up */
+    left: -55px;    /* Move 25px left */
+}
+
+.image-glass-wrapper:hover .badge-bottom-right {
+    bottom: 15px;   /* Move 25px down */
+    right: -55px;   /* Move 25px right */
 }
 
 @keyframes float {
@@ -790,9 +871,14 @@ h1, h2, h3, h4 {
     width: fit-content;
 }
 
+.hero-badge i {
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+}
+
 .landing-hero h1 {
     font-size: clamp(2.8rem, 4.8vw, 4.2rem);
-    font-weight: 800;
+    font-weight: 700;
     line-height: 1.1;
     color: var(--text-primary);
 }
