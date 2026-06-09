@@ -85,17 +85,6 @@
                         Solve challenges • Master interviews • Climb the leaderboard
                     </span>
                 </div>
-                
-                <div class="hero-stats">
-                    <div class="stat-item">
-                        <span class="stat-num">94%</span>
-                        <span class="stat-label">Offer Rate</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-num">50k+</span>
-                        <span class="stat-label">Mock Sessions</span>
-                    </div>
-                </div>
             </div>
             
             <div class="hero-visual-content">
@@ -115,10 +104,8 @@
             </div>
         </section>
 
-        <!-- Scroll Indicator -->
-        <div class="hero-scroll-indicator">
-            <div class="mouse"><div class="wheel"></div></div>
-            <span>Scroll to explore</span>
+        <div class="section-divider">
+            <div class="divider-glow"></div>
         </div>
 
         <!-- "How Role-Pilot Guides You" Flow Section -->
@@ -131,24 +118,40 @@
             <div class="guidance-steps">
                 <div class="guide-step">
                     <div class="step-number">01</div>
-                    <div class="step-icon"><i class="fa-solid fa-file-shield"></i></div>
-                    <h3>ATS Optimization</h3>
-                    <p>We scan your resume against live job descriptions, identifying missing keywords and structural red flags before you ever hit apply.</p>
+                    <div class="step-icon"><i class="fa-solid fa-user-tie"></i></div>
+                    <h3>TruGen AI-Powered Mock Interviews</h3>
+                    <p>Practice live, voice-interactive sessions with AI avatars. Receive instant diagnostics on your STAR method structure, English fluency, and tone.</p>
                 </div>
                 <div class="guide-step">
                     <div class="step-number">02</div>
                     <div class="step-icon"><i class="fa-solid fa-laptop-code"></i></div>
-                    <h3>Live Technical Arena</h3>
-                    <p>Practice in a real coding environment. Our AI evaluates your solutions for correctness and Big-O time/space complexity.</p>
+                    <h3>Technical Arena</h3>
+                    <p>Progress through level-based coding challenges with immediate, real-time AI evaluation of your Big-O time and space complexity.</p>
                 </div>
                 <div class="guide-step">
                     <div class="step-number">03</div>
-                    <div class="step-icon"><i class="fa-solid fa-user-tie"></i></div>
-                    <h3>Behavioral Coaching</h3>
-                    <p>Engage in voice-to-voice mock interviews with hyper-realistic AI avatars that score your English fluency, tone, and STAR method structure.</p>
+                    <div class="step-icon"><i class="fa-solid fa-file-shield"></i></div>
+                    <h3>ATS Diagnostics & Tailoring</h3>
+                    <p>Scan your resume against live job descriptions. Identify missing target keywords and structural red flags to optimize your ATS fit.</p>
+                </div>
+                <div class="guide-step">
+                    <div class="step-number">04</div>
+                    <div class="step-icon"><i class="fa-solid fa-trophy"></i></div>
+                    <h3>Dual-Sided Global Leaderboard</h3>
+                    <p>Earn XP and climb global ranks. Showcase your verifiable scores directly to recruiters looking to fast-track top performers.</p>
+                </div>
+                <div class="guide-step">
+                    <div class="step-number">05</div>
+                    <div class="step-icon"><i class="fa-solid fa-road"></i></div>
+                    <h3>Personalized Learning</h3>
+                    <p>Receive AI-generated study roadmaps to bridge identified skill gaps with targeted recommendations for topics and paradigms.</p>
                 </div>
             </div>
         </section> 
+
+        <div class="section-divider">
+            <div class="divider-glow"></div>
+        </div>
 
         <!-- Premium Live Dashboard Section -->
         <section class="landing-dashboard-section">
@@ -158,6 +161,9 @@
             </div>
             
             <div class="dashboard-preview-window">
+                <div class="simulated-cursor">
+                    <i class="fa-solid fa-arrow-pointer"></i>
+                </div>
                 <!-- Sidebar -->
                 <div class="dashboard-sidebar">
                     <div class="sidebar-user">
@@ -208,7 +214,7 @@
                                     <div class="feedback-item error"><i class="fa-solid fa-circle-xmark"></i> Missing keywords: React, Node.js, System Design</div>
                                     <div class="feedback-item warning"><i class="fa-solid fa-triangle-exclamation"></i> Action verbs lacking in experience section</div>
                                 </div>
-                                <button class="btn" id="optimize-resume-btn" style="height: 40px; font-size: 0.85rem;">Auto-Tailor Resume</button>
+                                <button class="btn pulse-btn" id="optimize-resume-btn" style="height: 40px; font-size: 0.85rem;">Auto-Tailor Resume</button>
                             </div>
                         </div>
                     </div>
@@ -244,7 +250,7 @@
                                     <div class="eval-stat"><span class="label">Time:</span> <span class="value success" id="time-complex">O(N) - Optimal</span></div>
                                     <div class="eval-stat"><span class="label">Space:</span> <span class="value success">O(N)</span></div>
                                 </div>
-                                <button class="btn" id="run-code-btn" style="background: var(--success); height: 40px;"><i class="fa-solid fa-play"></i> Run & Submit</button>
+                                <button class="btn pulse-btn-success" id="run-code-btn" style="background: var(--success); height: 40px;"><i class="fa-solid fa-play"></i> Run & Submit</button>
                                 
                                 <div class="xp-reward-toast" id="xp-toast">
                                     <i class="fa-solid fa-arrow-trend-up"></i> +50 XP Earned!
@@ -323,59 +329,152 @@
             </div>
         </section>
 
+        <div class="section-divider">
+            <div class="divider-glow"></div>
+        </div>
+
+        <!-- Step-by-Step Roadmap Flow -->
+        <section class="roadmap-flow-section">
+            <div class="section-header">
+                <h2>The Path to <span class="gradient-text">Your Next Role</span></h2>
+            </div>
+            <div class="horizontal-roadmap">
+                <div class="roadmap-node">
+                    <div class="node-icon"><i class="fa-solid fa-file-shield"></i></div>
+                    <div class="node-text">1. Attach Resume</div>
+                </div>
+                <div class="roadmap-line"></div>
+                <div class="roadmap-node">
+                    <div class="node-icon"><i class="fa-solid fa-code"></i></div>
+                    <div class="node-text">2. MCQ & Coding Arena</div>
+                </div>
+                <div class="roadmap-line"></div>
+                <div class="roadmap-node">
+                    <div class="node-icon"><i class="fa-solid fa-user-tie"></i></div>
+                    <div class="node-text">3. AI Interview Coaching</div>
+                </div>
+                <div class="roadmap-line"></div>
+                <div class="roadmap-node">
+                    <div class="node-icon"><i class="fa-solid fa-trophy"></i></div>
+                    <div class="node-text">4. Climb Leaderboard</div>
+                </div>
+                <div class="roadmap-line"></div>
+                <div class="roadmap-node">
+                    <div class="node-icon"><i class="fa-solid fa-handshake"></i></div>
+                    <div class="node-text">5. Land Job</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider">
+            <div class="divider-glow"></div>
+        </div>
+
+        <!-- Scorecard CTA Section -->
+        <section class="scorecard-cta-section">
+            <div class="scorecard-container">
+                <div class="scorecard-image-col">
+                    <div class="image-glass-wrapper scorecard-glass">
+                        <img src="images/leaderboard_dashboard_dark.png" alt="Role-Pilot Leaderboard Preview" id="scorecard-theme-img" class="hero-main-img">
+                    </div>
+                </div>
+                <div class="scorecard-text-col">
+                    <h2>Climb the global ranks. <br><span class="gradient-text">Get noticed by recruiters.</span></h2>
+                    <p>Earn XP by solving coding challenges and passing AI mock interviews. Get a detailed evaluation of your performance and prove your skills directly to hiring managers.</p>
+                    <button id="view-leaderboard-btn" class="btn">View Global Leaderboard</button>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider">
+            <div class="divider-glow"></div>
+        </div>
+
+        <!-- Review Matrix Section -->
+        <section class="review-matrix-section">
+            <div class="section-header">
+                <h2>Real Results from <span class="gradient-text">Top Candidates</span></h2>
+                <p>See how engineers are utilizing Role-Pilot to fast-track their careers.</p>
+            </div>
+            <div class="review-grid">
+                <div class="review-card">
+                    <div class="review-metric-badge success">ATS Score: 62% → 94%</div>
+                    <p class="review-text">"The ATS tailoring highlighted exactly what was missing in my resume. I fixed my keywords and landed a Backend Offer within two weeks."</p>
+                    <div class="review-author">
+                        <div class="author-avatar">SD</div>
+                        <div class="author-info">
+                            <span class="author-name">Sarah D.</span>
+                            <span class="author-role">Backend Engineer</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="review-card">
+                    <div class="review-metric-badge info">Mock Pass Rate: 95%</div>
+                    <p class="review-text">"The TruGen AI avatars are incredibly realistic. The feedback on my speaking clarity and filler words completely transformed my communication style."</p>
+                    <div class="review-author">
+                        <div class="author-avatar">MK</div>
+                        <div class="author-info">
+                            <span class="author-name">Michael K.</span>
+                            <span class="author-role">Fullstack Developer</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="review-card">
+                    <div class="review-metric-badge warning">Ranked Top 5</div>
+                    <p class="review-text">"The global leaderboard is a game changer. Top rankers are landing jobs easily because recruiters can verify our coding complexity scores instantly."</p>
+                    <div class="review-author">
+                        <div class="author-avatar">AT</div>
+                        <div class="author-info">
+                            <span class="author-name">Alex T.</span>
+                            <span class="author-role">Frontend Engineer</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider">
+            <div class="divider-glow"></div>
+        </div>
+
+        <!-- FAQ Section -->
+        <section class="faq-section">
+            <div class="section-header">
+                <h2>Frequently Asked <span class="gradient-text">Questions</span></h2>
+            </div>
+            <div class="faq-container">
+                <details class="faq-item" name="faq">
+                    <summary>How do the AI mock interviews work?</summary>
+                    <div class="faq-content">
+                        <p>Our TruGen AI avatars simulate real interview scenarios using advanced voice models. They analyze your verbal responses in real-time, evaluating your structure (using the STAR method), English fluency, tone, and technical accuracy.</p>
+                    </div>
+                </details>
+                <details class="faq-item" name="faq">
+                    <summary>Are my coding arena sessions private?</summary>
+                    <div class="faq-content">
+                        <p>Yes. Your coding sessions and history are private to you. However, you can choose to make your best scores public on the Global Leaderboard so recruiters can view your verified capabilities.</p>
+                    </div>
+                </details>
+                <details class="faq-item" name="faq">
+                    <summary>How accurate is the ATS compatibility scoring?</summary>
+                    <div class="faq-content">
+                        <p>Our ATS engine uses semantic analysis similar to enterprise tracking systems. It extracts keywords, assesses formatting, and compares your resume against live job descriptions to provide a highly accurate compatibility percentage.</p>
+                    </div>
+                </details>
+                <details class="faq-item" name="faq">
+                    <summary>What are the pricing details?</summary>
+                    <div class="faq-content">
+                        <p>Role-Pilot is currently free for candidates during our initial rollout phase. Premium features, including unlimited AI sessions and recruiter introductions, will be available under a transparent subscription model soon.</p>
+                    </div>
+                </details>
+            </div>
+        </section>
+
     </main>
 
-    <!-- 2026 Premium Footer -->
-    <footer class="premium-footer">
-        <div class="footer-top">
-            <div class="footer-brand">
-                <div class="logo">
-                    <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="footer-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="var(--primary)" />
-                                <stop offset="100%" stop-color="var(--accent)" />
-                            </linearGradient>
-                        </defs>
-                        <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#footer-logo-grad)" opacity="0.35" />
-                        <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#footer-logo-grad)" opacity="0.6" />
-                        <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#footer-logo-grad)" opacity="0.8" />
-                        <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#footer-logo-grad)" />
-                        <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#footer-logo-grad)" opacity="0.85" />
-                        <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#footer-logo-grad)" opacity="0.7" />
-                    </svg>
-                    <span>Role<strong>Pilot</strong></span>
-                </div>
-                <p>Your personal AI interview strategist for the modern tech landscape.</p>
-            </div>
-            <div class="footer-links">
-                <div class="link-column">
-                    <h4>Product</h4>
-                    <a href="#">ATS Scanner</a>
-                    <a href="#">Coding Arena</a>
-                    <a href="#">AI Avatars</a>
-                </div>
-                <div class="link-column">
-                    <h4>Resources</h4>
-                    <a href="#">Interview Guides</a>
-                    <a href="#">Tech Blog</a>
-                    <a href="#">Help Center</a>
-                </div>
-                <div class="link-column">
-                    <h4>Legal</h4>
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                </div>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2026 Role-Pilot Inc. All rights reserved.</p>
-            <div class="social-icons">
-                <a href="#"><i class="fa-brands fa-twitter"></i></a>
-                <a href="#"><i class="fa-brands fa-linkedin"></i></a>
-                <a href="#"><i class="fa-brands fa-github"></i></a>
-            </div>
-        </div>
+    <!-- Ultra Minimalist Footer -->
+    <footer class="minimalist-footer">
+        <p>© 2026 Role-Pilot — Built for ambitious humans.</p>
     </footer>
 
     <!-- Scripts -->

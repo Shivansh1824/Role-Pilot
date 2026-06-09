@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const panes = document.querySelectorAll('.dashboard-pane');
 
     tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
+        tab.addEventListener('click', (e) => {
             // Remove active class from all
             tabs.forEach(t => t.classList.remove('active'));
             panes.forEach(p => p.classList.remove('active'));
@@ -13,8 +13,90 @@ document.addEventListener('DOMContentLoaded', () => {
             tab.classList.add('active');
             const targetId = tab.getAttribute('data-target');
             document.getElementById(targetId).classList.add('active');
+            
+            // If it's a real user click, stop auto-play
+            if (e.isTrusted && typeof stopAutoPlay === 'function') {
+                stopAutoPlay();
+            }
         });
     });
+
+    // Dashboard Auto-Play Feature
+    const dashboardPreview = document.querySelector('.dashboard-preview-window');
+    const cursor = document.querySelector('.simulated-cursor');
+    let autoPlayInterval;
+    let currentTabIndex = 0;
+    let isUserInteracted = false;
+
+    const stopAutoPlay = () => {
+        isUserInteracted = true;
+        clearInterval(autoPlayInterval);
+        if (cursor) {
+            cursor.style.opacity = '0'; // Hide cursor when user takes over
+        }
+    };
+
+    if (dashboardPreview && tabs.length > 0 && cursor) {
+        // Show cursor initially
+        setTimeout(() => {
+            if (!isUserInteracted) cursor.style.opacity = '1';
+        }, 1000);
+
+        const simulateClick = (index) => {
+            if (isUserInteracted) return;
+
+            const targetTab = tabs[index];
+            
+            // Move cursor to tab
+            const tabRect = targetTab.getBoundingClientRect();
+            const containerRect = dashboardPreview.getBoundingClientRect();
+            
+            // Calculate relative position based on container
+            const top = tabRect.top - containerRect.top + (tabRect.height / 2);
+            const left = tabRect.left - containerRect.left + (tabRect.width / 2);
+            
+            cursor.style.top = `${top}px`;
+            cursor.style.left = `${left}px`;
+            
+            // Simulate click down effect on cursor
+            setTimeout(() => {
+                if (isUserInteracted) return;
+                cursor.style.transform = 'scale(0.8)';
+                targetTab.click(); // Trigger actual tab switch logic
+                
+                // Release click
+                setTimeout(() => {
+                    if (isUserInteracted) return;
+                    cursor.style.transform = 'scale(1)';
+                    // Move cursor slightly away after clicking to not obscure the active tab
+                    cursor.style.top = `${top + 40}px`;
+                    cursor.style.left = `${left + 40}px`;
+                }, 200);
+                
+            }, 800); // 800ms matches the CSS transition duration
+        };
+
+        const startAutoPlay = () => {
+            autoPlayInterval = setInterval(() => {
+                currentTabIndex = (currentTabIndex + 1) % tabs.length;
+                simulateClick(currentTabIndex);
+            }, 4500); // 4.5 seconds per tab
+            
+            // Initial click after 2 seconds
+            setTimeout(() => {
+                if (!isUserInteracted) {
+                    currentTabIndex = (currentTabIndex + 1) % tabs.length;
+                    simulateClick(currentTabIndex);
+                }
+            }, 2000);
+        };
+
+        // Stop on any interaction
+        dashboardPreview.addEventListener('mouseenter', stopAutoPlay);
+        dashboardPreview.addEventListener('touchstart', stopAutoPlay);
+
+        startAutoPlay();
+    }
 
     // ATS Auto-Tailor Simulation
     const optimizeBtn = document.getElementById('optimize-resume-btn');
