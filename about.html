@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Role-Pilot</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Inline Theme Script (Crucial: Place immediately in <head> to prevent FOUC / flickering) -->
+    <script>
+      (function() {
+          const currentTheme = localStorage.getItem('theme') || 'dark';
+          if (currentTheme === 'light') {
+              document.documentElement.classList.add('light-theme');
+          } else {
+              document.documentElement.classList.remove('light-theme');
+          }
+      })();
+    </script>
+    <!-- Theme Manager Script (for DOM toggles) -->
+    <script src="js/theme.js"></script>
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase JS Client Library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="landing-body subpage-body">
+    <div class="bg-layers">
+        <div class="bg-layer dark-bg"></div>
+        <div class="bg-layer light-bg"></div>
+    </div>
+    <div class="landing-overlay"></div>
+    
+    <header class="app-header">
+        <div class="header-left">
+            <a href="index.html" class="logo-wrapper">
+                <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--primary)" />
+                            <stop offset="100%" stop-color="var(--accent)" />
+                        </linearGradient>
+                    </defs>
+                    <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                    <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                    <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                    <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                    <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                    <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                </svg>
+                <span class="logo-text">Role<span>Pilot</span></span>
+            </a>
+        </div>
+        
+        <div class="header-center">
+            <nav class="header-nav">
+                <a href="index.html#how-it-guides" class="nav-link">How it Works</a>
+                <a href="index.html#live-dashboard" class="nav-link">Live Demo</a>
+                <div class="mobile-only-actions">
+                    <a href="form.html" class="btn-secondary-outline mobile-nav-btn">Sign In</a>
+                    <a href="form.html" class="btn btn-header mobile-nav-btn">Get Started</a>
+                </div>
+            </nav>
+        </div>
+
+        <div class="header-actions">
+            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+            <a href="form.html" id="header-signin-btn" class="btn-secondary-outline">Sign In</a>
+            <a href="form.html" class="btn btn-header header-signup-desktop">Get Started</a>
+            <button class="mobile-menu-toggle" aria-label="Toggle Mobile Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="page-main subpage-main">
+        <section class="subpage-content-section">
+            <div class="section-header">
+                <h2>About Role-Pilot</h2>
+                <p>Bridging the gap between engineering talent and modern hiring teams.</p>
+            </div>
+            <div class="image-glass-wrapper content-glass-panel">
+                <div class="premium-content-body">
+                    <h3>Our Mission</h3>
+                    <p>At Role-Pilot, our mission is to close the gap between exceptional tech candidates and recruiters by providing a deterministic, verifiable, and AI-powered preparation environment. We believe that securing a top-tier engineering role shouldn't rely on luck or expensive coaching, but on structured practice and transparent skill validation.</p>
+
+                    <h3>Core Platform Features</h3>
+                    <p>We've built a comprehensive suite of tools designed to simulate the exact conditions of modern technical interviews:</p>
+                    <ul>
+                        <li><strong>TruGen Voice Agent:</strong> Practice behavioral and technical screening rounds with our hyper-realistic voice AI. Get real-time feedback on your STAR method structure, delivery confidence, and communication clarity.</li>
+                        <li><strong>Technical Coding Arena:</strong> Solve real-world algorithmic and system design challenges in an IDE environment. Our AI instantly evaluates not just correctness, but your Big-O time and space complexity efficiency.</li>
+                        <li><strong>Global Tech Leaderboard:</strong> Move beyond static resumes. Earn XP for your successful coding submissions and mock interviews. Showcase your ranked performance directly to partnered recruiters looking for verified talent.</li>
+                    </ul>
+
+                    <h3>The 2026 Roadmap</h3>
+                    <p>We are continuously evolving Role-Pilot to remain the industry standard for career acceleration. Upcoming releases include:</p>
+                    <ul>
+                        <li><strong>AI Proctoring:</strong> Implementing non-intrusive, privacy-first session verification to ensure the integrity of the leaderboard rankings.</li>
+                        <li><strong>Verifiable Credentials:</strong> Generating cryptographically secure, on-chain proof of your coding proficiency and mock interview scores to share across professional networks.</li>
+                        <li><strong>Company Sandboxes:</strong> Exclusive integration environments where candidates can practice against the specific proprietary codebase structures of our hiring partners.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- Column 1: Brand -->
+                <div class="footer-brand-col">
+                    <a href="index.html" class="logo-wrapper">
+                        <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                            <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                            <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                            <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                            <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                            <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                        </svg>
+                        <span class="logo-text">Role<span>Pilot</span></span>
+                    </a>
+                    <p class="footer-pitch">Master technical interviews, optimize your ATS compatibility, and climb the recruiter-facing global leaderboard using voice-adaptive AI agents.</p>
+                    <div class="footer-socials">
+                        <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+                        <a href="#" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Column 2: Product -->
+                <div class="footer-links-col">
+                    <h3>Product</h3>
+                    <ul>
+                        <li><a href="form.html">AI Mock Interviews</a></li>
+                        <li><a href="form.html">ATS Compatibility</a></li>
+                        <li><a href="form.html">Resume Tailoring</a></li>
+                        <li><a href="dashboard.html">Coding Arena</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 3: Resources -->
+                <div class="footer-links-col">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="#">System Design Guide</a></li>
+                        <li><a href="dashboard.html">Global Leaderboard</a></li>
+                        <li><a href="#">Developer Documentation</a></li>
+                        <li><a href="#">API Status</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 4: Company -->
+                <div class="footer-links-col">
+                    <h3>Company</h3>
+                    <ul>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2026 Role-Pilot. All rights reserved. Built for modern engineers.</p>
+                <div class="footer-bottom-links">
+                    <a href="privacy.html">Privacy</a>
+                    <a href="terms.html">Terms</a>
+                    <a href="cookies.html">Cookies</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const header = document.querySelector('.app-header');
+            
+            if (menuToggle && header) {
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    header.classList.toggle('mobile-nav-active');
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (header.classList.contains('mobile-nav-active') && !header.contains(e.target)) {
+                        header.classList.remove('mobile-nav-active');
+                    }
+                });
+                
+                // Close menu when clicking navigation links
+                const navLinks = header.querySelectorAll('.nav-link, .mobile-nav-btn');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        header.classList.remove('mobile-nav-active');
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

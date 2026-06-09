@@ -16,17 +16,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Smooth scroll for Header Navigation
-    const navLinks = document.querySelectorAll('.nav-link');
-    navLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
+    // Global Page Transition & Smooth Scroll Logic
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if (!link) return;
+        
+        const href = link.getAttribute('href');
+        if (!href) return;
+        
+        // Handle Hash Links (Smooth Scroll on same page)
+        if (href.startsWith('#')) {
             e.preventDefault();
-            const targetId = link.getAttribute('href').substring(1);
+            const targetId = href.substring(1);
             const targetSection = document.getElementById(targetId);
             if (targetSection) {
                 targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
-        });
+            return;
+        }
+        
+        // Handle Cross-Page Hash Links (e.g., index.html#how-it-guides)
+        if (href.includes('.html#')) {
+            const [page, hash] = href.split('#');
+            // If we are already on that page, just scroll
+            if (window.location.pathname.endsWith(page)) {
+                e.preventDefault();
+                const targetSection = document.getElementById(hash);
+                if (targetSection) {
+                    targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                return;
+            }
+        }
+        
+        // Handle Internal Page Links (Smooth Fade Transition)
+        const isInternal = link.host === window.location.host;
+        const isBlank = link.target === '_blank';
+        const isJs = href.startsWith('javascript:');
+        
+        if (isInternal && !isBlank && !isJs) {
+            e.preventDefault();
+            document.body.classList.add('page-exit');
+            setTimeout(() => {
+                window.location.href = href;
+            }, 250); // Matches fadeOutPage CSS duration
+        }
     });
 
     // Header Sign In Redirect
