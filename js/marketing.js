@@ -49,18 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Handle Internal Page Links (Smooth Fade Transition)
-        const isInternal = link.host === window.location.host;
-        const isBlank = link.target === '_blank';
-        const isJs = href.startsWith('javascript:');
-        
-        if (isInternal && !isBlank && !isJs) {
-            e.preventDefault();
-            document.body.classList.add('page-exit');
-            setTimeout(() => {
-                window.location.href = href;
-            }, 250); // Matches fadeOutPage CSS duration
-        }
+        // Internal page links are allowed to navigate natively (instant response)
     });
 
     // Header Sign In Redirect

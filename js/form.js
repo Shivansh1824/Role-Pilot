@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             .maybeSingle();
 
         if (profile && profile.username && profile.avatar_url) {
-            window.location.href = 'dashboard.html';
+            window.location.href = 'index.html#live-dashboard';
             return;
         }
 
@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (error) throw error;
 
             // Direct to dashboard
-            window.location.href = 'dashboard.html';
+            window.location.href = 'index.html#live-dashboard';
 
         } catch (error) {
             console.error("Profile submit error:", error);

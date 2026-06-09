@@ -175,7 +175,7 @@ otpForm.addEventListener('submit', async (e) => {
 
         let redirectUrl = 'form.html';
         if (profile && profile.username && profile.avatar_url) {
-            redirectUrl = 'dashboard.html';
+            redirectUrl = 'index.html#live-dashboard';
         }
 
         continueBtn.dataset.redirect = redirectUrl;
