@@ -57,13 +57,20 @@
             <nav class="header-nav">
                 <a href="#how-it-guides" class="nav-link">How it Works</a>
                 <a href="#live-dashboard" class="nav-link">Live Demo</a>
+                <div class="mobile-only-actions">
+                    <a href="form.html" class="btn-secondary-outline mobile-nav-btn">Sign In</a>
+                    <a href="form.html" class="btn btn-header mobile-nav-btn">Get Started</a>
+                </div>
             </nav>
         </div>
 
         <div class="header-actions">
             <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
             <a href="form.html" id="header-signin-btn" class="btn-secondary-outline">Sign In</a>
-            <a href="form.html" class="btn btn-header">Get Started</a>
+            <a href="form.html" class="btn btn-header header-signup-desktop">Get Started</a>
+            <button class="mobile-menu-toggle" aria-label="Toggle Mobile Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
         </div>
     </header>
 
@@ -392,41 +399,75 @@
 
         <!-- Review Matrix Section -->
         <section class="review-matrix-section">
-            <div class="section-header">
-                <h2>Real Results from <span class="gradient-text">Top Candidates</span></h2>
-                <p>See how engineers are utilizing Role-Pilot to fast-track their careers.</p>
+            <!-- Top Header & Metrics Row -->
+            <div class="review-matrix-header-row">
+                <div class="matrix-header-left">
+                    <h2>Real Results from <br><span class="gradient-text">Top Candidates</span></h2>
+                    <p>See the direct impact Role-Pilot has on interview performance, resumes, and preparation speed.</p>
+                </div>
+                <div class="matrix-header-right">
+                    <div class="header-metric-item">
+                        <span class="header-metric-num">94%</span>
+                        <span class="header-metric-label">Pass Rate</span>
+                    </div>
+                    <div class="header-metric-item">
+                        <span class="header-metric-num">50k+</span>
+                        <span class="header-metric-label">Mock Sessions</span>
+                    </div>
+                    <div class="header-metric-item">
+                        <span class="header-metric-num">88%</span>
+                        <span class="header-metric-label">ATS Score</span>
+                    </div>
+                    <div class="header-metric-item">
+                        <span class="header-metric-num">3.2x</span>
+                        <span class="header-metric-label">Prep Speedup</span>
+                    </div>
+                </div>
             </div>
-            <div class="review-grid">
+
+            <!-- Bottom Testimonials Row -->
+            <div class="review-grid-horizontal">
+                <!-- Card 1 (Female Photo) -->
                 <div class="review-card">
                     <div class="review-metric-badge success">ATS Score: 62% → 94%</div>
-                    <p class="review-text">"The ATS tailoring highlighted exactly what was missing in my resume. I fixed my keywords and landed a Backend Offer within two weeks."</p>
+                    <p class="review-text">"Role-Pilot's structural diagnostics pinpointed the exact system design gaps in my resume. The auto-tailoring helped me land my Meta offer within two weeks."</p>
                     <div class="review-author">
-                        <div class="author-avatar">SD</div>
+                        <div class="author-img-wrapper">
+                            <img src="images/avatar_female.png" alt="Sarah D." class="author-img">
+                        </div>
                         <div class="author-info">
                             <span class="author-name">Sarah D.</span>
-                            <span class="author-role">Backend Engineer</span>
+                            <span class="author-role">Backend Engineer at Meta</span>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Card 2 (Male Photo) -->
                 <div class="review-card">
                     <div class="review-metric-badge info">Mock Pass Rate: 95%</div>
-                    <p class="review-text">"The TruGen AI avatars are incredibly realistic. The feedback on my speaking clarity and filler words completely transformed my communication style."</p>
+                    <p class="review-text">"The voice-interactive AI avatars felt identical to my actual technical and behavioral loops at Stripe. The real-time STAR method coaching is unmatched."</p>
                     <div class="review-author">
-                        <div class="author-avatar">MK</div>
+                        <div class="author-img-wrapper">
+                            <img src="images/avatar_male.png" alt="Michael K." class="author-img">
+                        </div>
                         <div class="author-info">
                             <span class="author-name">Michael K.</span>
-                            <span class="author-role">Fullstack Developer</span>
+                            <span class="author-role">Fullstack Developer at Stripe</span>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Card 3 (Onboarding Dicebear Avatar style) -->
                 <div class="review-card">
                     <div class="review-metric-badge warning">Ranked Top 5</div>
-                    <p class="review-text">"The global leaderboard is a game changer. Top rankers are landing jobs easily because recruiters can verify our coding complexity scores instantly."</p>
+                    <p class="review-text">"The global leaderboard is a massive unfair advantage. Recruiters fast-tracked my pipeline immediately after verifying my automated Big-O complexity scores."</p>
                     <div class="review-author">
-                        <div class="author-avatar">AT</div>
+                        <div class="author-img-wrapper onboarding-style-avatar">
+                            <img src="https://api.dicebear.com/7.x/personas/svg?seed=Alex&backgroundColor=transparent" alt="Alex T." class="author-img">
+                        </div>
                         <div class="author-info">
                             <span class="author-name">Alex T.</span>
-                            <span class="author-role">Frontend Engineer</span>
+                            <span class="author-role">Frontend Engineer at Vercel</span>
                         </div>
                     </div>
                 </div>
@@ -472,10 +513,106 @@
 
     </main>
 
-    <!-- Ultra Minimalist Footer -->
-    <footer class="minimalist-footer">
-        <p>© 2026 Role-Pilot — Built for ambitious humans.</p>
+    <!-- Premium Footer -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- Column 1: Brand -->
+                <div class="footer-brand-col">
+                    <a href="index.html" class="logo-wrapper">
+                        <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                            <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                            <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                            <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                            <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                            <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                        </svg>
+                        <span class="logo-text">Role<span>Pilot</span></span>
+                    </a>
+                    <p class="footer-pitch">Master technical interviews, optimize your ATS compatibility, and climb the recruiter-facing global leaderboard using voice-adaptive AI agents.</p>
+                    <div class="footer-socials">
+                        <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+                        <a href="#" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Column 2: Product -->
+                <div class="footer-links-col">
+                    <h3>Product</h3>
+                    <ul>
+                        <li><a href="form.html">AI Mock Interviews</a></li>
+                        <li><a href="form.html">ATS Compatibility</a></li>
+                        <li><a href="form.html">Resume Tailoring</a></li>
+                        <li><a href="dashboard.html">Coding Arena</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 3: Resources -->
+                <div class="footer-links-col">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="#">System Design Guide</a></li>
+                        <li><a href="dashboard.html">Global Leaderboard</a></li>
+                        <li><a href="#">Developer Documentation</a></li>
+                        <li><a href="#">API Status</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 4: Company -->
+                <div class="footer-links-col">
+                    <h3>Company</h3>
+                    <ul>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2026 Role-Pilot. All rights reserved. Built for modern engineers.</p>
+                <div class="footer-bottom-links">
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Cookies</a>
+                </div>
+            </div>
+        </div>
     </footer>
+
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const header = document.querySelector('.app-header');
+            
+            if (menuToggle && header) {
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    header.classList.toggle('mobile-nav-active');
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (header.classList.contains('mobile-nav-active') && !header.contains(e.target)) {
+                        header.classList.remove('mobile-nav-active');
+                    }
+                });
+                
+                // Close menu when clicking navigation links
+                const navLinks = header.querySelectorAll('.nav-link, .mobile-nav-btn');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        header.classList.remove('mobile-nav-active');
+                    });
+                });
+            }
+        });
+    </script>
 
     <!-- Scripts -->
     <script type="module" src="js/dashboard-preview.js"></script>
