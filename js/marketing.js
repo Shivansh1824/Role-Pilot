@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (headerSignInBtn) {
         headerSignInBtn.addEventListener('click', () => {
             // Redirect to the dedicated auth page
-            window.location.href = 'form.html';
+            window.location.href = 'login.html';
         });
     }
 

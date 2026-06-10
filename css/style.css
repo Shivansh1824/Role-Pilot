@@ -3539,3 +3539,166 @@ body.page-exit {
     color: var(--text-primary);
     font-weight: 600;
 }
+
+/* ========================================================= */
+/* 2026 LOGIN PAGE REDESIGN                                  */
+/* ========================================================= */
+
+.login-page {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.login-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background: transparent;
+    border-bottom: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.login-split-container {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    height: 100%;
+}
+
+.login-left-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 5rem;
+    position: relative;
+    z-index: 2;
+}
+
+.login-brand-content {
+    max-width: 600px;
+}
+
+.login-brand-content h1 {
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    margin: 1.5rem 0;
+}
+
+.login-brand-content p {
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+}
+
+.login-trust-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.login-trust-metrics .metric {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+}
+
+.login-trust-metrics .metric i {
+    color: var(--success);
+    font-size: 1.1rem;
+}
+
+.login-right-panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.login-auth-card {
+    width: 100%;
+    max-width: 440px;
+    padding: 3rem 2.5rem;
+    background: var(--panel-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-outer);
+    box-shadow: var(--shadow-layered);
+}
+
+.login-auth-card .google-btn {
+    width: 100%;
+    height: 48px;
+    margin-bottom: 1.5rem;
+}
+
+.login-auth-card .auth-switch {
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.login-auth-card .auth-switch a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.login-auth-card .auth-switch a:hover {
+    color: var(--primary-hover);
+}
+
+/* Visibility toggle button for passwords */
+.password-toggle {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.password-toggle:hover {
+    color: var(--text-primary);
+}
+
+@media (max-width: 1024px) {
+    .login-left-panel {
+        display: none;
+    }
+    .login-right-panel {
+        padding: 6rem 1.5rem 2rem; /* Add top padding to account for absolute header */
+    }
+    .login-header {
+        background: rgba(11, 15, 25, 0.2);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    :root.light-theme .login-header {
+        background: rgba(255, 255, 255, 0.3);
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+}

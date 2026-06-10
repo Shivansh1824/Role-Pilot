@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Inline Theme Script -->
+    <script>
+      (function() {
+          const currentTheme = localStorage.getItem('theme') || 'dark';
+          if (currentTheme === 'light') {
+              document.documentElement.classList.add('light-theme');
+          } else {
+              document.documentElement.classList.remove('light-theme');
+          }
+      })();
+    </script>
+    <script src="js/theme.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Login - Role-Pilot</title>
+</head>
+<body class="login-page">
+    <div class="bg-layers">
+        <div class="bg-layer dark-bg"></div>
+        <div class="bg-layer light-bg"></div>
+    </div>
+    <div class="landing-overlay"></div>
+    
+    <header class="app-header login-header">
+        <a href="index.html" class="logo-wrapper">
+            <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="var(--primary)" />
+                        <stop offset="100%" stop-color="var(--accent)" />
+                    </linearGradient>
+                </defs>
+                <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+            </svg>
+            <span class="logo-text">Role<span>Pilot</span></span>
+        </a>
+        <div class="header-actions">
+            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+        </div>
+    </header>
+
+    <main class="login-split-container">
+        <!-- Left Panel: Branding & Value Prop -->
+        <div class="login-left-panel">
+            <div class="login-brand-content">
+                <div class="hero-badge">
+                    <i class="fa-solid fa-robot"></i> AI Interview Copilot
+                </div>
+                <h1>Master the technical interview with <br><span>real-time AI feedback.</span></h1>
+                <p>Overcome interview anxiety. Practice in a realistic, low-stakes environment, share your code context, and get constructive feedback before your actual assessment.</p>
+                <div class="login-trust-metrics">
+                    <div class="metric"><i class="fa-solid fa-check"></i> Instant ATS Diagnostics</div>
+                    <div class="metric"><i class="fa-solid fa-check"></i> Voice-Interactive Mock Interviews</div>
+                    <div class="metric"><i class="fa-solid fa-check"></i> Global Recruiter Leaderboard</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Auth Card -->
+        <div class="login-right-panel">
+            <div class="glass-card login-auth-card">
+                
+                <!-- Toast Notification Box -->
+                <div id="alert-box" class="alert-box" style="display: none;">
+                    <i id="alert-icon" class="fa-solid alert-icon"></i>
+                    <span id="alert-message"></span>
+                </div>
+
+                <div class="auth-header">
+                    <h2 id="auth-title">Welcome to Role<span>Pilot</span></h2>
+                    <p id="auth-subtitle">Sign in to access your<br>AI career navigator.</p>
+                </div>
+
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="email-input">Email address</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-envelope input-icon"></i>
+                            <input type="email" id="email-input" class="input-control" placeholder="you@example.com" required autocomplete="email">
+                        </div>
+                        <div id="email-suggestion" class="email-suggestion" style="display: none;">
+                            Did you mean <span id="suggestion-link" class="suggestion-link"></span>?
+                        </div>
+                        <div id="auth-error" class="input-error-msg" style="display: none;"></div>
+                    </div>
+
+                    <div class="form-group" id="name-group" style="display: none; height: 0; overflow: hidden; opacity: 0; transition: all 0.3s ease;">
+                        <label for="name-input">Full name</label>
+                        <div class="input-wrapper">
+                            <i class="fa-regular fa-user input-icon"></i>
+                            <input type="text" id="name-input" class="input-control" placeholder="John Doe" autocomplete="name" tabindex="-1">
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="password-group" style="display: none; height: 0; overflow: hidden; opacity: 0; transition: all 0.3s ease;">
+                        <label for="password-input">Password</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="password-input" class="input-control" placeholder="••••••••" autocomplete="current-password" tabindex="-1">
+                            <button type="button" class="password-toggle" id="password-toggle" aria-label="Toggle password visibility">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="auth-submit-btn" class="btn">
+                        <span>Continue</span>
+                        <div class="spinner" id="auth-spinner" style="display: none;"></div>
+                    </button>
+                </form>
+
+                <div class="divider">
+                    <span>or</span>
+                </div>
+
+                <button type="button" id="google-signin-btn" class="google-btn">
+                    <i class="fa-brands fa-google"></i> Continue with Google
+                </button>
+
+                <p class="auth-switch">
+                    <span id="auth-switch-text">Don't have an account?</span> 
+                    <a href="#" id="auth-switch-action">Create one</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="js/login.js"></script>
+</body>
+</html>
