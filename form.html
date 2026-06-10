@@ -25,7 +25,7 @@
     <!-- Supabase JS Client Library CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="landing-body">
+<body class="landing-body form-page">
     <div class="bg-layers">
         <div class="bg-layer dark-bg"></div>
         <div class="bg-layer light-bg"></div>
@@ -52,8 +52,8 @@
         </a>
         <div class="header-center"></div>
         <div class="header-actions">
+            <a href="index.html" class="back-home-btn"><i class="fa-solid fa-arrow-left"></i> <span>Back to Home</span></a>
             <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
-            <button id="header-signin-btn" class="btn-secondary-outline">Sign In</button>
         </div>
     </header>
 
@@ -67,10 +67,68 @@
                 <h1>Personalize your <br><span>AI Navigator.</span></h1>
                 <p>We use your target role, experience level, and core skills to calibrate your AI interview agents and custom-tailor your ATS benchmarks.</p>
                 
-                <div class="login-trust-metrics" style="margin-top: 2rem;">
-                    <div class="metric"><i class="fa-solid fa-check"></i> Define Professional Identity</div>
-                    <div class="metric"><i class="fa-solid fa-check"></i> Select Target Career Role</div>
-                    <div class="metric"><i class="fa-solid fa-check"></i> Calibrate Skill Matrix</div>
+                <!-- 2026 Glassmorphic Calibration Widget -->
+                <div class="login-preview-widget form-preview-widget">
+                    <div class="widget-header">
+                        <div class="widget-title">
+                            <span class="status-pulse-dot warning-pulse"></span>
+                            <span>AI Profile Calibration</span>
+                        </div>
+                        <span class="widget-mode">In Progress</span>
+                    </div>
+                    <div class="widget-body">
+                        <div class="calibration-stats">
+                            <div class="calib-item">
+                                <div class="calib-label">
+                                    <span>Technical Assessment Index</span>
+                                    <span>94%</span>
+                                </div>
+                                <div class="calib-progress-bar">
+                                    <div class="calib-progress-fill" style="width: 94%;"></div>
+                                </div>
+                            </div>
+                            <div class="calib-item">
+                                <div class="calib-label">
+                                    <span>Communication & Clarity</span>
+                                    <span>89%</span>
+                                </div>
+                                <div class="calib-progress-bar">
+                                    <div class="calib-progress-fill" style="width: 89%; background: var(--accent);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Floating metrics badges -->
+                    <div class="floating-metric metric-ats">
+                        <i class="fa-solid fa-briefcase"></i>
+                        <div>
+                            <span class="metric-label">Role Target</span>
+                            <span class="metric-value">Software Eng</span>
+                        </div>
+                    </div>
+                    <div class="floating-metric metric-xp">
+                        <i class="fa-solid fa-circle-nodes"></i>
+                        <div>
+                            <span class="metric-label">Skill Index</span>
+                            <span class="metric-value">Calibrated</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="login-trust-metrics-cards">
+                    <div class="metric-card">
+                        <i class="fa-solid fa-user-gear"></i>
+                        <span>Identity Profile</span>
+                    </div>
+                    <div class="metric-card">
+                        <i class="fa-solid fa-crosshairs"></i>
+                        <span>Target Role</span>
+                    </div>
+                    <div class="metric-card">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>Skill Calibration</span>
+                    </div>
                 </div>
             </div>
         </div>
