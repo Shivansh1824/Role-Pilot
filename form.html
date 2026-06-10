@@ -50,132 +50,34 @@
             </svg>
             <span class="logo-text">Role<span>Pilot</span></span>
         </a>
+        <div class="header-center"></div>
         <div class="header-actions">
             <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
             <button id="header-signin-btn" class="btn-secondary-outline">Sign In</button>
         </div>
     </header>
 
-    <main class="landing-container">
-        <!-- Left Column: Interactive Feature Previews (Maintains Layout Symmetry) -->
-        <div class="landing-content">
-            <section class="landing-hero">
+    <main class="login-split-container">
+        <!-- Left Column: Narrative -->
+        <div class="login-left-panel">
+            <div class="login-brand-content">
                 <div class="hero-badge">
-                    <i class="fa-solid fa-robot"></i> AI Interview Copilot
+                    <i class="fa-solid fa-sliders"></i> System Calibration
                 </div>
-                <h1>Navigate your career with <br><span>AI precision.</span></h1>
-                <p>Prepare for role-specific interviews with live agents, verify your ATS score, and generate custom learning paths to land your dream job.</p>
-            </section>
-
-            <!-- Unified Application Mockup Window -->
-            <div class="app-mockup-window">
-                <div class="mockup-header">
-                    <div class="window-dots">
-                        <div class="window-dot red"></div>
-                        <div class="window-dot yellow"></div>
-                        <div class="window-dot green"></div>
-                    </div>
-                    <div class="window-title">Role-Pilot Copilot v1.0 - Mock Interview Simulator</div>
-                    <div style="width: 52px;"></div> <!-- Visual balance spacer -->
-                </div>
-                <div class="mockup-body">
-                    <!-- Panel 1: AI Interviewer -->
-                    <div class="mockup-panel">
-                        <div class="panel-header">
-                            <div class="panel-title">
-                                <i class="fa-solid fa-microphone-lines" style="color: var(--primary);"></i>
-                                <span>Interviewer Agent</span>
-                            </div>
-                            <div class="panel-status">
-                                <div class="spinner" style="display: block; width: 8px; height: 8px; border-width: 1.5px; border-top-color: var(--success);"></div>
-                                <span>Live Evaluation</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Dynamic Waveform Simulation -->
-                        <div class="waveform-container">
-                            <div class="wave-bar"></div>
-                            <div class="wave-bar"></div>
-                            <div class="wave-bar"></div>
-                            <div class="wave-bar"></div>
-                            <div class="wave-bar"></div>
-                            <div class="wave-bar"></div>
-                            <div class="wave-bar"></div>
-                            <div class="wave-bar"></div>
-                            <div class="wave-bar"></div>
-                            <div class="wave-bar"></div>
-                        </div>
-                        
-                        <div class="transcript-preview">
-                            <div class="transcript-label">Live Transcript</div>
-                            "Q: Describe a time you had to optimize SQL queries..."
-                        </div>
-
-                        <div class="metric-row">
-                            <span>Fluency & Tone</span>
-                            <span class="metric-value">92% (Excellent)</span>
-                        </div>
-                    </div>
-
-                    <!-- Panel 2: Career Roadmap & ATS -->
-                    <div class="mockup-panel">
-                        <div class="panel-header">
-                            <div class="panel-title">
-                                <i class="fa-solid fa-route" style="color: var(--accent);"></i>
-                                <span>Career Planner</span>
-                            </div>
-                            
-                            <!-- Circular ATS score dial -->
-                            <div class="ats-chart-wrapper">
-                                <div class="circle-chart">
-                                    <svg width="60" height="60" viewBox="0 0 36 36">
-                                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <path class="circle-fill" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                    </svg>
-                                    <div class="circle-percentage">84%</div>
-                                </div>
-                                <div class="ats-label">
-                                    <span class="ats-score-text">ATS Fit</span>
-                                    <span class="ats-status">Ready</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Steps Timeline -->
-                        <div class="roadmap-steps">
-                            <div class="roadmap-step complete">
-                                <span>Analyze target role requirements</span>
-                            </div>
-                            <div class="roadmap-step complete">
-                                <span>Upload resume & check compatibility</span>
-                            </div>
-                            <div class="roadmap-step active">
-                                <span>Practice mock interview sessions</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Built With Logos (Secondary/Integrated style) -->
-            <div class="built-with">
-                <div class="built-with-text">Integrating Core Technologies</div>
-                <div class="tech-badges">
-                    <div class="tech-badge">
-                        <i class="fa-brands fa-google"></i>
-                        <span>Google Gemini AI</span>
-                    </div>
-                    <div class="tech-badge">
-                        <i class="fa-solid fa-robot"></i>
-                        <span>Trugen Interview AI</span>
-                    </div>
+                <h1>Personalize your <br><span>AI Navigator.</span></h1>
+                <p>We use your target role, experience level, and core skills to calibrate your AI interview agents and custom-tailor your ATS benchmarks.</p>
+                
+                <div class="login-trust-metrics" style="margin-top: 2rem;">
+                    <div class="metric"><i class="fa-solid fa-check"></i> Define Professional Identity</div>
+                    <div class="metric"><i class="fa-solid fa-check"></i> Select Target Career Role</div>
+                    <div class="metric"><i class="fa-solid fa-check"></i> Calibrate Skill Matrix</div>
                 </div>
             </div>
         </div>
 
         <!-- Right Column: Interactive Onboarding Card -->
-        <div class="landing-auth-wrapper">
-            <div class="glass-card" style="padding: 2.5rem 2rem;">
+        <div class="login-right-panel">
+            <div class="glass-card login-auth-card" style="padding: 2.5rem 2rem; max-width: 680px; width: 100%;">
                 <div class="auth-header" style="margin-bottom: 1.5rem;">
                     <h2>Complete Profile</h2>
                     <p>Let's personalize your career navigator.</p>
@@ -191,35 +93,55 @@
                         <input type="hidden" id="selected-avatar" required>
                     </div>
 
-                    <!-- Real Name -->
-                    <div class="form-group">
-                        <label for="onboarding-name">Real Name</label>
-                        <div class="input-wrapper">
-                            <input type="text" id="onboarding-name" class="input-control" placeholder="John Doe" required style="padding-left: 16px;">
+                    <div class="form-row">
+                        <!-- Real Name -->
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="onboarding-name">Real Name</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="onboarding-name" class="input-control" placeholder="John Doe" required style="padding-left: 16px;">
+                            </div>
+                        </div>
+
+                        <!-- Username -->
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="onboarding-username">Username</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="onboarding-username" class="input-control" placeholder="john_doe" required style="padding-left: 16px;">
+                            </div>
+                            <div id="username-status" class="input-status-msg"></div>
                         </div>
                     </div>
 
-                    <!-- Username -->
-                    <div class="form-group">
-                        <label for="onboarding-username">Username</label>
-                        <div class="input-wrapper">
-                            <input type="text" id="onboarding-username" class="input-control" placeholder="john_doe" required style="padding-left: 16px;">
+                    <div class="form-row">
+                        <!-- Target Role Dropdown -->
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Target Career Role</label>
+                            <div class="custom-dropdown" id="role-dropdown">
+                                <div class="dropdown-selected" id="role-dropdown-selected">
+                                    <span class="placeholder">Select target role</span>
+                                </div>
+                                <div class="dropdown-options" id="role-dropdown-options">
+                                    <!-- Roles injected via JS -->
+                                </div>
+                            </div>
+                            <input type="hidden" id="selected-role" required>
                         </div>
-                        <div id="username-status" class="input-status-msg"></div>
-                    </div>
 
-                    <!-- Target Role Dropdown -->
-                    <div class="form-group">
-                        <label>Target Career Role</label>
-                        <div class="custom-dropdown" id="role-dropdown">
-                            <div class="dropdown-selected" id="role-dropdown-selected">
-                                <span class="placeholder">Select target role</span>
-                            </div>
-                            <div class="dropdown-options" id="role-dropdown-options">
-                                <!-- Roles injected via JS -->
+                        <!-- Key Skills tagging input -->
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Key Skills (Optional)</label>
+                            <div class="custom-dropdown" id="skills-dropdown">
+                                <div class="skills-selector-wrapper" id="skills-wrapper">
+                                    <!-- Tags will be dynamically injected here -->
+                                    <input type="text" id="skills-input" placeholder="Type a skill and press Enter" autocomplete="off">
+                                </div>
+                                <div class="dropdown-options" id="skills-dropdown-options">
+                                    <div class="dropdown-list-container" id="skills-list-container">
+                                        <!-- Predefined skills injected via JS -->
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <input type="hidden" id="selected-role" required>
                     </div>
 
                     <!-- Experience Level -->
@@ -248,15 +170,6 @@
                             </div>
                         </div>
                         <input type="hidden" id="selected-experience" required>
-                    </div>
-
-                    <!-- Key Skills tagging input -->
-                    <div class="form-group">
-                        <label>Key Skills (Optional)</label>
-                        <div class="skills-selector-wrapper" id="skills-wrapper">
-                            <!-- Tags will be dynamically injected here -->
-                            <input type="text" id="skills-input" placeholder="Type a skill and press Enter">
-                        </div>
                     </div>
 
                     <button type="submit" class="btn" id="onboarding-submit" disabled style="margin-top: 1rem;">

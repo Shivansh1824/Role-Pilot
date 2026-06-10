@@ -1787,6 +1787,17 @@ h1, h2, h3, h4 {
     text-decoration: line-through;
 }
 
+/* Onboarding & Landing Main Container */
+.landing-container {
+    position: relative;
+    z-index: 2; /* Renders above the .landing-overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: calc(100vh - 80px); /* Account for header */
+}
+
 /* Frosted glass authentication card container */
 .landing-auth-wrapper {
     display: flex;
@@ -1949,8 +1960,16 @@ h1, h2, h3, h4 {
 }
 
 :root.light-theme .input-control {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    color: var(--text-primary);
+}
+
+:root.light-theme .input-control:focus {
     background: #ffffff;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15), inset 0 1px 2px rgba(0,0,0,0.02);
 }
 
 .input-control::placeholder {
@@ -2199,20 +2218,65 @@ h1, h2, h3, h4 {
 
 /* Onboarding form styling */
 .avatar-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 10px;
-    margin: 12px 0 20px 0;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 14px;
+    padding-bottom: 12px;
+    margin: 16px 0 24px 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
 }
 
-@media (max-width: 480px) {
-    .avatar-grid {
-        grid-template-columns: repeat(4, 1fr);
+.avatar-grid::-webkit-scrollbar {
+    height: 6px;
+}
+
+.avatar-grid::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.avatar-grid::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+        margin-bottom: 0;
+    }
+    .form-row .form-group {
+        margin-bottom: 24px !important;
     }
 }
 
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+
 .avatar-option {
+    flex: 0 0 72px;
     aspect-ratio: 1;
+    scroll-snap-align: start;
     border: 2px solid var(--glass-border);
     border-radius: 12px;
     padding: 4px;
@@ -2326,6 +2390,13 @@ h1, h2, h3, h4 {
     gap: 12px;
     transition: var(--transition);
     font-size: 0.95rem;
+    overflow: hidden;
+}
+
+.dropdown-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .dropdown-item:hover {
@@ -2346,6 +2417,7 @@ h1, h2, h3, h4 {
     background: var(--glass-border);
     color: var(--text-primary);
     font-size: 0.8rem;
+    flex-shrink: 0;
 }
 
 .dropdown-selected .placeholder {
@@ -2355,9 +2427,15 @@ h1, h2, h3, h4 {
 /* Experience Level Selector (Premium Cards) */
 .experience-level-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-top: 6px;
+}
+
+@media (max-width: 640px) {
+    .experience-level-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 .experience-card {
@@ -2367,7 +2445,7 @@ h1, h2, h3, h4 {
     padding: 14px;
     text-align: center;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2381,6 +2459,8 @@ h1, h2, h3, h4 {
 
 .experience-card:hover {
     border-color: var(--text-muted);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .experience-card.selected {
@@ -2751,6 +2831,12 @@ h1, h2, h3, h4 {
     flex-direction: column;
 }
 
+.dashboard-pane.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
 .custom-dropdown.open .dropdown-options {
     opacity: 1;
     visibility: visible;
@@ -2765,7 +2851,9 @@ h1, h2, h3, h4 {
     gap: 10px;
     position: sticky;
     top: 0;
-    background: var(--panel-bg);
+    background: var(--bg-color);
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
     z-index: 10;
 }
 
@@ -2789,8 +2877,7 @@ h1, h2, h3, h4 {
 }
 
 .dropdown-list-container {
-    max-height: 240px;
-    overflow-y: auto;
+    padding-bottom: 8px;
 }
 
 .dropdown-list-container::-webkit-scrollbar {

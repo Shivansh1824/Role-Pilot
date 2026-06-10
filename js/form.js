@@ -155,7 +155,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         { id: 'devops', name: 'DevOps Engineer', icon: 'fa-cloud' },
         { id: 'mobile_developer', name: 'Mobile Developer', icon: 'fa-mobile-screen-button' },
         { id: 'qa_engineer', name: 'QA Engineer', icon: 'fa-bug' },
-        { id: 'security_analyst', name: 'Cybersecurity Analyst', icon: 'fa-shield-halved' }
+        { id: 'security_analyst', name: 'Cybersecurity Analyst', icon: 'fa-shield-halved' },
+        { id: 'customer_support', name: 'Customer Support', icon: 'fa-headset' },
+        { id: 'call_agent', name: 'Call Agent / Telesales', icon: 'fa-phone-volume' },
+        { id: 'client_relations', name: 'Client Relations Manager', icon: 'fa-handshake' }
     ];
 
     const populateRoles = () => {
