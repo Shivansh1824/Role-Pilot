@@ -434,33 +434,33 @@ loginForm.addEventListener('submit', async (e) => {
                                 margin: 1.5rem 0;
                             }
                             .otp-field {
-                                width: 2.2rem;
-                                height: 3rem;
-                                font-size: 1.35rem;
+                                width: 2.5rem;
+                                height: 3.2rem;
+                                font-size: 1.4rem;
                                 font-weight: 700;
                                 text-align: center;
-                                background: rgba(0, 0, 0, 0.2);
-                                border: 1px solid rgba(255, 255, 255, 0.1);
-                                border-radius: 10px;
+                                background: rgba(10, 16, 32, 0.35);
+                                border: 1px solid rgba(255, 255, 255, 0.08);
+                                border-radius: 12px;
                                 color: #ffffff;
                                 outline: none;
                                 transition: all 0.2s ease;
                             }
                             .otp-field:focus {
-                                background: rgba(0, 0, 0, 0.3);
+                                background: rgba(10, 16, 32, 0.5);
                                 border-color: var(--primary);
-                                box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+                                box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15);
                             }
                             
                             :root.light-theme .otp-field {
-                                background: #ffffff;
-                                border: 1px solid rgba(0, 0, 0, 0.15);
+                                background: rgba(248, 250, 252, 0.85);
+                                border: 1px solid rgba(15, 23, 42, 0.08);
                                 color: #0f172a;
                             }
                             :root.light-theme .otp-field:focus {
                                 background: #ffffff;
                                 border-color: var(--primary);
-                                box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+                                box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.1);
                             }
                             
                             .otp-subtitle {
@@ -476,7 +476,7 @@ loginForm.addEventListener('submit', async (e) => {
                             
                             .otp-envelope {
                                 font-size: 3rem; 
-                                margin-bottom: 1rem;
+                                margin-bottom: 0.8rem;
                                 color: var(--text-primary);
                             }
                             :root.light-theme .otp-envelope {
@@ -488,6 +488,27 @@ loginForm.addEventListener('submit', async (e) => {
                                 font-size: 0.85rem;
                                 margin-top: 0.5rem;
                                 display: none;
+                            }
+
+                            #verify-submit-btn {
+                                height: 52px;
+                                border-radius: 14px;
+                                background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+                                box-shadow: 0 4px 18px rgba(168, 85, 247, 0.28);
+                                font-size: 1rem;
+                                font-weight: 700;
+                                border: none;
+                                color: #ffffff;
+                                cursor: pointer;
+                                transition: var(--transition);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                width: 100%;
+                            }
+                            #verify-submit-btn:hover {
+                                transform: translateY(-1.5px) scale(1.01);
+                                box-shadow: 0 6px 24px rgba(168, 85, 247, 0.45), 0 0 12px rgba(6, 182, 212, 0.2);
                             }
                         </style>
                         <div class="otp-envelope">✉️</div>
