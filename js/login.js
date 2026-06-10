@@ -198,6 +198,25 @@ async function initDb() {
     try {
         db = await getSupabaseClient();
         
+        // Check if user is already logged in to prevent showing login screen
+        const { data: { session }, error: sessionError } = await db.auth.getSession();
+        if (session && !sessionError) {
+            // Hide body to prevent any flicker of the blur screen
+            document.body.style.display = 'none';
+            const { data: profile } = await db
+                .from('profiles')
+                .select('username, avatar_url, target_role, experience_level')
+                .eq('id', session.user.id)
+                .maybeSingle();
+                
+            if (profile && profile.username && profile.avatar_url && profile.target_role && profile.experience_level) {
+                window.location.href = 'index.html#live-dashboard';
+            } else {
+                window.location.href = 'form.html';
+            }
+            return;
+        }
+
         // Check for prefilled email in URL
         const urlParams = new URLSearchParams(window.location.search);
         const prefilledEmail = urlParams.get('email');
@@ -592,11 +611,11 @@ loginForm.addEventListener('submit', async (e) => {
 
                 const { data: profile } = await db
                     .from('profiles')
-                    .select('username, avatar_url')
+                    .select('username, avatar_url, target_role, experience_level')
                     .eq('id', user.id)
                     .maybeSingle();
 
-                if (profile && profile.username && profile.avatar_url) {
+                if (profile && profile.username && profile.avatar_url && profile.target_role && profile.experience_level) {
                     window.location.href = 'index.html#live-dashboard';
                 } else {
                     window.location.href = 'form.html';

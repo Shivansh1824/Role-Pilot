@@ -31,11 +31,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const { data: profile } = await db
             .from('profiles')
-            .select('username, avatar_url, full_name')
+            .select('username, avatar_url, full_name, target_role, experience_level')
             .eq('id', user.id)
             .maybeSingle();
 
-        if (profile && profile.username && profile.avatar_url) {
+        if (profile && profile.username && profile.avatar_url && profile.target_role && profile.experience_level) {
             window.location.href = 'index.html#live-dashboard';
             return;
         }
@@ -88,11 +88,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         { grad: ['hsl(10, 80%, 50%)', 'hsl(340, 80%, 55%)'], icon: 'fa-brain' },
         { grad: ['hsl(280, 70%, 50%)', 'hsl(340, 80%, 50%)'], icon: 'fa-microscope' },
         { grad: ['hsl(180, 70%, 40%)', 'hsl(263, 70%, 50%)'], icon: 'fa-seedling' },
-        { grad: ['hsl(60, 85%, 45%)', 'hsl(142, 70%, 45%)'], icon: 'fa-chart-line' }
+        { grad: ['hsl(60, 85%, 45%)', 'hsl(142, 70%, 45%)'], icon: 'fa-chart-line' },
+        { grad: ['hsl(320, 80%, 50%)', 'hsl(220, 90%, 50%)'], icon: 'fa-bolt' },
+        { grad: ['hsl(15, 80%, 50%)', 'hsl(45, 90%, 50%)'], icon: 'fa-fire' },
+        { grad: ['hsl(240, 70%, 50%)', 'hsl(300, 70%, 50%)'], icon: 'fa-wand-magic-sparkles' }
     ];
 
     const generateAvatarsGrid = () => {
         avatarGrid.innerHTML = '';
+
+        // Add custom upload placeholder
+        const customUploadDiv = document.createElement('div');
+        customUploadDiv.className = 'avatar-option custom-upload-btn';
+        customUploadDiv.style.position = 'relative';
+        customUploadDiv.style.border = '2px dashed var(--glass-border)';
+        customUploadDiv.innerHTML = `
+            <div style="width: 100%; height: 100%; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); background: rgba(255, 255, 255, 0.02); transition: var(--transition);">
+                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--primary);"></i>
+                <span style="font-size: 0.7rem; font-weight: 600; text-align: center; line-height: 1.2;">Upload<br>Custom</span>
+            </div>
+        `;
+        customUploadDiv.addEventListener('click', () => {
+            console.log("Custom Avatar Upload Clicked! (Placeholder for R2 integration)");
+            document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+            customUploadDiv.classList.add('selected');
+            selectedAvatarInput.value = 'custom_placeholder'; 
+            validateForm();
+        });
+        avatarGrid.appendChild(customUploadDiv);
+
         avatarsInfo.forEach((avatar, index) => {
             const seed = `RolePilot_${user.id}_${index + 1}`;
             // Dicebear personas library
@@ -136,33 +160,79 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const populateRoles = () => {
         roleDropdownOptions.innerHTML = '';
-        careerRoles.forEach(role => {
-            const item = document.createElement('div');
-            item.className = 'dropdown-item';
-            item.innerHTML = `
-                <div class="role-icon-small">
-                    <i class="fa-solid ${role.icon}"></i>
-                </div>
-                <span>${role.name}</span>
-            `;
-            item.addEventListener('click', () => {
-                roleDropdownSelected.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <i class="fa-solid ${role.icon}" style="color:var(--primary);"></i>
-                        <span>${role.name}</span>
+
+        // Add Search Input once
+        const searchContainer = document.createElement('div');
+        searchContainer.className = 'dropdown-search-container';
+        searchContainer.innerHTML = `
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="role-search-input" placeholder="Search roles..." autocomplete="off">
+        `;
+        roleDropdownOptions.appendChild(searchContainer);
+
+        const listContainer = document.createElement('div');
+        listContainer.className = 'dropdown-list-container';
+        roleDropdownOptions.appendChild(listContainer);
+
+        const renderList = (filterText) => {
+            listContainer.innerHTML = '';
+            const lowerFilter = filterText.toLowerCase();
+            const filteredRoles = careerRoles.filter(role => role.name.toLowerCase().includes(lowerFilter));
+
+            if (filteredRoles.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'dropdown-item no-results';
+                noResults.style.color = 'var(--text-muted)';
+                noResults.style.cursor = 'default';
+                noResults.innerText = 'No roles found';
+                listContainer.appendChild(noResults);
+            }
+
+            filteredRoles.forEach(role => {
+                const item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.innerHTML = `
+                    <div class="role-icon-small">
+                        <i class="fa-solid ${role.icon}"></i>
                     </div>
+                    <span>${role.name}</span>
                 `;
-                selectedRoleInput.value = role.name;
-                roleDropdown.classList.remove('open');
-                validateForm();
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent dropdown from toggling again if clicking inside
+                    roleDropdownSelected.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <i class="fa-solid ${role.icon}" style="color:var(--primary);"></i>
+                            <span>${role.name}</span>
+                        </div>
+                    `;
+                    selectedRoleInput.value = role.name;
+                    roleDropdown.classList.remove('open');
+                    validateForm();
+                });
+                listContainer.appendChild(item);
             });
-            roleDropdownOptions.appendChild(item);
+        };
+
+        renderList('');
+
+        const searchInput = searchContainer.querySelector('input');
+        searchContainer.addEventListener('click', (e) => e.stopPropagation());
+        searchInput.addEventListener('click', (e) => e.stopPropagation());
+        
+        searchInput.addEventListener('input', (e) => {
+            renderList(e.target.value);
         });
     };
     populateRoles();
 
     roleDropdownSelected.addEventListener('click', () => {
         roleDropdown.classList.toggle('open');
+        if (roleDropdown.classList.contains('open')) {
+            const searchInput = document.getElementById('role-search-input');
+            if (searchInput) {
+                searchInput.focus();
+            }
+        }
     });
 
     document.addEventListener('click', (e) => {
@@ -219,9 +289,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 8. Username Check Uniqueness Debounced
     let usernameTimeout;
     
+    // Prevent typing spaces entirely
+    usernameInput.addEventListener('keydown', (e) => {
+        if (e.key === ' ') {
+            e.preventDefault();
+        }
+    });
+    
     const checkUsernameAvailability = async () => {
         const val = usernameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-        usernameInput.value = val;
+        if (usernameInput.value !== val) {
+            usernameInput.value = val;
+        }
 
         if (val.length < 3) {
             usernameStatus.textContent = 'Username must be at least 3 characters.';
