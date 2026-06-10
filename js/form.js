@@ -70,6 +70,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const skillsInput = document.getElementById('skills-input');
     const skillsWrapper = document.getElementById('skills-wrapper');
+    const skillsDropdown = document.getElementById('skills-dropdown');
+    const skillsListContainer = document.getElementById('skills-list-container');
     const signoutBtn = document.getElementById('onboarding-signout-btn');
 
     let skillsList = [];
@@ -156,6 +158,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         { id: 'mobile_developer', name: 'Mobile Developer', icon: 'fa-mobile-screen-button' },
         { id: 'qa_engineer', name: 'QA Engineer', icon: 'fa-bug' },
         { id: 'security_analyst', name: 'Cybersecurity Analyst', icon: 'fa-shield-halved' },
+        { id: 'gen_ai_engineer', name: 'Gen AI Engineer', icon: 'fa-robot' },
+        { id: 'prompt_engineer', name: 'Prompt Engineer', icon: 'fa-terminal' },
+        { id: 'mlops_engineer', name: 'MLOps Engineer', icon: 'fa-gears' },
+        { id: 'ai_product_manager', name: 'AI Product Manager', icon: 'fa-chart-pie' },
+        { id: 'ai_ethics_specialist', name: 'AI Ethics Specialist', icon: 'fa-scale-balanced' },
         { id: 'customer_support', name: 'Customer Support', icon: 'fa-headset' },
         { id: 'call_agent', name: 'Call Agent / Telesales', icon: 'fa-phone-volume' },
         { id: 'client_relations', name: 'Client Relations Manager', icon: 'fa-handshake' }
@@ -242,6 +249,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!roleDropdown.contains(e.target)) {
             roleDropdown.classList.remove('open');
         }
+        if (skillsDropdown && !skillsDropdown.contains(e.target)) {
+            skillsDropdown.classList.remove('open');
+        }
     });
 
     // 6. Experience level selector mapping
@@ -275,19 +285,84 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             skillsWrapper.insertBefore(tag, skillsInput);
         });
+
+        if (skillsList.length > 0) {
+            skillsInput.placeholder = '';
+        } else {
+            skillsInput.placeholder = 'Type a skill and press Enter';
+        }
     };
 
-    skillsInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault();
-            const value = skillsInput.value.trim().replace(/[^a-zA-Z0-9+#.\s]/g, '');
-            if (value && !skillsList.includes(value)) {
-                skillsList.push(value);
-                renderSkillTags();
-            }
-            skillsInput.value = '';
+    const PREDEFINED_SKILLS = [
+        'React', 'Node.js', 'Python', 'JavaScript', 'TypeScript',
+        'AWS', 'Docker', 'Kubernetes', 'SQL', 'MongoDB',
+        'GraphQL', 'Git', 'CI/CD', 'Go', 'Rust', 'Java', 'C++',
+        'Swift', 'Kotlin', 'Firebase', 'Supabase', 'Next.js'
+    ];
+
+    const renderSkillsDropdown = (filterText = '') => {
+        if (!skillsListContainer) return;
+        skillsListContainer.innerHTML = '';
+        const lowerFilter = filterText.toLowerCase();
+        
+        // Filter out skills that are already added
+        const availableSkills = PREDEFINED_SKILLS.filter(s => !skillsList.includes(s));
+        const filteredSkills = availableSkills.filter(s => s.toLowerCase().includes(lowerFilter));
+
+        if (filteredSkills.length === 0) {
+            const noRes = document.createElement('div');
+            noRes.className = 'dropdown-item no-results';
+            noRes.style.color = 'var(--text-muted)';
+            noRes.style.cursor = 'default';
+            noRes.innerText = filterText ? 'Press Enter to add custom skill' : 'All standard skills added';
+            skillsListContainer.appendChild(noRes);
         }
-    });
+
+        filteredSkills.forEach(skill => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.innerHTML = `<span>${skill}</span>`;
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                skillsList.push(skill);
+                renderSkillTags();
+                skillsInput.value = '';
+                skillsDropdown.classList.remove('open');
+                skillsInput.focus();
+            });
+            skillsListContainer.appendChild(item);
+        });
+    };
+
+    if (skillsInput && skillsDropdown) {
+        skillsInput.addEventListener('focus', () => {
+            skillsDropdown.classList.add('open');
+            renderSkillsDropdown(skillsInput.value);
+        });
+
+        skillsInput.addEventListener('input', (e) => {
+            skillsDropdown.classList.add('open');
+            renderSkillsDropdown(e.target.value);
+        });
+
+        skillsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                const value = skillsInput.value.trim().replace(/[^a-zA-Z0-9+#.\s-]/g, '');
+                if (value && !skillsList.includes(value)) {
+                    skillsList.push(value);
+                    renderSkillTags();
+                }
+                skillsInput.value = '';
+                skillsDropdown.classList.remove('open');
+            }
+        });
+        
+        // Ensure clicking anywhere in the wrapper focuses the input
+        skillsWrapper.addEventListener('click', () => {
+            skillsInput.focus();
+        });
+    }
 
     // 8. Username Check Uniqueness Debounced
     let usernameTimeout;
