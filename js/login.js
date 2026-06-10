@@ -17,6 +17,7 @@ const emailSuggestion = document.getElementById('email-suggestion');
 const suggestionLink = document.getElementById('suggestion-link');
 const authSubmitBtn = document.getElementById('auth-submit-btn');
 const authSpinner = document.getElementById('auth-spinner');
+const loginAuthCard = document.getElementById('login-auth-card');
 
 const authTitle = document.getElementById('auth-title');
 const authSubtitle = document.getElementById('auth-subtitle');
@@ -104,10 +105,8 @@ function checkEmailTypos(email) {
 // Expand a group element
 function expandGroup(group, input) {
     if (group) {
-        group.style.display = 'block';
-        group.style.height = 'auto';
-        group.style.opacity = '1';
-        group.style.overflow = 'visible';
+        group.classList.add('expanded');
+        group.removeAttribute('style'); // Clear any residual inline styles
     }
     if (input) {
         input.setAttribute('required', 'true');
@@ -118,10 +117,8 @@ function expandGroup(group, input) {
 // Collapse a group element
 function collapseGroup(group, input) {
     if (group) {
-        group.style.display = 'none';
-        group.style.opacity = '0';
-        group.style.height = '0';
-        group.style.overflow = 'hidden';
+        group.classList.remove('expanded');
+        group.removeAttribute('style'); // Clear any residual inline styles
     }
     if (input) {
         input.removeAttribute('required');
@@ -134,23 +131,15 @@ function collapseGroup(group, input) {
 function updateFormLayout(signUpState) {
     isSignUp = signUpState;
     
-    // Always show password if an email is valid enough to proceed, 
-    // but we can collapse it if we are fully resetting.
-    if (checkedEmail) {
-        expandGroup(passwordGroup, passwordInput);
-    } else {
-        collapseGroup(passwordGroup, passwordInput);
-    }
+    // Password is now always visible by default
     
     if (isSignUp) {
         if (authTitle) authTitle.innerHTML = 'Create Account';
-        if (authSubtitle) authSubtitle.textContent = "Welcome! We didn't find an account for this email. Let's create one.";
-        if (authSubmitBtn) {
-            const span = authSubmitBtn.querySelector('span');
-            if (span) span.textContent = 'Create Account';
-        }
+        if (authSubtitle) authSubtitle.textContent = 'Welcome! We didn\'t find an account for this email. Let\'s create one.';
+        if (authSubmitBtn) authSubmitBtn.querySelector('span').textContent = 'Create Account';
         if (authSwitchText) authSwitchText.textContent = 'Already have an account?';
-        if (authSwitchAction) authSwitchAction.textContent = 'Sign in';
+        if (authSwitchAction) authSwitchAction.textContent = 'Sign In';
+        if (loginAuthCard) loginAuthCard.classList.add('expanded-mode');
         
         expandGroup(nameGroup, nameInput);
     } else {
@@ -160,8 +149,9 @@ function updateFormLayout(signUpState) {
             const span = authSubmitBtn.querySelector('span');
             if (span) span.textContent = checkedEmail ? 'Sign In' : 'Continue';
         }
-        if (authSwitchText) authSwitchText.textContent = "Don't have an account?";
-        if (authSwitchAction) authSwitchAction.textContent = 'Create one';
+        if (authSwitchText) authSwitchText.textContent = 'Don\'t have an account?';
+        if (authSwitchAction) authSwitchAction.textContent = 'Sign Up';
+        if (loginAuthCard) loginAuthCard.classList.remove('expanded-mode');
         
         collapseGroup(nameGroup, nameInput);
     }
@@ -315,7 +305,7 @@ function resetToSignIn() {
 
 // Check triggers
 if (emailInput) {
-    emailInput.addEventListener('input', debounce(checkUserStatus, 600));
+    emailInput.addEventListener('input', debounce(checkUserStatus, 300));
     emailInput.addEventListener('blur', checkUserStatus);
 }
 
@@ -327,12 +317,7 @@ loginForm.addEventListener('submit', async (e) => {
     hideAlert();
     const email = emailInput.value.trim().toLowerCase();
     
-    // If the password field isn't visible yet, we're still checking the email
-    if (passwordGroup.style.display === 'none') {
-        emailInput.focus();
-        emailInput.blur(); // Force a check
-        return;
-    }
+    // Continue logic
 
     const password = passwordInput.value;
 
@@ -373,6 +358,21 @@ loginForm.addEventListener('submit', async (e) => {
 
         if (isSignUp) {
             const fullName = nameInput.value.trim();
+            
+            if (password.length < 6) {
+                if (authError) {
+                    authError.innerHTML = 'Password must be at least 6 characters.';
+                    authError.style.display = 'block';
+                }
+                passwordInput.classList.add('error');
+                passwordInput.focus();
+                authSubmitBtn.disabled = false;
+                authSpinner.style.display = 'none';
+                return;
+            } else {
+                passwordInput.classList.remove('error');
+            }
+
             try {
                 const { data, error } = await db.auth.signUp({
                     email: email,
@@ -389,8 +389,188 @@ loginForm.addEventListener('submit', async (e) => {
                 if (data && data.session) {
                     window.location.href = 'form.html';
                 } else {
-                    // Redirect to the separate OTP page
-                    window.location.href = 'otp.html?email=' + encodeURIComponent(email);
+                    // Show dynamic 8-digit OTP screen inside the card
+                    loginForm.style.display = 'none';
+                    
+                    const elementsToHide = ['.auth-switch', '.divider', '.auth-header', '#google-signin-btn', '#alert-box'];
+                    elementsToHide.forEach(selector => {
+                        const el = document.querySelector(selector);
+                        if (el) el.style.display = 'none';
+                    });
+                    
+                    const successState = document.createElement('div');
+                    successState.style.textAlign = 'center';
+                    successState.style.padding = '1rem 0';
+                    successState.style.animation = 'verifyFadeIn 0.5s ease-out forwards';
+                    successState.innerHTML = `
+                        <style>
+                            @keyframes verifyFadeIn {
+                                from { opacity: 0; transform: translateY(10px); }
+                                to { opacity: 1; transform: translateY(0); }
+                            }
+                            .otp-input-container {
+                                display: flex;
+                                justify-content: center;
+                                gap: 0.5rem;
+                                margin: 1.5rem 0;
+                            }
+                            .otp-field {
+                                width: 2.2rem;
+                                height: 3rem;
+                                font-size: 1.35rem;
+                                font-weight: 700;
+                                text-align: center;
+                                background: rgba(0, 0, 0, 0.2);
+                                border: 1px solid rgba(255, 255, 255, 0.1);
+                                border-radius: 10px;
+                                color: #ffffff;
+                                outline: none;
+                                transition: all 0.2s ease;
+                            }
+                            .otp-field:focus {
+                                background: rgba(0, 0, 0, 0.3);
+                                border-color: var(--primary);
+                                box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+                            }
+                            
+                            :root.light-theme .otp-field {
+                                background: #ffffff;
+                                border: 1px solid rgba(0, 0, 0, 0.15);
+                                color: #0f172a;
+                            }
+                            :root.light-theme .otp-field:focus {
+                                background: #ffffff;
+                                border-color: var(--primary);
+                                box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+                            }
+                            
+                            .otp-subtitle {
+                                color: var(--text-secondary);
+                                line-height: 1.5;
+                                font-size: 0.9rem;
+                                margin: 0;
+                            }
+                            .otp-subtitle strong {
+                                color: var(--text-primary);
+                                font-weight: 600;
+                            }
+                            
+                            .otp-envelope {
+                                font-size: 3rem; 
+                                margin-bottom: 1rem;
+                                color: var(--text-primary);
+                            }
+                            :root.light-theme .otp-envelope {
+                                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+                            }
+
+                            .otp-error-msg {
+                                color: var(--error);
+                                font-size: 0.85rem;
+                                margin-top: 0.5rem;
+                                display: none;
+                            }
+                        </style>
+                        <div class="otp-envelope">✉️</div>
+                        <h3 style="margin-bottom: 0.5rem; color: var(--primary); font-size: 1.35rem; font-weight: 700;">Verify Your Account</h3>
+                        <p class="otp-subtitle">
+                            We sent an 8-digit confirmation code to <br><strong style="font-weight: 600;">${email}</strong>.
+                        </p>
+                        
+                        <div class="otp-input-container">
+                            <input type="text" maxlength="1" class="otp-field" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-field" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-field" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-field" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-field" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-field" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-field" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                            <input type="text" maxlength="1" class="otp-field" pattern="[0-9]" inputmode="numeric" required autocomplete="off">
+                        </div>
+                        
+                        <div id="otp-error" class="otp-error-msg"></div>
+                        
+                        <button id="verify-submit-btn" type="button" class="btn" style="margin-top: 1rem; width: 100%;"><span>Verify & Sign In</span></button>
+                        
+                        <p style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+                            Didn't receive the code? <a href="#" id="verify-back-link" style="color: var(--primary); text-decoration: none; font-weight: 600;">Back to Sign In</a>
+                        </p>
+                    `;
+                    
+                    loginForm.parentElement.appendChild(successState);
+                    
+                    const otpFields = document.querySelectorAll('.otp-field');
+                    const verifyBtn = document.getElementById('verify-submit-btn');
+                    const verifyBtnSpan = verifyBtn.querySelector('span');
+                    const otpError = document.getElementById('otp-error');
+                    const backLink = document.getElementById('verify-back-link');
+                    
+                    // Automatic focus shifting behavior
+                    otpFields.forEach((field, index) => {
+                        if (index === 0) field.focus();
+                        
+                        field.addEventListener('input', (e) => {
+                            field.value = field.value.replace(/[^0-9]/g, '');
+                            if (field.value.length === 1 && index < otpFields.length - 1) {
+                                otpFields[index + 1].focus();
+                            }
+                        });
+                        
+                        field.addEventListener('keydown', (e) => {
+                            if (e.key === 'Backspace' && field.value.length === 0 && index > 0) {
+                                otpFields[index - 1].focus();
+                            }
+                        });
+                    });
+                    
+                    // Verify logic
+                    verifyBtn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        let token = "";
+                        otpFields.forEach(field => { token += field.value; });
+                        
+                        if (token.length !== 8) {
+                            otpError.textContent = "Please enter all 8 digits of the verification code.";
+                            otpError.style.display = 'block';
+                            return;
+                        }
+                        
+                        otpError.style.display = 'none';
+                        verifyBtn.disabled = true;
+                        verifyBtnSpan.textContent = 'Verifying...';
+                        
+                        try {
+                            const { data: verifyData, error: verifyError } = await db.auth.verifyOtp({
+                                email,
+                                token,
+                                type: 'signup'
+                            });
+                            
+                            verifyBtn.disabled = false;
+                            verifyBtnSpan.textContent = 'Verify & Sign In';
+                            
+                            if (verifyError) {
+                                otpError.textContent = verifyError.message || "Invalid verification code.";
+                                otpError.style.display = 'block';
+                                otpFields.forEach(field => field.style.borderColor = 'var(--error)');
+                            } else {
+                                successState.style.display = 'none';
+                                window.location.href = 'form.html';
+                            }
+                        } catch (err) {
+                            verifyBtn.disabled = false;
+                            verifyBtnSpan.textContent = 'Verify & Sign In';
+                            otpError.textContent = "An error occurred. Please try again.";
+                            otpError.style.display = 'block';
+                        }
+                    });
+                    
+                    if (backLink) {
+                        backLink.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            window.location.reload();
+                        });
+                    }
                 }
             } catch (error) {
                 showAlert('error', error.message || 'Failed to sign up. Please try again.');

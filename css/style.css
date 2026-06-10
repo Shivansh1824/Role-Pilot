@@ -1901,7 +1901,7 @@ h1, h2, h3, h4 {
     opacity: 0;
     margin-bottom: 0;
     overflow: hidden;
-    transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), margin-bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out, margin-bottom 0.3s ease-out;
 }
 
 #name-group.expanded {
@@ -3637,6 +3637,11 @@ body.page-exit {
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-outer);
     box-shadow: var(--shadow-layered);
+    transition: margin-top 0.4s ease-out, background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-auth-card.expanded-mode {
+    margin-top: 60px;
 }
 
 .login-auth-card .google-btn {
@@ -3682,6 +3687,33 @@ body.page-exit {
 
 .password-toggle:hover {
     color: var(--text-primary);
+}
+
+.input-error-msg {
+    color: var(--error);
+    text-align: center;
+    font-size: 0.9rem;
+    margin-top: 1.2rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.email-suggestion {
+    font-size: 0.85rem;
+    color: var(--success);
+    margin-top: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: opacity 0.2s ease;
+}
+
+.email-suggestion:hover {
+    opacity: 0.8;
+}
+
+.suggestion-link {
+    text-decoration: underline;
+    font-weight: 600;
 }
 
 @media (max-width: 1024px) {

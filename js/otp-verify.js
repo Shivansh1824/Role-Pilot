@@ -202,7 +202,7 @@ otpForm.addEventListener('submit', async (e) => {
 backBtn.addEventListener('click', () => {
     backBtn.disabled = true;
     backBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...';
-    window.location.href = `index.html?email=${encodeURIComponent(targetEmail)}`;
+    window.location.href = `login.html?email=${encodeURIComponent(targetEmail)}`;
 });
 
 // Continue Action
