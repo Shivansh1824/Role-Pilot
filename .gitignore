@@ -34,4 +34,4 @@ Thumbs.db
 *.sw?
 
 # Supabase CLI
-/supabase/
+# We track migrations and functions in git, but ignore branches and temp files via supabase/.gitignore
