@@ -210,7 +210,7 @@ async function initDb() {
                 .maybeSingle();
                 
             if (profile && profile.username && profile.avatar_url && profile.target_role && profile.experience_level) {
-                window.location.href = 'index.html#live-dashboard';
+                window.location.href = 'dashboard.html';
             } else {
                 window.location.href = 'form.html';
             }
@@ -637,7 +637,7 @@ loginForm.addEventListener('submit', async (e) => {
                     .maybeSingle();
 
                 if (profile && profile.username && profile.avatar_url && profile.target_role && profile.experience_level) {
-                    window.location.href = 'index.html#live-dashboard';
+                    window.location.href = 'dashboard.html';
                 } else {
                     window.location.href = 'form.html';
                 }

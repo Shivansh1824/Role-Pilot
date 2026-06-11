@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+          const currentTheme = localStorage.getItem('theme') || 'dark';
+          if (currentTheme === 'light') {
+              document.documentElement.classList.add('light-theme');
+          } else {
+              document.documentElement.classList.remove('light-theme');
+          }
+      })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Candidate Dashboard - Role-Pilot</title>
+</head>
+<body class="dashboard-page">
+    <div class="bg-layers">
+        <div class="bg-layer dark-bg"></div>
+        <div class="bg-layer light-bg"></div>
+    </div>
+    
+    <!-- Global App Header -->
+    <header class="app-header dashboard-header">
+        <div class="header-left">
+            <a href="index.html" class="logo-wrapper">
+                <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--primary)" />
+                            <stop offset="100%" stop-color="var(--accent)" />
+                        </linearGradient>
+                    </defs>
+                    <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                    <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                    <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                    <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                    <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                    <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                </svg>
+                <span class="logo-text">Role<span>Pilot</span></span>
+            </a>
+        </div>
+        
+        <div class="header-center">
+            <nav class="header-nav">
+                <ul class="dashboard-nav-tabs">
+                    <li><a href="#" class="nav-tab-link active">Dashboard</a></li>
+                    <li><a href="#" class="nav-tab-link">Coding Arena</a></li>
+                    <li><a href="#" class="nav-tab-link">Mock Interviews</a></li>
+                    <li><a href="#" class="nav-tab-link">ATS Tailor</a></li>
+                    <li><a href="#" class="nav-tab-link">Leaderboard</a></li>
+                </ul>
+            </nav>
+        </div>
+        
+        <div class="header-actions header-user-actions">
+            <div class="xp-badge">
+                <i class="fa-solid fa-bolt"></i>
+                <span id="header-xp">XP: 4,250 • Master Tier</span>
+            </div>
+            
+            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+            
+            <div class="profile-dropdown-wrapper">
+                <div class="profile-trigger" id="profile-trigger">SR</div>
+                <div class="dropdown-menu" id="profile-dropdown">
+                    <a href="#" class="dropdown-item"><i class="fa-solid fa-user-gear"></i> Profile Settings</a>
+                    <a href="#" class="dropdown-item"><i class="fa-solid fa-credit-card"></i> Billing</a>
+                    <div style="height: 1px; background: var(--glass-border); margin: 4px 0;"></div>
+                    <a href="#" class="dropdown-item" id="logout-btn" style="color: var(--error);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
+                </div>
+            </div>
+            
+            <button class="mobile-menu-toggle" id="mobile-menu-btn">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        
+        <!-- Dashboard Hero Greeting Banner -->
+        <section class="dashboard-hero">
+            <div class="greeting-content">
+                <h1 id="greeting-title">Welcome back, <span id="user-firstname">Shivansh</span> 👋</h1>
+                <p id="greeting-subtitle">Target Role: Senior Frontend Engineer • Current Level: Advanced</p>
+            </div>
+            <div class="hero-actions">
+                <a href="#" class="btn btn-primary-gradient">Start Mock Interview</a>
+                <a href="#" class="btn btn-secondary-outline">Enter Coding Arena</a>
+            </div>
+        </section>
+
+        <!-- North Star Performance Matrix -->
+        <section class="metrics-grid">
+            <div class="metric-card-glass">
+                <div class="metric-header">
+                    <span>ATS Fit Score</span>
+                    <div class="metric-icon"><i class="fa-solid fa-file-shield"></i></div>
+                </div>
+                <div class="metric-value">
+                    82%
+                    <span class="metric-trend trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +5%</span>
+                </div>
+                <div class="metric-sub">Current resume match rate</div>
+                <div class="micro-badges">
+                    <span class="micro-badge">Node.js Match: High</span>
+                </div>
+            </div>
+
+            <div class="metric-card-glass">
+                <div class="metric-header">
+                    <span>STAR Communication</span>
+                    <div class="metric-icon"><i class="fa-solid fa-comments"></i></div>
+                </div>
+                <div class="metric-value">
+                    B+ <span style="font-size: 1rem; color: var(--text-secondary);">(85%)</span>
+                </div>
+                <div class="metric-sub">Behavioral round average</div>
+                <div class="micro-badges">
+                    <span class="micro-badge">Fluent</span>
+                    <span class="micro-badge" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">Fillers: Low</span>
+                </div>
+            </div>
+
+            <div class="metric-card-glass">
+                <div class="metric-header">
+                    <span>Coding Arena Tier</span>
+                    <div class="metric-icon"><i class="fa-solid fa-code"></i></div>
+                </div>
+                <div class="metric-value">
+                    Tier 3
+                </div>
+                <div class="metric-sub">Advanced Arrays & Hashing</div>
+                <div class="micro-badges">
+                    <span class="micro-badge">32 Challenges Completed</span>
+                </div>
+            </div>
+
+            <div class="metric-card-glass">
+                <div class="metric-header">
+                    <span>Global Rank</span>
+                    <div class="metric-icon"><i class="fa-solid fa-trophy"></i></div>
+                </div>
+                <div class="metric-value">
+                    #42
+                    <span class="metric-trend trend-up"><i class="fa-solid fa-caret-up"></i> 3</span>
+                </div>
+                <div class="metric-sub">Top 5% of Frontend Candidates</div>
+                <div class="micro-badges">
+                    <span class="micro-badge"><i class="fa-solid fa-fire"></i> 7 Day Streak</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Two-Column Work Layout -->
+        <section class="dashboard-work-area">
+            
+            <!-- Left Column: Roadmap & History -->
+            <div class="panel-section">
+                <!-- Personalized AI Study Roadmap Card -->
+                <div class="glass-panel">
+                    <h2 class="panel-title"><i class="fa-solid fa-map-location-dot" style="color: var(--primary);"></i> AI Study Roadmap</h2>
+                    <div class="timeline">
+                        <div class="timeline-item active">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <h4>Optimize Resume for Node.js</h4>
+                                <p class="metric-sub">Missing key backend terminology identified in target roles.</p>
+                                <div class="timeline-action">
+                                    <button class="btn btn-secondary-outline btn-sm">Analyze Resume</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <h4>Solve 3 Arrays Challenges</h4>
+                                <p class="metric-sub">Coding Arena • Recommended to pass Tier 3.</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item locked">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <h4>STAR Interview Prep: Systems Design</h4>
+                                <p class="metric-sub">Unlocks after Tier 3 completion.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session History Tabbed System -->
+                <div class="glass-panel">
+                    <div class="tabs-header">
+                        <button class="tab-btn active" data-target="tab-mock">Mock Interviews</button>
+                        <button class="tab-btn" data-target="tab-coding">Coding Arena</button>
+                        <button class="tab-btn" data-target="tab-ats">ATS Uploads</button>
+                    </div>
+
+                    <div class="tab-content active" id="tab-mock">
+                        <div class="table-responsive">
+                            <table class="dashboard-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Topic</th>
+                                        <th>Status</th>
+                                        <th>Score</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Jun 09, 2026</td>
+                                        <td>Frontend Architecture</td>
+                                        <td><span class="status-badge status-completed">Completed</span></td>
+                                        <td>88/100</td>
+                                        <td><a href="#" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">View Feedback</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Jun 05, 2026</td>
+                                        <td>Behavioral: Conflict Res.</td>
+                                        <td><span class="status-badge status-review">Proctoring Review</span></td>
+                                        <td>Pending</td>
+                                        <td><a href="#" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">Processing</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="tab-coding">
+                        <div class="table-responsive">
+                            <table class="dashboard-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Challenge Title</th>
+                                        <th>Status</th>
+                                        <th>Time</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Jun 10, 2026</td>
+                                        <td>Two Sum (Optimized)</td>
+                                        <td><span class="status-badge status-completed">Completed</span></td>
+                                        <td>12m 45s</td>
+                                        <td><a href="#" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">Review Code</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Jun 11, 2026</td>
+                                        <td>LRU Cache Implementation</td>
+                                        <td><span class="status-badge status-progress">In Progress</span></td>
+                                        <td>--</td>
+                                        <td><a href="#" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">Resume</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="tab-ats">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <p>No past ATS analysis logs found. Upload your first resume to get started.</p>
+                            <button class="btn btn-secondary-outline btn-sm">Scan Resume</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Column: Utilities -->
+            <div class="panel-section">
+                <!-- ATS Resume Hub -->
+                <div class="glass-panel">
+                    <h2 class="panel-title"><i class="fa-solid fa-file-contract" style="color: var(--accent);"></i> ATS Tailoring Hub</h2>
+                    
+                    <div class="file-info">
+                        <i class="fa-regular fa-file-pdf file-icon"></i>
+                        <div class="file-details">
+                            <div class="file-name">Shivansh_Rana_CV.pdf</div>
+                            <div class="file-date">Uploaded on Jun 10, 2026</div>
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn btn-secondary-outline btn-sm" title="View"><i class="fa-regular fa-eye"></i></button>
+                            <button class="btn btn-secondary-outline btn-sm" style="color: var(--error); border-color: rgba(248, 113, 113, 0.3);" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary-gradient" style="width: 100%; margin-bottom: 1.5rem; height: 40px; font-size: 0.9rem;">Optimize ATS</button>
+
+                    <div class="drop-zone">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <p style="font-size: 0.95rem; color: var(--text-secondary);">Drag & drop a new resume to scan or replace</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Supports PDF, DOCX (Max 5MB)</p>
+                    </div>
+                </div>
+
+                <!-- Recruiter Screening Gateway Card -->
+                <div class="glass-panel">
+                    <h2 class="panel-title"><i class="fa-solid fa-building-user" style="color: var(--success);"></i> Recruiter Gateway</h2>
+                    <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.5;">Received an invitation link code from an employer? Enter it below to begin your verified screening.</p>
+                    
+                    <div class="input-with-btn">
+                        <input type="text" placeholder="E.G. TRU-8X2A" id="recruiter-code">
+                        <button class="btn btn-primary-gradient" style="padding: 0 16px; border-radius: 10px;">Launch</button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- TruGen AI Live Mentor Widget -->
+    <aside class="trugen-widget" id="trugen-widget">
+        <div class="widget-header-bar" id="trugen-header">
+            <div class="avatar-container">
+                <i class="fa-solid fa-robot" style="font-size: 1.2rem; color: var(--primary);"></i>
+                <div class="live-indicator"></div>
+            </div>
+            <div class="header-text">
+                <h5>AI Coach Elara</h5>
+                <span>Live Mentor • TruGen.ai</span>
+            </div>
+            <div class="header-actions">
+                <button class="widget-action-btn" id="trugen-collapse-btn"><i class="fa-solid fa-chevron-down"></i></button>
+            </div>
+        </div>
+        <div class="widget-body">
+            <div class="chat-msg">
+                "Hi Shivansh! Great progress on Tier 3 Arrays. Do you want to review the two-pointer technique before your next challenge?"
+            </div>
+        </div>
+        <div class="widget-footer">
+            <input type="text" placeholder="Ask your AI mentor...">
+            <button class="widget-send-btn"><i class="fa-solid fa-paper-plane" style="font-size: 0.8rem;"></i></button>
+        </div>
+    </aside>
+
+    <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>
