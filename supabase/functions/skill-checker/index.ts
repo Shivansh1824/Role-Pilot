@@ -148,7 +148,7 @@ Example Output:
       const errText = await response.text()
       console.error('Gemini API Error:', errText)
       return new Response(
-        JSON.stringify({ error: \`Gemini API returned error: \${response.status}\`, details: errText }),
+        JSON.stringify({ error: `Gemini API returned error: ${response.status}`, details: errText }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

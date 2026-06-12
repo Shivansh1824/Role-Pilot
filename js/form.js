@@ -592,6 +592,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        if (/^[0-9]/.test(val)) {
+            usernameStatus.textContent = "Username cannot start with a number.";
+            usernameStatus.className = 'input-status-msg error';
+            isUsernameValid = false;
+            validateForm();
+            return;
+        }
+
+        if (/^[0-9]+$/.test(val)) {
+            usernameStatus.textContent = "Username cannot be only numbers.";
+            usernameStatus.className = 'input-status-msg error';
+            isUsernameValid = false;
+            validateForm();
+            return;
+        }
+
         usernameStatus.textContent = 'Checking availability...';
         usernameStatus.className = 'input-status-msg';
 
@@ -641,9 +657,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Auto-generate username from name once name is typed
     nameInput.addEventListener('blur', () => {
         if (!usernameInput.value && nameInput.value.trim()) {
-            const draft = nameInput.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 15);
-            usernameInput.value = draft;
-            checkUsernameAvailability();
+            let draft = nameInput.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 15);
+            // Ensure auto-generated username doesn't start with a number or underscore
+            draft = draft.replace(/^[0-9_]+/, '');
+            if (draft.length >= 3) {
+                usernameInput.value = draft;
+                checkUsernameAvailability();
+            }
         }
     });
 

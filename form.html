@@ -166,7 +166,7 @@
                         <div class="form-group" style="margin-bottom: 0;">
                             <label for="onboarding-username">Username</label>
                             <div class="input-wrapper">
-                                <input type="text" id="onboarding-username" class="input-control" placeholder="john_doe" required style="padding-left: 16px;">
+                                <input type="text" id="onboarding-username" class="input-control" placeholder="john_doe" required style="padding-left: 16px;" pattern="^[a-zA-Z_][a-zA-Z0-9_]{2,}$" title="Username must be at least 3 characters, start with a letter or underscore, and contain only letters, numbers, or underscores.">
                             </div>
                             <div id="username-status" class="input-status-msg"></div>
                         </div>
