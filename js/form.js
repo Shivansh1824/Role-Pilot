@@ -77,6 +77,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     let skillsList = [];
     let isUsernameValid = false;
 
+    // Modal & status elements for skill validation
+    const skillsStatus = document.getElementById('skills-status');
+    const skillsConfirmModal = document.getElementById('skills-confirm-modal');
+    const modalSkillsList = document.getElementById('modal-skills-list');
+    const modalEditBtn = document.getElementById('modal-edit-btn');
+    const modalContinueBtn = document.getElementById('modal-continue-btn');
+    let pendingSkillsList = []; // Stores corrected skills list if confirmation is needed
+
     // 4. Generate 12 Sleek Avatars (Dicebear + Gradient Fallback)
     const avatarsInfo = [
         { grad: ['hsl(263, 70%, 50%)', 'hsl(190, 90%, 50%)'], icon: 'fa-user-tie' },
@@ -266,6 +274,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 7. Interactive Key Skills Tagging
     const renderSkillTags = () => {
+        // Reset validation message on modification
+        if (skillsStatus) {
+            skillsStatus.textContent = '';
+            skillsStatus.className = 'input-status-msg';
+        }
+
         // Clear existing tags but preserve the input element itself
         const tags = skillsWrapper.querySelectorAll('.skill-tag');
         tags.forEach(tag => tag.remove());
@@ -459,13 +473,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // 10. Form submission to database
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (submitBtn.disabled) return;
+    const compileFinalSkills = (results) => {
+        return skillsList.map(originalSkill => {
+            const matchedPredefined = PREDEFINED_SKILLS.find(
+                pre => pre.toLowerCase() === originalSkill.toLowerCase()
+            );
+            if (matchedPredefined) {
+                return matchedPredefined;
+            }
 
+            const aiResult = results.find(res => res.original.toLowerCase() === originalSkill.toLowerCase());
+            if (aiResult && aiResult.isValid && aiResult.correctedName) {
+                return aiResult.correctedName;
+            }
+            return originalSkill;
+        });
+    };
+
+    const saveProfile = async () => {
         submitBtn.disabled = true;
-        spinner.style.display = 'block';
+        if (spinner) spinner.style.display = 'block';
 
         const profileData = {
             full_name: nameInput.value.trim(),
@@ -484,17 +511,152 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .eq('id', user.id);
 
             if (error) throw error;
-
-            // Direct to dashboard
             window.location.href = 'dashboard.html';
-
         } catch (error) {
             console.error("Profile submit error:", error);
             alert("Failed to save profile onboarding: " + (error.message || error));
             submitBtn.disabled = false;
-            spinner.style.display = 'none';
+            if (spinner) spinner.style.display = 'none';
         }
+    };
+
+    // 10. Form submission to database
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (submitBtn.disabled) return;
+
+        const submitBtnText = submitBtn.querySelector('span');
+        const originalText = submitBtnText ? submitBtnText.textContent : 'Complete & Go to Dashboard';
+
+        // Clear any previous error messages
+        if (skillsStatus) {
+            skillsStatus.textContent = '';
+            skillsStatus.className = 'input-status-msg';
+        }
+        document.querySelectorAll('.skill-tag').forEach(tag => tag.classList.remove('invalid'));
+
+        // Identify custom skills
+        const customSkills = skillsList.filter(skill => {
+            return !PREDEFINED_SKILLS.some(pre => pre.toLowerCase() === skill.toLowerCase());
+        });
+
+        // If there are custom skills, run AI validation
+        if (customSkills.length > 0) {
+            submitBtn.disabled = true;
+            if (spinner) spinner.style.display = 'block';
+            if (submitBtnText) submitBtnText.textContent = 'Validating skills...';
+
+            try {
+                const { data, error } = await db.functions.invoke('skill-checker', {
+                    body: { skills: customSkills }
+                });
+
+                if (error) throw error;
+
+                if (data) {
+                    if (data.allValid === false) {
+                        // Mark invalid tags in red
+                        const results = data.results || [];
+                        results.forEach(res => {
+                            if (!res.isValid) {
+                                const tags = skillsWrapper.querySelectorAll('.skill-tag');
+                                tags.forEach(tag => {
+                                    const span = tag.querySelector('span');
+                                    if (span && span.textContent.trim().toLowerCase() === res.original.toLowerCase()) {
+                                        tag.classList.add('invalid');
+                                    }
+                                });
+                            }
+                        });
+
+                        // Show validation message
+                        if (skillsStatus) {
+                            skillsStatus.textContent = "Please remove or correct highlighted invalid skills.";
+                            skillsStatus.className = "input-status-msg error";
+                        }
+
+                        // Restore submit button
+                        submitBtn.disabled = false;
+                        if (spinner) spinner.style.display = 'none';
+                        if (submitBtnText) submitBtnText.textContent = originalText;
+                        return; // Halt form submission
+                    }
+
+                    // Compile the fully resolved and corrected skills list
+                    pendingSkillsList = compileFinalSkills(data.results);
+
+                    if (data.requiresConfirmation) {
+                        // Show modal with corrections
+                        if (modalSkillsList) {
+                            modalSkillsList.innerHTML = '';
+                            data.results.forEach(res => {
+                                if (res.wasModified && res.correctedName) {
+                                    const row = document.createElement('div');
+                                    row.className = 'modal-skill-row';
+                                    row.innerHTML = `
+                                        <span class="modal-skill-original">${res.original}</span>
+                                        <i class="fa-solid fa-arrow-right-long modal-skill-arrow"></i>
+                                        <span class="modal-skill-corrected">${res.correctedName}</span>
+                                    `;
+                                    modalSkillsList.appendChild(row);
+                                }
+                            });
+                        }
+
+                        // Open modal
+                        if (skillsConfirmModal) {
+                            skillsConfirmModal.classList.add('open');
+                        }
+
+                        // Restore submit button
+                        submitBtn.disabled = false;
+                        if (spinner) spinner.style.display = 'none';
+                        if (submitBtnText) submitBtnText.textContent = originalText;
+                        return; // Wait for modal confirmation
+                    } else {
+                        // If no confirmation needed, update skillsList and proceed
+                        skillsList = pendingSkillsList;
+                    }
+                }
+            } catch (err) {
+                console.error("Skills validation error:", err);
+                if (skillsStatus) {
+                    skillsStatus.textContent = "Skills check failed. Please check your network and try again.";
+                    skillsStatus.className = "input-status-msg error";
+                }
+                submitBtn.disabled = false;
+                if (spinner) spinner.style.display = 'none';
+                if (submitBtnText) submitBtnText.textContent = originalText;
+                return;
+            }
+        } else {
+            // If all skills are predefined, just format them correctly
+            skillsList = skillsList.map(skill => {
+                const matched = PREDEFINED_SKILLS.find(pre => pre.toLowerCase() === skill.toLowerCase());
+                return matched || skill;
+            });
+        }
+
+        // Proceed to save profile
+        await saveProfile();
     });
+
+    // Modal buttons click events
+    if (modalEditBtn && skillsConfirmModal) {
+        modalEditBtn.addEventListener('click', () => {
+            skillsConfirmModal.classList.remove('open');
+            skillsInput.focus();
+        });
+    }
+
+    if (modalContinueBtn && skillsConfirmModal) {
+        modalContinueBtn.addEventListener('click', async () => {
+            skillsConfirmModal.classList.remove('open');
+            skillsList = pendingSkillsList;
+            renderSkillTags();
+            await saveProfile();
+        });
+    }
 
     // 11. Onboarding Cancel & Sign Out
     if (signoutBtn) {
