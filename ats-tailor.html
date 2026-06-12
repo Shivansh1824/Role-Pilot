@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+          const currentTheme = localStorage.getItem('theme') || 'dark';
+          if (currentTheme === 'light') {
+              document.documentElement.classList.add('light-theme');
+          } else {
+              document.documentElement.classList.remove('light-theme');
+          }
+      })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ats-tailor.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>ATS Tailor - Role-Pilot</title>
+</head>
+<body class="dashboard-page">
+    <div class="bg-layers">
+        <div class="bg-layer dark-bg"></div>
+        <div class="bg-layer light-bg"></div>
+    </div>
+    <div class="landing-overlay"></div>
+    
+    <!-- Global App Header -->
+    <header class="app-header dashboard-header">
+        <div class="header-left">
+            <a href="index.html" class="logo-wrapper">
+                <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--primary)" />
+                            <stop offset="100%" stop-color="var(--accent)" />
+                        </linearGradient>
+                    </defs>
+                    <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                    <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                    <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                    <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                    <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                    <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                </svg>
+                <span class="logo-text">Role<span>Pilot</span></span>
+            </a>
+        </div>
+        
+        <div class="header-center">
+            <nav class="header-nav">
+                <ul class="dashboard-nav-tabs">
+                    <li><a href="dashboard.html" class="nav-tab-link">Dashboard</a></li>
+                    <li><a href="#" class="nav-tab-link">Coding Arena</a></li>
+                    <li><a href="#" class="nav-tab-link">Mock Interviews</a></li>
+                    <li><a href="ats-tailor.html" class="nav-tab-link active">ATS Tailor</a></li>
+                    <li><a href="#" class="nav-tab-link">Leaderboard</a></li>
+                </ul>
+            </nav>
+        </div>
+        
+        <div class="header-actions header-user-actions">
+            <div class="xp-badge">
+                <i class="fa-solid fa-bolt"></i>
+                <span id="header-xp">XP: 4,250 • Master Tier</span>
+            </div>
+            
+            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+            
+            <div class="profile-dropdown-wrapper">
+                <div class="profile-trigger" id="profile-trigger">SR</div>
+            </div>
+            
+            <button class="mobile-menu-toggle" id="mobile-menu-btn">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="dashboard-container ats-workspace">
+        <!-- ATS Page Header -->
+        <div class="ats-page-header">
+            <div class="ats-role-selector">
+                <label for="target-role-select">Target Role</label>
+                <div class="select-wrapper">
+                    <select id="target-role-select" class="role-dropdown">
+                        <option value="Frontend Engineer">Frontend Engineer</option>
+                        <option value="Backend Engineer">Backend Engineer</option>
+                        <option value="Full Stack Engineer">Full Stack Engineer</option>
+                        <option value="Product Manager">Product Manager</option>
+                        <option value="Data Scientist">Data Scientist</option>
+                        <option value="UI/UX Designer">UI/UX Designer</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down select-icon"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Split Screen Layout -->
+        <section class="ats-split-layout">
+            
+            <!-- LEFT PANEL: ATS Education -->
+            <div class="panel-section ats-education-panel">
+                <div class="glass-panel">
+                    <h2 class="edu-title"><i class="fa-solid fa-graduation-cap"></i> Why ATS Scoring Matters</h2>
+                    
+                    <div class="edu-highlight-box">
+                        <h3 class="edu-highlight-title"><i class="fa-solid fa-robot"></i> The Gatekeeper</h3>
+                        <p class="edu-highlight-text">
+                            Over <strong>75% of resumes</strong> are rejected by Applicant Tracking Systems (ATS) before a human ever sees them. These systems scan your resume for keyword density, strict formatting, and required experience based on the exact job description.
+                        </p>
+                    </div>
+
+                    <h3 class="edu-subtitle">How Role-Pilot helps you bypass the filter:</h3>
+                    
+                    <div class="edu-features">
+                        <div class="edu-feature-item">
+                            <div class="edu-feature-icon icon-green">
+                                <i class="fa-solid fa-file-code"></i>
+                            </div>
+                            <div class="edu-feature-content">
+                                <h4>Format Audit</h4>
+                                <p>We ensure your resume is machine-readable by identifying hidden tables, columns, or complex layouts that break parsers.</p>
+                            </div>
+                        </div>
+
+                        <div class="edu-feature-item">
+                            <div class="edu-feature-icon icon-blue">
+                                <i class="fa-solid fa-tags"></i>
+                            </div>
+                            <div class="edu-feature-content">
+                                <h4>Keyword Gap Analysis</h4>
+                                <p>We compare your resume against the provided job description to highlight exactly which critical skills and buzzwords you are missing.</p>
+                            </div>
+                        </div>
+
+                        <div class="edu-feature-item">
+                            <div class="edu-feature-icon icon-purple">
+                                <i class="fa-solid fa-list-check"></i>
+                            </div>
+                            <div class="edu-feature-content">
+                                <h4>Actionable Feedback</h4>
+                                <p>We don't just give you a generic score. You get a prioritized checklist of exactly what to change to reach a 90%+ match rate.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL: Input Area -->
+            <div class="panel-section ats-input-panel input-panels-container">
+                <div class="glass-panel">
+                    <h2 class="panel-title"><i class="fa-solid fa-file-pdf" style="color: var(--accent);"></i> Upload Resume</h2>
+                    <p class="panel-subtitle">Drop your current resume to see how it performs.</p>
+                    
+                    <div class="drop-zone ats-dropzone" id="resume-dropzone">
+                        <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+                        <h4>Drag & drop your resume</h4>
+                        <p>Supports PDF, DOCX (Max 5MB)</p>
+                        <button class="btn btn-secondary-outline btn-sm upload-btn">Browse Files</button>
+                        <input type="file" id="file-input" hidden accept=".pdf,.doc,.docx" />
+                    </div>
+
+                    <!-- Selected File State (Hidden by default) -->
+                    <div class="selected-file-state" id="selected-file-state" style="display: none;">
+                        <div class="file-info">
+                            <i class="fa-regular fa-file-pdf file-icon"></i>
+                            <div class="file-details">
+                                <div class="file-name" id="selected-file-name">Resume.pdf</div>
+                                <div class="file-date">Ready to analyze</div>
+                            </div>
+                            <div class="file-actions">
+                                <button class="btn btn-secondary-outline btn-sm remove-file-btn" id="remove-file-btn" title="Remove"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel">
+                    <h2 class="panel-title"><i class="fa-solid fa-briefcase" style="color: var(--primary);"></i> Target Job Description</h2>
+                    <p class="panel-subtitle">Paste the full job description here to analyze your match.</p>
+                    <textarea id="job-description" class="jd-textarea" placeholder="e.g. We are looking for a Senior Frontend Engineer with experience in React, TypeScript, and Node.js..."></textarea>
+                    
+                    <button class="btn btn-primary-gradient w-100 mt-6" id="analyze-btn" style="font-size: 1.1rem; padding: 14px;">Analyze ATS Match <i class="fa-solid fa-wand-magic-sparkles"></i></button>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <script type="module" src="js/ats-tailor.js"></script>
+</body>
+</html>
