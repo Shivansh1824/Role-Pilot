@@ -174,10 +174,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Analysis Simulation Logic ---
 
+    function switchState(showElement, hideElements = []) {
+        hideElements.forEach(el => {
+            if (el) {
+                el.style.display = 'none';
+                el.classList.remove('state-animate');
+            }
+        });
+        if (showElement) {
+            showElement.style.display = 'flex';
+            // Force reflow to restart CSS keyframes
+            void showElement.offsetWidth;
+            showElement.classList.add('state-animate');
+        }
+    }
+
     function resetAnalysis() {
-        if (emptyState) emptyState.style.display = 'flex';
-        if (scanningState) scanningState.style.display = 'none';
-        if (resultsContainer) resultsContainer.style.display = 'none';
+        switchState(emptyState, [scanningState, resultsContainer]);
         if (scanProgressBar) scanProgressBar.style.width = '0%';
         if (scoreValue) scoreValue.textContent = '0';
         if (scoreRingProgress) scoreRingProgress.style.strokeDashoffset = '339.29';
@@ -193,9 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Start scanning
-        if (emptyState) emptyState.style.display = 'none';
-        if (scanningState) scanningState.style.display = 'flex';
-        if (resultsContainer) resultsContainer.style.display = 'none';
+        switchState(scanningState, [emptyState, resultsContainer]);
         
         // Simulate progress bar
         let progress = 0;
@@ -212,8 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function showResults() {
-        if (scanningState) scanningState.style.display = 'none';
-        if (resultsContainer) resultsContainer.style.display = 'flex';
+        switchState(resultsContainer, [scanningState, emptyState]);
         
         // Animate Score to 82%
         if (scoreValue && scoreRingProgress) animateScore(82);
