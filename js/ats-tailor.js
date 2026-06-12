@@ -6,16 +6,37 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data: { session }, error } = await db.auth.getSession();
             if (error || !session) return;
             
-            const { data: profile } = await db.from('profiles').select('target_role').eq('id', session.user.id).maybeSingle();
+            const { data: profile } = await db
+                .from('profiles')
+                .select('target_role, avatar_url, full_name')
+                .eq('id', session.user.id)
+                .maybeSingle();
 
-            if (profile && profile.target_role) {
-                const roleSelect = document.getElementById('target-role-select');
-                if (roleSelect) {
-                    let optionExists = Array.from(roleSelect.options).some(opt => opt.value === profile.target_role);
-                    if (!optionExists) {
-                        roleSelect.add(new Option(profile.target_role, profile.target_role));
+            if (profile) {
+                // Set target role dropdown
+                if (profile.target_role) {
+                    const roleSelect = document.getElementById('target-role-select');
+                    if (roleSelect) {
+                        let optionExists = Array.from(roleSelect.options).some(opt => opt.value === profile.target_role);
+                        if (!optionExists) {
+                            roleSelect.add(new Option(profile.target_role, profile.target_role));
+                        }
+                        roleSelect.value = profile.target_role;
                     }
-                    roleSelect.value = profile.target_role;
+                }
+                
+                // Set avatar/initials
+                const triggerEl = document.getElementById('profile-trigger');
+                if (triggerEl) {
+                    const fullName = profile.full_name || session.user.user_metadata?.full_name || "User";
+                    const firstName = fullName.split(' ')[0];
+                    const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    
+                    if (profile.avatar_url && profile.avatar_url !== 'custom_placeholder') {
+                        triggerEl.innerHTML = `<img src="${profile.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:contain;" alt="${firstName}">`;
+                    } else {
+                        triggerEl.textContent = initials;
+                    }
                 }
             }
         } catch (err) {
@@ -192,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showResults() {
         if (scanningState) scanningState.style.display = 'none';
-        if (resultsContainer) resultsContainer.style.display = 'block';
+        if (resultsContainer) resultsContainer.style.display = 'flex';
         
         // Animate Score to 82%
         if (scoreValue && scoreRingProgress) animateScore(82);
