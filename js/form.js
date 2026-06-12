@@ -107,25 +107,208 @@ document.addEventListener('DOMContentLoaded', async () => {
     const generateAvatarsGrid = () => {
         avatarGrid.innerHTML = '';
 
-        // Add custom upload placeholder
+        // Add custom upload option with Supabase integration
         const customUploadDiv = document.createElement('div');
         customUploadDiv.className = 'avatar-option custom-upload-btn';
         customUploadDiv.style.position = 'relative';
         customUploadDiv.style.border = '2px dashed var(--glass-border)';
+        
+        // Define the inner HTML including the hidden file input
         customUploadDiv.innerHTML = `
-            <div style="width: 100%; height: 100%; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); background: rgba(255, 255, 255, 0.02); transition: var(--transition);">
-                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--primary);"></i>
-                <span style="font-size: 0.7rem; font-weight: 600; text-align: center; line-height: 1.2;">Upload<br>Custom</span>
+            <div id="custom-upload-content" style="width: 100%; height: 100%; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); background: rgba(255, 255, 255, 0.02); transition: var(--transition); overflow: hidden; position: relative;">
+                <i id="custom-upload-icon" class="fa-solid fa-cloud-arrow-up" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--primary);"></i>
+                <span id="custom-upload-text" style="font-size: 0.7rem; font-weight: 600; text-align: center; line-height: 1.2;">Upload<br>Custom</span>
+                <img id="custom-upload-preview" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 8px; z-index: 2;" />
             </div>
+            <input type="file" id="custom-avatar-input" accept="image/*" style="display: none;">
         `;
-        customUploadDiv.addEventListener('click', () => {
-            console.log("Custom Avatar Upload Clicked! (Placeholder for R2 integration)");
-            document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
-            customUploadDiv.classList.add('selected');
-            selectedAvatarInput.value = 'custom_placeholder'; 
-            validateForm();
-        });
+        
         avatarGrid.appendChild(customUploadDiv);
+
+        const customInput = document.getElementById('custom-avatar-input');
+        const customContent = document.getElementById('custom-upload-content');
+        const customIcon = document.getElementById('custom-upload-icon');
+        const customText = document.getElementById('custom-upload-text');
+        const customPreview = document.getElementById('custom-upload-preview');
+
+        customUploadDiv.addEventListener('click', () => {
+            customInput.click();
+        });
+
+        let cropper = null;
+        const cropModal = document.getElementById('avatar-crop-modal');
+        const cropperImage = document.getElementById('cropper-image');
+        const cropperCancelBtn = document.getElementById('cropper-cancel-btn');
+        const cropperSaveBtn = document.getElementById('cropper-save-btn');
+        const cropperSpinner = document.getElementById('cropper-spinner');
+
+        customInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Enforce max size (e.g., 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert("File is too large. Please upload an image under 5MB.");
+                customInput.value = ''; // Reset input
+                return;
+            }
+
+            // Read the file for the cropper
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                cropperImage.src = e.target.result;
+                cropModal.classList.add('open');
+
+                // Destroy existing cropper if any
+                if (cropper) {
+                    cropper.destroy();
+                }
+
+                // Initialize new cropper
+                cropper = new Cropper(cropperImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 1,
+                    restore: false,
+                    guides: false,
+                    center: false,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+
+        cropperCancelBtn.addEventListener('click', () => {
+            cropModal.classList.remove('open');
+            customInput.value = '';
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        });
+
+        cropperSaveBtn.addEventListener('click', async () => {
+            if (!cropper) return;
+
+            // Show loading state
+            cropperSaveBtn.disabled = true;
+            cropperSpinner.style.display = 'block';
+            cropperSaveBtn.querySelector('span').textContent = 'Uploading...';
+
+            // Get the cropped canvas
+            const canvas = cropper.getCroppedCanvas({
+                width: 400,
+                height: 400,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+
+            if (!canvas) {
+                alert("Failed to crop image.");
+                resetCropperBtn();
+                return;
+            }
+
+            // Convert canvas to blob
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    alert("Failed to process image.");
+                    resetCropperBtn();
+                    return;
+                }
+
+                // Visual feedback for upload state on the main tile
+                customIcon.className = "fa-solid fa-spinner fa-spin";
+                customIcon.style.color = "var(--text-secondary)";
+                customText.innerHTML = "Uploading...";
+
+                // Prepare Supabase file path
+                const fileExt = 'jpeg';
+                const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+                const uploadFile = new File([blob], filePath, { type: 'image/jpeg' });
+
+                try {
+                    // Upload to Supabase Storage
+                    const { data, error } = await db.storage
+                        .from('avatars')
+                        .upload(filePath, uploadFile, {
+                            cacheControl: '3600',
+                            upsert: true
+                        });
+
+                    if (error) throw error;
+
+                    // Retrieve public URL
+                    const { data: publicUrlData } = db.storage
+                        .from('avatars')
+                        .getPublicUrl(filePath);
+
+                    const publicUrl = publicUrlData.publicUrl;
+
+                    // Create new avatar option tile
+                    const newDiv = document.createElement('div');
+                    newDiv.className = 'avatar-option';
+                    newDiv.style.position = 'relative';
+                    newDiv.innerHTML = `
+                        <img src="${publicUrl}" alt="Custom Avatar" style="width: 100%; height: 100%; border-radius: 8px; object-fit: cover;">
+                    `;
+
+                    newDiv.addEventListener('click', () => {
+                        document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                        newDiv.classList.add('selected');
+                        selectedAvatarInput.value = publicUrl;
+                        validateForm();
+                        
+                        // Move to front
+                        if (avatarGrid.children.length > 1 && avatarGrid.children[1] !== newDiv) {
+                            avatarGrid.insertBefore(newDiv, avatarGrid.children[1]);
+                            avatarGrid.scrollTo({ left: 0, behavior: 'smooth' });
+                        }
+                    });
+
+                    // Deselect others and select new one
+                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                    newDiv.classList.add('selected');
+                    selectedAvatarInput.value = publicUrl;
+                    validateForm();
+
+                    // Insert at index 1
+                    if (avatarGrid.children.length > 1) {
+                        avatarGrid.insertBefore(newDiv, avatarGrid.children[1]);
+                    } else {
+                        avatarGrid.appendChild(newDiv);
+                    }
+                    avatarGrid.scrollTo({ left: 0, behavior: 'smooth' });
+
+                    // Close modal and cleanup
+                    cropModal.classList.remove('open');
+                    customInput.value = '';
+                    cropper.destroy();
+                    cropper = null;
+
+                } catch (err) {
+                    console.error("Avatar upload failed:", err);
+                    alert("Upload failed. Ensure the 'avatars' bucket exists, is public, and allows uploads.");
+                } finally {
+                    // Revert UI of the upload button
+                    customIcon.className = "fa-solid fa-cloud-arrow-up";
+                    customIcon.style.color = "var(--primary)";
+                    customText.innerHTML = "Upload<br>Custom";
+                    customUploadDiv.classList.remove('selected');
+                    resetCropperBtn();
+                }
+            }, 'image/jpeg', 0.9);
+        });
+
+        function resetCropperBtn() {
+            cropperSaveBtn.disabled = false;
+            cropperSpinner.style.display = 'none';
+            cropperSaveBtn.querySelector('span').textContent = 'Crop & Upload';
+        }
 
         avatarsInfo.forEach((avatar, index) => {
             const seed = `RolePilot_${user.id}_${index + 1}`;
@@ -147,6 +330,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 div.classList.add('selected');
                 selectedAvatarInput.value = dicebearUrl; // store URL as profile avatar_url
                 validateForm();
+                
+                // Move to front (after custom upload button)
+                if (avatarGrid.children.length > 1 && avatarGrid.children[1] !== div) {
+                    avatarGrid.insertBefore(div, avatarGrid.children[1]);
+                    // Smooth scroll to left to ensure it's visible
+                    avatarGrid.scrollTo({ left: 0, behavior: 'smooth' });
+                }
             });
 
             avatarGrid.appendChild(div);

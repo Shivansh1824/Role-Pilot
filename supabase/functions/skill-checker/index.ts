@@ -27,8 +27,8 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Call Google Gemini 3.5 Flash API
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`
+    // Call Google Gemini 3.1 Flash-Lite API
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`
 
     const systemPrompt = `<context>
 You are an expert AI recruiter and data normalization API processing user-entered skills for a career platform.
@@ -135,7 +135,11 @@ Example Output:
         },
         generationConfig: {
           responseMimeType: "application/json",
-          temperature: 0.1
+          temperature: 0.1,
+          thinkingConfig: {
+            thinkingLevel: "MEDIUM",
+            includeThoughts: false
+          }
         }
       })
     })
