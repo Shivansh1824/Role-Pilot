@@ -14,7 +14,7 @@ The client-side interface is built using standard, performant HTML5, vanilla Jav
 | **Landing Page** | `index.html` | Premium glassmorphic hero page featuring high-conversion CTAs, trust matrices, interactive FAQ accordions, and fully responsive header/footer sections. | Completed |
 | **Authentication Screen** | `login.html` | Secure entrance with clean dark/light theme options, direct validation, and inline dynamic 8-digit OTP inputs (no external redirects). | Completed |
 | **Candidate Dashboard** | `dashboard.html` | High-fidelity console containing user hero welcome, career roadmap tracker, session histories, ATS upload stats, and a floating TruGen AI Mentor widget. | Completed |
-| **Onboarding Form** | `form.html` | Profile initialization page utilizing a Smart Combobox for skill tag parsing, avatar icon selections, and strict username validation rules. | Completed |
+| **Onboarding Form** | `form.html` | Profile initialization page utilizing a Smart Combobox for skill tag parsing, a visual Cropper.js modal for custom avatar uploads to Supabase, dynamic grid UX, and strict username validation rules. | Completed |
 | **About Us** | `about.html` | Static responsive page detailing the project's career readiness vision and team architecture. | Completed |
 | **Privacy Policy** | `privacy.html` | Compliant user privacy disclosure document matching standard layout styles. | Completed |
 | **Terms of Service** | `terms.html` | Standardized user terms and rules governing platform utilization. | Completed |
@@ -54,7 +54,7 @@ Local database schemas are migrated directly to the remote Supabase project unde
 
 We utilize native Supabase Storage buckets secured through strict RLS policies to maintain user security:
 
-1.  **`avatars` (Public Bucket):** Stores public user avatar pictures. Reads are globally permitted to display user stats on leaderboards, but edits are restricted strictly to the authenticated creator.
+1.  **`avatars` (Public Bucket):** Stores public user avatar pictures. Reads are globally permitted to display user stats on leaderboards, but edits are restricted strictly to the authenticated creator. Integrated with a frontend visual cropper (`Cropper.js`) for perfect 1:1 ratio circular avatars and dynamically spawns premium grid tiles upon upload.
 2.  **`resumes` (Private Bucket):** Stores sensitive PDF/Docx files. Access is locked down. Downloads, edits, and deletions are only possible for the authenticated user who uploaded the resume. URLs expire after a short duration (via signed URLs).
 
 ---
