@@ -495,6 +495,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             skillsInput.placeholder = 'Type a skill and press Enter';
         }
+        validateForm();
     };
 
     const PREDEFINED_SKILLS = [
@@ -675,8 +676,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isAvatarSelected = selectedAvatarInput.value.length > 0;
         const isRoleSelected = selectedRoleInput.value.length > 0;
         const isExperienceSelected = selectedExperienceInput.value.length > 0;
+        const isSkillsEntered = skillsList.length > 0;
 
-        if (isNameEntered && isAvatarSelected && isRoleSelected && isExperienceSelected && isUsernameValid) {
+        if (isNameEntered && isAvatarSelected && isRoleSelected && isExperienceSelected && isUsernameValid && isSkillsEntered) {
             submitBtn.disabled = false;
         } else {
             submitBtn.disabled = true;
@@ -781,8 +783,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                         // Show validation message
                         if (skillsStatus) {
-                            skillsStatus.textContent = "Please remove or correct highlighted invalid skills.";
-                            skillsStatus.className = "input-status-msg error";
+                            skillsStatus.innerHTML = `
+                                <div class="ai-status-msg error-state" style="display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; background: rgba(239, 68, 68, 0.06); border: 1px dashed rgba(239, 68, 68, 0.3); padding: 10px 14px; border-radius: 8px; color: var(--text-primary); font-size: 0.88rem; line-height: 1.4;">
+                                    <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent); font-size: 1.1rem; margin-top: 2px; filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.45));"></i>
+                                    <div>
+                                        <span style="font-weight: 700; color: var(--error); display: block; margin-bottom: 2px;">AI Verification Detected Gaps:</span>
+                                        <span style="color: var(--text-secondary);">The highlighted tags do not match recognized professional skills. Please remove them to proceed.</span>
+                                    </div>
+                                </div>
+                            `;
+                            skillsStatus.className = 'input-status-msg';
                         }
 
                         // Restore submit button

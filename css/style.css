@@ -38,6 +38,11 @@
     
     /* Layout Overlays */
     --overlay-color: rgba(9, 13, 22, 0.78);
+
+    /* Modal Specific colors */
+    --modal-bg: rgba(10, 16, 32, 0.92);
+    --modal-row-bg: rgba(255, 255, 255, 0.03);
+    --modal-text-original: hsl(215, 14%, 60%);
 }
 
 /* Light Theme Variables */
@@ -64,6 +69,11 @@
     --error: hsl(0, 84%, 55%);
     
     --overlay-color: rgba(240, 244, 248, 0.6);
+
+    /* Modal Specific colors */
+    --modal-bg: rgba(255, 255, 255, 0.96);
+    --modal-row-bg: rgba(15, 23, 42, 0.04);
+    --modal-text-original: hsl(215, 16%, 45%);
 }
 
 /* Reset and Base Styles */
@@ -5269,7 +5279,7 @@ body.page-exit {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(9, 13, 22, 0.6);
+    background: var(--overlay-color);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     display: flex;
@@ -5287,7 +5297,7 @@ body.page-exit {
 }
 
 .modal-container {
-    background: var(--panel-bg);
+    background: var(--modal-bg);
     border: 1px solid var(--glass-border);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
@@ -5355,14 +5365,14 @@ body.page-exit {
     align-items: center;
     justify-content: space-between;
     padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--modal-row-bg);
     border: 1px solid var(--glass-border);
     border-radius: 8px;
 }
 
 .modal-skill-original {
     text-decoration: line-through;
-    color: var(--text-muted);
+    color: var(--modal-text-original);
     font-size: 0.85rem;
 }
 
@@ -5407,12 +5417,12 @@ body.page-exit {
 }
 
 .modal-btn-secondary {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--modal-row-bg);
     border: 1px solid var(--glass-border);
     color: var(--text-secondary);
 }
 .modal-btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--glass-border-hover);
     color: var(--text-primary);
 }
 
