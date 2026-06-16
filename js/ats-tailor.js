@@ -153,6 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
             dropzone.style.padding = 'var(--space-4)';
             selectedFileState.style.display = 'block';
             
+            // Set resume step state as completed
+            const stepResume = document.getElementById('step-resume');
+            if (stepResume) stepResume.classList.add('completed');
+            
             // Reset any previous analysis
             resetAnalysis();
         }
@@ -169,8 +173,30 @@ document.addEventListener('DOMContentLoaded', () => {
         dropzone.style.padding = 'var(--space-8) var(--space-4)';
         selectedFileState.style.display = 'none';
         
+        // Remove completed state
+        const stepResume = document.getElementById('step-resume');
+        if (stepResume) stepResume.classList.remove('completed');
+        
         resetAnalysis();
     });
+
+    // Reactive listener for Job Description step
+    const jobDescriptionInput = document.getElementById('job-description');
+    if (jobDescriptionInput) {
+        const toggleJobStep = () => {
+            const stepJob = document.getElementById('step-job');
+            if (stepJob) {
+                if (jobDescriptionInput.value.trim().length > 0) {
+                    stepJob.classList.add('completed');
+                } else {
+                    stepJob.classList.remove('completed');
+                }
+            }
+        };
+        jobDescriptionInput.addEventListener('input', toggleJobStep);
+        // Initial load check
+        toggleJobStep();
+    }
 
     // --- Analysis Simulation Logic ---
 
@@ -198,6 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     analyzeBtn.addEventListener('click', () => {
         // Validate inputs (simulate)
+        const isFileUploaded = selectedFileState && selectedFileState.style.display === 'block';
+        if (!isFileUploaded) {
+            alert('Please upload your resume first.');
+            return;
+        }
+
         const jdText = document.getElementById('job-description').value;
         if (!jdText.trim()) {
             alert('Please paste a target job description first.');
