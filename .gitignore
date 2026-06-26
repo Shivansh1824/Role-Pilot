@@ -35,3 +35,7 @@ Thumbs.db
 
 # Supabase CLI
 # We track migrations and functions in git, but ignore branches and temp files via supabase/.gitignore
+
+# Large datasets
+India_runs_data_and_ai_challenge/candidates.jsonl
+
