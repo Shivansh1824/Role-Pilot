@@ -37,6 +37,11 @@ In today's competitive job market, candidate preparation is disjointed, and recr
 * **AI-Generated Study Roadmaps**: Based on coding and interview feedback, the system generates customized guidance.
 * **Targeted Recommendations**: Recommends specific topics, coding paradigms, and mock focus areas to patch identified skill gaps.
 
+### 6. 🏢 Intelligent Recruiter Pipeline (Hackathon Integration)
+* **AI Candidate Discovery**: An advanced AI ranker processes over 100,000 candidate profiles using semantic embeddings and behavioral signals.
+* **Role-Pilot Metric Verification**: Ranks talent not just by resume keywords, but by factoring in real platform telemetry (e.g., Coding Arena scores, Mock Interview completion rates, and recruiter responsiveness).
+* **High-Trust Shortlists**: Recruiters receive a curated, Top 100 dashboard of verified candidates complete with AI-generated reasoning for their match to specific job descriptions.
+
 ---
 
 ## 🔮 Co-Founder's Strategic Roadmap (Planned Improvements)
