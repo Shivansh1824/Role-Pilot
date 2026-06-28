@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Mock Interviews - Role-Pilot</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Inline Theme Script (Crucial: Place immediately in <head> to prevent FOUC / flickering) -->
+    <script>
+      (function() {
+          const currentTheme = localStorage.getItem('theme') || 'dark';
+          if (currentTheme === 'light') {
+              document.documentElement.classList.add('light-theme');
+          } else {
+              document.documentElement.classList.remove('light-theme');
+          }
+      })();
+    </script>
+    
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase JS Client Library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Custom Interview Styles -->
+    <style>
+        .interview-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            min-height: calc(100vh - 120px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .setup-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-outer);
+            padding: 3.5rem;
+            max-width: 650px;
+            margin: 0 auto;
+            width: 100%;
+            box-shadow: var(--shadow-layered);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            animation: cardFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .setup-card h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+        }
+
+        .setup-card p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+
+        .role-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            text-align: left;
+        }
+
+        .role-input-group label {
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .role-select-box {
+            position: relative;
+        }
+
+        .role-select-box select, .role-write-in-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        :root.light-theme .role-select-box select, :root.light-theme .role-write-in-input {
+            background: rgba(15, 23, 42, 0.03);
+        }
+
+        .role-select-box select:focus, .role-write-in-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+        }
+
+        .or-divider {
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            position: relative;
+        }
+
+        .or-divider::before, .or-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: var(--glass-border);
+        }
+
+        .or-divider::before { left: 0; }
+        .or-divider::after { right: 0; }
+
+        /* Active Interview Grid */
+        .interview-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .interview-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .interviewer-sidebar {
+            background: var(--panel-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-outer);
+            padding: 2.5rem;
+            box-shadow: var(--shadow-layered);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            height: fit-content;
+        }
+
+        .sidebar-avatar-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+        }
+
+        .sidebar-avatar-glow {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+            opacity: 0.35;
+            filter: blur(10px);
+        }
+
+        .sidebar-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--glass-border);
+            z-index: 2;
+            position: relative;
+        }
+
+        .interviewer-title-info {
+            text-align: center;
+        }
+
+        .interviewer-title-info h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .interviewer-title-info p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .interview-progress-bar {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 1.5rem;
+        }
+
+        .progress-lbl {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Chat Pane Workspace */
+        .chat-pane {
+            background: var(--panel-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-outer);
+            box-shadow: var(--shadow-layered);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: rgba(0, 0, 0, 0.15);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        :root.light-theme .chat-header {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .chat-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            animation: messageSlideIn 0.4s ease forwards;
+        }
+
+        @keyframes messageSlideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-bubble.ai {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text-primary);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        :root.light-theme .message-bubble.ai {
+            background: rgba(15, 23, 42, 0.03);
+            border-color: rgba(15, 23, 42, 0.06);
+        }
+
+        .message-bubble.user {
+            background: var(--primary);
+            color: #ffffff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .feedback-bubble {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px dashed rgba(16, 185, 129, 0.25);
+            color: var(--text-primary);
+            padding: 1.5rem;
+            border-radius: 16px;
+            align-self: stretch;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.9rem;
+            animation: messageSlideIn 0.5s ease forwards;
+        }
+
+        :root.light-theme .feedback-bubble {
+            background: rgba(16, 185, 129, 0.03);
+        }
+
+        .feedback-rating {
+            font-weight: 800;
+            color: var(--success);
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chat-input-bar {
+            background: rgba(0, 0, 0, 0.15);
+            border-top: 1px solid var(--glass-border);
+            padding: 1.25rem 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        :root.light-theme .chat-input-bar {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .chat-input-bar textarea {
+            flex-grow: 1;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: none;
+            outline: none;
+            height: 60px;
+            transition: var(--transition);
+        }
+
+        :root.light-theme .chat-input-bar textarea {
+            background: rgba(15, 23, 42, 0.02);
+        }
+
+        .chat-input-bar textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .chat-send-btn {
+            background: var(--primary);
+            border: none;
+            color: #ffffff;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+            margin-bottom: 5px;
+        }
+
+        .chat-send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            background: var(--primary-hover);
+        }
+
+        .chat-send-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Success screen card styling */
+        .summary-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-outer);
+            padding: 4rem;
+            max-width: 750px;
+            margin: 0 auto;
+            width: 100%;
+            box-shadow: var(--shadow-layered);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            align-items: center;
+            animation: cardFadeIn 0.8s ease forwards;
+        }
+
+        .summary-header-icon {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
+        }
+
+        .summary-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 2rem 0;
+        }
+
+        @media (max-width: 600px) {
+            .summary-metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+    </style>
+</head>
+<body class="dashboard-page">
+    <div class="bg-layers">
+        <div class="bg-layer dark-bg"></div>
+        <div class="bg-layer light-bg"></div>
+    </div>
+    <div class="landing-overlay"></div>
+    
+    <!-- Global App Header -->
+    <header class="app-header dashboard-header">
+        <div class="header-left">
+            <a href="index.html" class="logo-wrapper">
+                <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--primary)" />
+                            <stop offset="100%" stop-color="var(--accent)" />
+                        </linearGradient>
+                    </defs>
+                    <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                    <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                    <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                    <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                    <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                    <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                </svg>
+                <span class="logo-text">Role<span>Pilot</span></span>
+            </a>
+        </div>
+        
+        <div class="header-center">
+            <nav class="header-nav">
+                <ul class="dashboard-nav-tabs">
+                    <li><a href="dashboard.html" class="nav-tab-link">Dashboard</a></li>
+                    <li><a href="code-arena/index.html" class="nav-tab-link">Coding Arena</a></li>
+                    <li><a href="mock-interviews.html" class="nav-tab-link active">Mock Interviews</a></li>
+                    <li><a href="ats-tailor.html" class="nav-tab-link">ATS Tailor</a></li>
+                    <li><a href="leaderboard.html" class="nav-tab-link">Leaderboard</a></li>
+                </ul>
+            </nav>
+        </div>
+        
+        <div class="header-actions header-user-actions">
+            <div class="xp-badge">
+                <i class="fa-solid fa-bolt"></i>
+                <span id="header-xp">XP: 4,250 • Master Tier</span>
+            </div>
+            
+            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+            
+            <div class="profile-dropdown-wrapper">
+                <div class="profile-trigger" id="profile-trigger">SR</div>
+                <div class="dropdown-menu" id="profile-dropdown">
+                    <a href="#" class="dropdown-item"><i class="fa-solid fa-user-gear"></i> Profile Settings</a>
+                    <a href="#" class="dropdown-item"><i class="fa-solid fa-credit-card"></i> Billing</a>
+                    <div style="height: 1px; background: var(--glass-border); margin: 4px 0;"></div>
+                    <a href="#" class="dropdown-item" id="logout-btn" style="color: var(--error);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
+                </div>
+            </div>
+            
+            <button class="mobile-menu-toggle" id="mobile-menu-btn">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="interview-container">
+        
+        <!-- STEP 1: INTERVIEW SETUP CARD -->
+        <div class="setup-card" id="setup-card">
+            <div class="setup-header">
+                <h2>AI Mock Interviews</h2>
+                <p>Begin a custom, voice-interactive behavioral or technical loop tailored to your target job profile.</p>
+            </div>
+
+            <div class="role-input-group">
+                <div>
+                    <label for="profile-select">Select a Standard Profile</label>
+                    <div class="role-select-box" style="margin-top: 8px;">
+                        <select id="profile-select">
+                            <option value="Frontend Engineer">Frontend Engineer</option>
+                            <option value="Backend Engineer">Backend Engineer</option>
+                            <option value="Full Stack Developer">Full Stack Developer</option>
+                            <option value="Data Scientist">Data Scientist</option>
+                            <option value="Product Manager">Product Manager</option>
+                            <option value="DevOps Engineer">DevOps Engineer</option>
+                            <option value="Custom Write-In">-- Enter a Custom Profile Below --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="or-divider">OR</div>
+
+                <div>
+                    <label for="profile-write-in">Type Custom Job Profile</label>
+                    <input type="text" id="profile-write-in" class="role-write-in-input" style="margin-top: 8px;" placeholder="e.g. iOS Developer, Cybersecurity Lead..." disabled>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="start-interview-btn">
+                Start Custom Interview <i class="fa-solid fa-microphone" style="margin-left: 8px;"></i>
+            </button>
+        </div>
+
+        <!-- STEP 2: ACTIVE INTERVIEW CHAT MODULE -->
+        <div class="interview-grid" id="interview-workspace" style="display: none;">
+            
+            <!-- Interviewer Sidebar -->
+            <div class="interviewer-sidebar">
+                <div class="sidebar-avatar-wrapper">
+                    <div class="sidebar-avatar-glow"></div>
+                    <img src="images/ai_interviewer.png" alt="AI Interviewer" class="sidebar-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Elara&backgroundColor=transparent'">
+                </div>
+
+                <div class="interviewer-title-info">
+                    <h3>Elara</h3>
+                    <p>Senior Recruiter • TruGen.ai</p>
+                </div>
+
+                <!-- Custom Info Badge -->
+                <div class="welcome-badge" style="margin: 0; background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.25); color: var(--accent);">
+                    <i class="fa-solid fa-microphone-lines"></i> Interactive Session
+                </div>
+
+                <!-- Progress indicators -->
+                <div class="interview-progress-bar">
+                    <div class="progress-lbl">
+                        <span>Interview Progress</span>
+                        <span id="progress-val">Question 1 of 3</span>
+                    </div>
+                    <div class="meter-bar-bg">
+                        <div class="meter-bar-fill easy-fill" id="progress-bar-fill" style="width: 33%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Chat Interface -->
+            <div class="chat-pane">
+                <div class="chat-header">
+                    <h3 id="session-title">Mock Loop: Frontend Engineer</h3>
+                    <div class="timer" id="session-timer">00:00</div>
+                </div>
+
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Dynamic chat messages go here -->
+                </div>
+
+                <div class="chat-input-bar">
+                    <textarea id="user-response" placeholder="Type your answer here using the STAR framework (Situation, Task, Action, Result)..."></textarea>
+                    <button class="chat-send-btn" id="send-response-btn" disabled>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- STEP 3: MOCK SESSION SUMMARY & SCORECARD -->
+        <div class="summary-card" id="summary-card" style="display: none;">
+            <div class="summary-header-icon">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            
+            <div>
+                <h2 style="font-size: 2.2rem; font-weight: 800;">Mock Loop Completed!</h2>
+                <p style="color: var(--text-secondary); margin-top: 6px;">Your interview telemetry has been processed. Here is your feedback scorecard:</p>
+            </div>
+
+            <div class="summary-metrics-grid">
+                <div class="stat-box">
+                    <h4 style="font-size: 2rem; color: var(--success);" id="summary-grade">A-</h4>
+                    <p>STAR Structure</p>
+                </div>
+                <div class="stat-box" style="border-left: 1px solid var(--glass-border); border-right: 1px solid var(--glass-border);">
+                    <h4 style="font-size: 2rem; color: var(--accent);" id="summary-xp-earned">+150 XP</h4>
+                    <p>XP Rewarded</p>
+                </div>
+                <div class="stat-box">
+                    <h4 style="font-size: 2rem; color: #ffffff;" id="summary-total-xp">4,400</h4>
+                    <p>Total XP</p>
+                </div>
+            </div>
+
+            <div class="feedback-bubble" style="text-align: left;">
+                <div class="feedback-rating">
+                    <i class="fa-solid fa-circle-check"></i> Recruiter Insights
+                </div>
+                <p style="margin-top: 6px; line-height: 1.5; color: var(--text-secondary);" id="summary-feedback-paragraph">
+                    Excellent structure. Your answers show a clear understanding of the STAR method. You highlighted specific technical metrics and resolved trade-offs cleanly.
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 1rem; width: 100%;">
+                <a href="dashboard.html" class="btn btn-secondary-outline" style="flex: 1; height: 46px; text-decoration: none; justify-content: center; display: inline-flex; align-items: center;">Return to Dashboard</a>
+                <button class="btn btn-primary" id="restart-interview-btn-card" style="flex: 1; height: 46px;">Start New Session</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Theme management and main app logic scripts -->
+    <script src="js/theme.js"></script>
+    <script type="module">
+        import { getSupabaseClient } from './js/supabase-client.js';
+
+        // Predefined question sets based on selected Job Profile
+        const QUESTION_SETS = {
+            "Frontend Engineer": [
+                "Explain the differences between client-side rendering (CSR) and server-side rendering (SSR), and when you would use a meta-framework like Next.js.",
+                "How does React's virtual DOM work, and how does it optimize rendering performance under the hood?",
+                "Walk me through how you would optimize a slow web application that has a high Largest Contentful Paint (LCP) score."
+            ],
+            "Backend Engineer": [
+                "Describe the difference between SQL and NoSQL databases, and how you choose which database to use for a high-volume user profile service.",
+                "How do you design a rate limiter for a public API endpoint to prevent abuse and DDoS attacks?",
+                "Explain the difference between optimistic and pessimistic locking in transaction management."
+            ],
+            "Full Stack Developer": [
+                "Describe the flow of a modern OAuth 2.0 authorization code flow with PKCE from client to server.",
+                "How do you ensure proper state synchronization and real-time updates between a Node.js backend and a React client?",
+                "How would you architect a file-upload service that scales to handle large files (e.g. 5GB) securely?"
+            ],
+            "Data Scientist": [
+                "Explain the difference between overfitting and underfitting, and how you would prevent overfitting in a deep learning model.",
+                "How does the Transformer self-attention mechanism work at a high level?",
+                "How would you handle highly imbalanced datasets in a binary classification problem?"
+            ],
+            "Product Manager": [
+                "How do you prioritize a product roadmap when multiple stakeholders have conflicting high-priority feature requests?",
+                "Describe a metrics framework you would use to measure the success of a new search feature on an e-commerce platform.",
+                "How would you handle a situation where an engineering team estimates a critical launch will take twice as long as planned?"
+            ],
+            "DevOps Engineer": [
+                "What is Infrastructure as Code (IaC), and how does Terraform manage states securely across teams?",
+                "How do you configure a zero-downtime blue-green deployment pipeline using Kubernetes?",
+                "How would you design a secure secrets management system for a microservices cluster?"
+            ],
+            "Custom": [
+                "Walk me through a challenging technical problem you solved recently and how you decided on the final architecture.",
+                "How do you handle disagreements on technical designs or project priorities within your development team?",
+                "What is your approach to learning new technologies or frameworks quickly when joining a new project?"
+            ]
+        };
+
+        // Local storage helpers
+        const getXP = () => {
+            const xp = localStorage.getItem('rolepilot_xp');
+            return xp ? parseInt(xp) : 4250;
+        };
+
+        const setXP = (xp) => {
+            localStorage.setItem('rolepilot_xp', xp.toString());
+        };
+
+        // State variables
+        let selectedRole = "Frontend Engineer";
+        let currentQuestionIdx = 0;
+        let questionBank = [];
+        let sessionTimerInterval = null;
+        let elapsedSeconds = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Theme toggle init
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            if (themeToggleBtn) {
+                const currentTheme = localStorage.getItem('theme') || 'dark';
+                themeToggleBtn.textContent = currentTheme === 'light' ? '🌙' : '☀️';
+                themeToggleBtn.addEventListener('click', () => {
+                    const isLight = document.documentElement.classList.toggle('light-theme');
+                    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+                    themeToggleBtn.textContent = isLight ? '🌙' : '☀️';
+                });
+            }
+
+            // Sync user profile headers
+            const userXp = getXP();
+            const headerXpEl = document.getElementById('header-xp');
+            if (headerXpEl) {
+                headerXpEl.textContent = `XP: ${userXp.toLocaleString()} • Master Tier`;
+            }
+
+            // Sync Supabase details if present
+            const checkSupabase = async () => {
+                try {
+                    const db = await getSupabaseClient();
+                    const { data: { session } } = await db.auth.getSession();
+                    if (session) {
+                        const { data: profile } = await db.from('profiles').select('full_name, avatar_url').eq('id', session.user.id).maybeSingle();
+                        if (profile) {
+                            const initials = profile.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                            const triggerEl = document.getElementById('profile-trigger');
+                            if (triggerEl) {
+                                if (profile.avatar_url && profile.avatar_url !== 'custom_placeholder') {
+                                    triggerEl.innerHTML = `<img src="${profile.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:contain;" alt="${profile.full_name}">`;
+                                } else {
+                                    triggerEl.textContent = initials;
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Supabase details bypass:", e);
+                }
+            };
+            checkSupabase();
+
+            // Toggle custom text input based on select dropdown choice
+            const profileSelect = document.getElementById('profile-select');
+            const profileWriteIn = document.getElementById('profile-write-in');
+
+            profileSelect.addEventListener('change', () => {
+                if (profileSelect.value === 'Custom Write-In') {
+                    profileWriteIn.removeAttribute('disabled');
+                    profileWriteIn.focus();
+                } else {
+                    profileWriteIn.setAttribute('disabled', 'true');
+                    profileWriteIn.value = '';
+                }
+            });
+
+            // Start Interview button
+            const startBtn = document.getElementById('start-interview-btn');
+            startBtn.addEventListener('click', startMockInterview);
+
+            // Textarea input enabled button
+            const userResponseArea = document.getElementById('user-response');
+            const sendResponseBtn = document.getElementById('send-response-btn');
+
+            userResponseArea.addEventListener('input', () => {
+                sendResponseBtn.disabled = userResponseArea.value.trim().length < 15; // Require at least 15 chars to click send
+            });
+
+            sendResponseBtn.addEventListener('click', submitUserAnswer);
+
+            // Restart buttons
+            document.getElementById('restart-interview-btn-card').addEventListener('click', resetSession);
+        });
+
+        function startMockInterview() {
+            const profileSelect = document.getElementById('profile-select');
+            const profileWriteIn = document.getElementById('profile-write-in');
+
+            if (profileSelect.value === 'Custom Write-In') {
+                const typed = profileWriteIn.value.trim();
+                if (!typed) {
+                    alert("Please type a custom job profile to continue.");
+                    profileWriteIn.focus();
+                    return;
+                }
+                selectedRole = typed;
+                questionBank = QUESTION_SETS["Custom"];
+            } else {
+                selectedRole = profileSelect.value;
+                questionBank = QUESTION_SETS[selectedRole] || QUESTION_SETS["Custom"];
+            }
+
+            // Initialize workspace
+            document.getElementById('setup-card').style.display = 'none';
+            document.getElementById('interview-workspace').style.display = 'grid';
+            document.getElementById('session-title').textContent = `Mock Loop: ${selectedRole}`;
+            
+            currentQuestionIdx = 0;
+            elapsedSeconds = 0;
+            document.getElementById('chat-messages').innerHTML = '';
+            
+            // Start timer
+            sessionTimerInterval = setInterval(() => {
+                elapsedSeconds++;
+                const mins = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+                const secs = (elapsedSeconds % 60).toString().padStart(2, '0');
+                document.getElementById('session-timer').textContent = `${mins}:${secs}`;
+            }, 1000);
+
+            // Trigger first AI question
+            triggerAIQuestion();
+        }
+
+        function triggerAIQuestion() {
+            const messagesContainer = document.getElementById('chat-messages');
+            const question = questionBank[currentQuestionIdx];
+
+            // Progress labels
+            document.getElementById('progress-val').textContent = `Question ${currentQuestionIdx + 1} of ${questionBank.length}`;
+            document.getElementById('progress-bar-fill').style.width = `${((currentQuestionIdx + 1) / questionBank.length) * 100}%`;
+
+            // Display message loader
+            const loaderDiv = document.createElement('div');
+            loaderDiv.className = 'message-bubble ai';
+            loaderDiv.innerHTML = `<i class="fa-solid fa-ellipsis fa-bounce"></i> Elara is asking...`;
+            messagesContainer.appendChild(loaderDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            setTimeout(() => {
+                loaderDiv.innerHTML = `<strong>Question ${currentQuestionIdx + 1}:</strong><br>${question}`;
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 1200);
+        }
+
+        function submitUserAnswer() {
+            const responseArea = document.getElementById('user-response');
+            const answer = responseArea.value.trim();
+            if (!answer) return;
+
+            const messagesContainer = document.getElementById('chat-messages');
+            
+            // Append user response
+            const userDiv = document.createElement('div');
+            userDiv.className = 'message-bubble user';
+            userDiv.textContent = answer;
+            messagesContainer.appendChild(userDiv);
+            
+            responseArea.value = '';
+            document.getElementById('send-response-btn').disabled = true;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Trigger AI feedback loader
+            const feedbackLoader = document.createElement('div');
+            feedbackLoader.className = 'message-bubble ai';
+            feedbackLoader.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Analyzing response with TruGen AI...`;
+            messagesContainer.appendChild(feedbackLoader);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            setTimeout(() => {
+                // Generate mock score based on STAR metrics (length and key terms)
+                const lowerAns = answer.toLowerCase();
+                let score = "B";
+                let feedbackText = "Good baseline answer. However, you could improve by highlighting concrete technical results and resolving trade-offs more clearly.";
+                
+                // STAR analysis (e.g. check for metric indicators or action words)
+                const hasMetrics = /\d+/.test(lowerAns) || lowerAns.includes("percent") || lowerAns.includes("lcp") || lowerAns.includes("scale") || lowerAns.includes("ms");
+                const hasSituation = lowerAns.includes("situation") || lowerAns.includes("when") || lowerAns.includes("background");
+                const hasAction = lowerAns.includes("action") || lowerAns.includes("i decided") || lowerAns.includes("implemented") || lowerAns.includes("architected");
+                const hasResult = lowerAns.includes("result") || lowerAns.includes("achieved") || lowerAns.includes("resulting in");
+
+                if (hasSituation && hasAction && hasResult && hasMetrics) {
+                    score = "A";
+                    feedbackText = "Excellent! Perfect STAR format alignment. You described the situation clearly, laid out your active steps, and provided concrete, measurable outcomes.";
+                } else if (hasAction && hasResult) {
+                    score = "A-";
+                    feedbackText = "Very strong answer. You focused heavily on your active contributions and achievements, but try adding more background context to fully set the scene.";
+                } else if (hasMetrics) {
+                    score = "B+";
+                    feedbackText = "Good response with nice measurable results, but the structure is slightly disorganized. Try explicitly dividing your answer into Situation, Action, and Results.";
+                }
+
+                // Replace loader with AI feedback bubble
+                feedbackLoader.remove();
+
+                const fbBubble = document.createElement('div');
+                fbBubble.className = 'feedback-bubble';
+                fbBubble.innerHTML = `
+                    <div class="feedback-rating">
+                        <i class="fa-solid fa-circle-check"></i> STAR Score: ${score} (+50 XP)
+                    </div>
+                    <p style="color:var(--text-secondary); line-height:1.5;">${feedbackText}</p>
+                `;
+                messagesContainer.appendChild(fbBubble);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                // Update local storage XP
+                const newXp = getXP() + 50;
+                setXP(newXp);
+                const headerXpEl = document.getElementById('header-xp');
+                if (headerXpEl) {
+                    headerXpEl.textContent = `XP: ${newXp.toLocaleString()} • Master Tier`;
+                }
+
+                // Check if loop finished
+                currentQuestionIdx++;
+                setTimeout(() => {
+                    if (currentQuestionIdx < questionBank.length) {
+                        triggerAIQuestion();
+                    } else {
+                        // Complete session
+                        finishMockSession();
+                    }
+                }, 2000);
+
+            }, 2000);
+        }
+
+        function finishMockSession() {
+            clearInterval(sessionTimerInterval);
+            document.getElementById('interview-workspace').style.display = 'none';
+            document.getElementById('summary-card').style.display = 'flex';
+            
+            const totalXpNow = getXP();
+            document.getElementById('summary-total-xp').textContent = totalXpNow.toLocaleString();
+            
+            // Calculate final feedback parameters
+            document.getElementById('summary-grade').textContent = "A-";
+            document.getElementById('summary-xp-earned').textContent = `+150 XP`;
+            document.getElementById('summary-feedback-paragraph').textContent = `Excellent job completing the ${selectedRole} mock interview series. You completed the session in ${Math.floor(elapsedSeconds / 60)}m ${elapsedSeconds % 60}s. Your responses scored a high rating in STAR metrics, verifying your ability to communicate complex architecture and project deliverables clearly.`;
+        }
+
+        function resetSession() {
+            document.getElementById('summary-card').style.display = 'none';
+            document.getElementById('setup-card').style.display = 'flex';
+            document.getElementById('profile-write-in').value = '';
+            document.getElementById('profile-select').value = 'Frontend Engineer';
+            document.getElementById('profile-write-in').setAttribute('disabled', 'true');
+        }
+    </script>
+</body>
+</html>

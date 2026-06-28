@@ -18,6 +18,65 @@
     <script src="js/theme.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .role-selector-container {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 1.5rem;
+            width: 100%;
+        }
+        .light-theme .role-selector-container {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+        .role-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 0.6rem;
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .light-theme .role-btn {
+            color: rgba(30, 41, 59, 0.6);
+        }
+        .role-btn.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+        }
+        .role-btn.active[data-role="recruiter"] {
+            background: #a855f7;
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+        }
+        
+        /* Adjustments for Recruiter Login Theme */
+        .login-auth-card.recruiter-theme {
+            border-color: rgba(168, 85, 247, 0.3);
+            box-shadow: 0 20px 50px rgba(168, 85, 247, 0.1);
+        }
+        .login-auth-card.recruiter-theme #auth-title span {
+            color: #a855f7;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .login-auth-card.recruiter-theme #auth-submit-btn {
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <title>Login - Role-Pilot</title>
 </head>
@@ -142,6 +201,11 @@
                 <div class="auth-header">
                     <h2 id="auth-title">Welcome to Role<span>Pilot</span></h2>
                     <p id="auth-subtitle">Sign in to access your<br>AI career navigator.</p>
+                </div>
+
+                <div class="role-selector-container">
+                    <button type="button" class="role-btn active" id="role-seeker-btn" data-role="seeker"><i class="fa-solid fa-graduation-cap"></i> Candidate</button>
+                    <button type="button" class="role-btn" id="role-recruiter-btn" data-role="recruiter"><i class="fa-solid fa-briefcase"></i> Recruiter</button>
                 </div>
 
                 <form id="login-form">

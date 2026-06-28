@@ -30,6 +30,45 @@ let checkedEmail = '';
 let isChecking = false;
 let activeCheckPromise = null;
 
+// Role Selector State & Logic
+let selectedRole = 'seeker';
+const roleSeekerBtn = document.getElementById('role-seeker-btn');
+const roleRecruiterBtn = document.getElementById('role-recruiter-btn');
+
+if (roleSeekerBtn && roleRecruiterBtn) {
+    roleSeekerBtn.addEventListener('click', () => {
+        selectedRole = 'seeker';
+        roleSeekerBtn.classList.add('active');
+        roleRecruiterBtn.classList.remove('active');
+        if (loginAuthCard) loginAuthCard.classList.remove('recruiter-theme');
+        if (authTitle) authTitle.innerHTML = 'Welcome to Role<span>Pilot</span>';
+        if (authSubtitle) authSubtitle.textContent = 'Sign in to access your AI career navigator.';
+        
+        // Seeker is standard layout
+        if (isSignUp) {
+            expandGroup(nameGroup, nameInput);
+        } else {
+            collapseGroup(nameGroup, nameInput);
+        }
+    });
+
+    roleRecruiterBtn.addEventListener('click', () => {
+        selectedRole = 'recruiter';
+        roleRecruiterBtn.classList.add('active');
+        roleSeekerBtn.classList.remove('active');
+        if (loginAuthCard) loginAuthCard.classList.add('recruiter-theme');
+        
+        // Reset check status & layout
+        resetToSignIn();
+        
+        if (authTitle) authTitle.innerHTML = 'Recruiter Portal';
+        if (authSubtitle) authSubtitle.textContent = 'Sign in to access the recruiter console and rank top talent.';
+        
+        // Recruiter has simple login, no signup name required
+        collapseGroup(nameGroup, nameInput);
+    });
+}
+
 // Debounce helper
 function debounce(func, delay) {
     let timeoutId;
@@ -224,6 +263,13 @@ async function initDb() {
             emailInput.value = prefilledEmail;
             checkUserStatus(); // Trigger status check immediately
         }
+
+        const prefilledRole = urlParams.get('role');
+        if (prefilledRole === 'recruiter' && roleRecruiterBtn) {
+            roleRecruiterBtn.click();
+        } else if (prefilledRole === 'seeker' && roleSeekerBtn) {
+            roleSeekerBtn.click();
+        }
     } catch (e) {
         showAlert('error', `Database initialization error: ${e.message}`);
         authSubmitBtn.disabled = true;
@@ -249,6 +295,12 @@ if (emailSuggestion) {
 // Dynamic email lookup function
 async function checkUserStatus() {
     if (!db) return null;
+    
+    // Short-circuit for recruiter
+    if (selectedRole === 'recruiter') {
+        return null;
+    }
+    
     const email = emailInput.value.trim();
 
     if (!email) {
@@ -331,14 +383,26 @@ if (emailInput) {
 /* --- Form Submission Actions --- */
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!db) return;
-
     hideAlert();
+
     const email = emailInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
+
+    // Recruiter Mode Redirect
+    if (selectedRole === 'recruiter') {
+        authSubmitBtn.disabled = true;
+        authSpinner.style.display = 'block';
+        setTimeout(() => {
+            authSubmitBtn.disabled = false;
+            authSpinner.style.display = 'none';
+            window.location.href = 'recruiter/index.html';
+        }, 1000);
+        return;
+    }
+
+    if (!db) return;
     
     // Continue logic
-
-    const password = passwordInput.value;
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {

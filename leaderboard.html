@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Leaderboard - Role-Pilot</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Inline Theme Script (Crucial: Place immediately in <head> to prevent FOUC / flickering) -->
+    <script>
+      (function() {
+          const currentTheme = localStorage.getItem('theme') || 'dark';
+          if (currentTheme === 'light') {
+              document.documentElement.classList.add('light-theme');
+          } else {
+              document.documentElement.classList.remove('light-theme');
+          }
+      })();
+    </script>
+    
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase JS Client Library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Page Specific Styles -->
+    <style>
+        .leaderboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .leaderboard-header-section {
+            text-align: center;
+        }
+
+        .leaderboard-header-section h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .leaderboard-header-section p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+        }
+
+        .podium-section {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 2rem;
+            align-items: end;
+            margin: 2rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .podium-section {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        .podium-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-layered);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .podium-card.rank-1 {
+            border-color: rgba(245, 158, 11, 0.4);
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--panel-bg) 100%);
+            padding: 3rem 2rem;
+        }
+
+        .podium-card.rank-2 {
+            border-color: rgba(148, 163, 184, 0.4);
+        }
+
+        .podium-card.rank-3 {
+            border-color: rgba(180, 83, 9, 0.4);
+        }
+
+        .podium-rank-badge {
+            position: absolute;
+            top: -20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .rank-1 .podium-rank-badge { background: #f59e0b; color: #000000; }
+        .rank-2 .podium-rank-badge { background: #94a3b8; color: #000000; }
+        .rank-3 .podium-rank-badge { background: #b45309; color: #ffffff; }
+
+        .podium-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #ffffff;
+            border: 3px solid var(--glass-border);
+        }
+
+        .podium-card.rank-1 .podium-avatar {
+            width: 100px;
+            height: 100px;
+            font-size: 2.2rem;
+        }
+
+        .podium-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .podium-role {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .podium-xp {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .leaderboard-list-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-outer);
+            padding: 2.5rem;
+            box-shadow: var(--shadow-layered);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+        }
+
+        .list-search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            align-items: center;
+        }
+
+        :root.light-theme .list-search-bar {
+            background: rgba(15, 23, 42, 0.02);
+        }
+
+        .list-search-bar input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            flex-grow: 1;
+        }
+
+        .lb-row {
+            display: grid;
+            grid-template-columns: 80px 1.5fr 1fr 1fr 120px;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .lb-row.header {
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--glass-border);
+        }
+
+        .lb-row.current-user {
+            background: rgba(168, 85, 247, 0.08);
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            border-radius: 12px;
+        }
+
+        .lb-row:not(.header):hover {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        :root.light-theme .lb-row:not(.header):hover {
+            background: rgba(15, 23, 42, 0.01);
+        }
+
+        .lb-rank-num {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .lb-row.current-user .lb-rank-num {
+            color: var(--primary-hover);
+        }
+
+        .lb-user-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .lb-user-ava {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .lb-user-tag {
+            font-size: 0.75rem;
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .lb-xp-val {
+            font-weight: 700;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body class="dashboard-page">
+    <div class="bg-layers">
+        <div class="bg-layer dark-bg"></div>
+        <div class="bg-layer light-bg"></div>
+    </div>
+    <div class="landing-overlay"></div>
+    
+    <!-- Global App Header -->
+    <header class="app-header dashboard-header">
+        <div class="header-left">
+            <a href="index.html" class="logo-wrapper">
+                <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                    <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                    <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                    <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                    <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                    <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                </svg>
+                <span class="logo-text">Role<span>Pilot</span></span>
+            </a>
+        </div>
+        
+        <div class="header-center">
+            <nav class="header-nav">
+                <ul class="dashboard-nav-tabs">
+                    <li><a href="dashboard.html" class="nav-tab-link">Dashboard</a></li>
+                    <li><a href="code-arena/index.html" class="nav-tab-link">Coding Arena</a></li>
+                    <li><a href="mock-interviews.html" class="nav-tab-link">Mock Interviews</a></li>
+                    <li><a href="ats-tailor.html" class="nav-tab-link">ATS Tailor</a></li>
+                    <li><a href="leaderboard.html" class="nav-tab-link active">Leaderboard</a></li>
+                </ul>
+            </nav>
+        </div>
+        
+        <div class="header-actions header-user-actions">
+            <div class="xp-badge">
+                <i class="fa-solid fa-bolt"></i>
+                <span id="header-xp">XP: 4,250 • Master Tier</span>
+            </div>
+            
+            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+            
+            <div class="profile-dropdown-wrapper">
+                <div class="profile-trigger" id="profile-trigger">SR</div>
+                <div class="dropdown-menu" id="profile-dropdown">
+                    <a href="#" class="dropdown-item"><i class="fa-solid fa-user-gear"></i> Profile Settings</a>
+                    <a href="#" class="dropdown-item"><i class="fa-solid fa-credit-card"></i> Billing</a>
+                    <div style="height: 1px; background: var(--glass-border); margin: 4px 0;"></div>
+                    <a href="#" class="dropdown-item" id="logout-btn" style="color: var(--error);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
+                </div>
+            </div>
+            
+            <button class="mobile-menu-toggle" id="mobile-menu-btn">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="leaderboard-container">
+        
+        <div class="leaderboard-header-section">
+            <h1>Global Tech Leaderboard</h1>
+            <p>Verifiable experience ranking based on mock interview telemetries and coding correctness.</p>
+        </div>
+
+        <!-- Dynamic Podium Section for Top 3 -->
+        <div class="podium-section" id="podium-root">
+            <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Main Leaderboard list card -->
+        <div class="leaderboard-list-card">
+            <div class="list-search-bar">
+                <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
+                <input type="text" id="candidate-search" placeholder="Search candidates by name, stack or title...">
+            </div>
+
+            <div class="lb-row header">
+                <div>Rank</div>
+                <div>Candidate</div>
+                <div>Role</div>
+                <div>Badges</div>
+                <div style="text-align: right;">XP Score</div>
+            </div>
+
+            <div id="leaderboard-rows-root">
+                <!-- Rendered dynamically -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- UI Logic and theme managers -->
+    <script src="js/theme.js"></script>
+    <script type="module">
+        import { getSupabaseClient } from './js/supabase-client.js';
+
+        // Local storage scores fallback
+        const getXP = () => {
+            const xp = localStorage.getItem('rolepilot_xp');
+            return xp ? parseInt(xp) : 4250;
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Theme toggle init
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            if (themeToggleBtn) {
+                const currentTheme = localStorage.getItem('theme') || 'dark';
+                themeToggleBtn.textContent = currentTheme === 'light' ? '🌙' : '☀️';
+                themeToggleBtn.addEventListener('click', () => {
+                    const isLight = document.documentElement.classList.toggle('light-theme');
+                    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+                    themeToggleBtn.textContent = isLight ? '🌙' : '☀️';
+                });
+            }
+
+            // Sync user headers
+            const userXp = getXP();
+            const headerXpEl = document.getElementById('header-xp');
+            if (headerXpEl) {
+                headerXpEl.textContent = `XP: ${userXp.toLocaleString()} • Master Tier`;
+            }
+
+            // Initialize rankings
+            initLeaderboard();
+        });
+
+        async function initLeaderboard() {
+            let userDisplayName = "Shivansh";
+            let userRole = "Senior Frontend Engineer";
+            let userAvatar = "SR";
+            let userAvatarUrl = null;
+
+            // Attempt to retrieve profile from Supabase
+            try {
+                const db = await getSupabaseClient();
+                const { data: { session } } = await db.auth.getSession();
+                if (session) {
+                    const { data: profile } = await db.from('profiles').select('full_name, avatar_url, target_role').eq('id', session.user.id).maybeSingle();
+                    if (profile) {
+                        userDisplayName = profile.full_name;
+                        userRole = profile.target_role;
+                        userAvatar = profile.full_name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+                        userAvatarUrl = profile.avatar_url;
+
+                        const triggerEl = document.getElementById('profile-trigger');
+                        if (triggerEl) {
+                            if (profile.avatar_url && profile.avatar_url !== 'custom_placeholder') {
+                                triggerEl.innerHTML = `<img src="${profile.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:contain;" alt="${userDisplayName}">`;
+                            } else {
+                                triggerEl.textContent = userAvatar;
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not query Supabase session, fallback to local details:", e);
+            }
+
+            const currentCandidateXp = getXP();
+
+            // Set up candidates list
+            const staticCandidates = [
+                { name: "Alex Kim", role: "Frontend Developer", xp: 14200, isSelf: false, avatar: "AK", badge: "React Expert" },
+                { name: "Sarah Jenkins", role: "Backend Developer", xp: 12850, isSelf: false, avatar: "SJ", badge: "System Design" },
+                { name: "Mike Richardson", role: "Fullstack Developer", xp: 11400, isSelf: false, avatar: "MR", badge: "AWS Architect" },
+                { name: "Emily Watson", role: "Frontend Developer", xp: 9800, isSelf: false, avatar: "EW", badge: "TypeScript" },
+                { name: "Carlos Ruiz", role: "Data Scientist", xp: 8250, isSelf: false, avatar: "CR", badge: "Python Score" },
+                { name: "David Lee", role: "DevOps Engineer", xp: 7100, isSelf: false, avatar: "DL", badge: "Kubernetes" },
+                { name: "Anna Petrov", role: "Frontend Developer", xp: 5950, isSelf: false, avatar: "AP", badge: "Next.js" }
+            ];
+
+            // Add our current user
+            const selfUser = {
+                name: userDisplayName + " (You)",
+                role: userRole,
+                xp: currentCandidateXp,
+                isSelf: true,
+                avatar: userAvatar,
+                avatarUrl: userAvatarUrl,
+                badge: "Role-Pilot Verified"
+            };
+            
+            staticCandidates.push(selfUser);
+
+            // Sort candidates dynamically by XP descending
+            staticCandidates.sort((a, b) => b.xp - a.xp);
+
+            const renderUI = (filterText = '') => {
+                const query = filterText.toLowerCase();
+                const filtered = staticCandidates.filter(c => 
+                    c.name.toLowerCase().includes(query) || 
+                    c.role.toLowerCase().includes(query) || 
+                    (c.badge && c.badge.toLowerCase().includes(query))
+                );
+
+                // Render podium for first 3 in filtered (only if searching is empty or has enough results)
+                const podiumRoot = document.getElementById('podium-root');
+                podiumRoot.innerHTML = '';
+                
+                // Get absolute top 3 for podium visualization
+                const topThree = staticCandidates.slice(0, 3);
+                
+                // Rearrange podium order: Rank 2 (Left), Rank 1 (Center), Rank 3 (Right)
+                const podiumLayout = [null, null, null];
+                if (topThree[1]) podiumLayout[0] = { ...topThree[1], rank: 2 };
+                if (topThree[0]) podiumLayout[1] = { ...topThree[0], rank: 1 };
+                if (topThree[2]) podiumLayout[2] = { ...topThree[2], rank: 3 };
+
+                podiumLayout.forEach((cand, idx) => {
+                    if (!cand) {
+                        // Empty spacer
+                        const div = document.createElement('div');
+                        podiumRoot.appendChild(div);
+                        return;
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = `podium-card rank-${cand.rank}`;
+                    
+                    const avatarHtml = cand.avatarUrl && cand.avatarUrl !== 'custom_placeholder'
+                        ? `<img src="${cand.avatarUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:contain;" alt="${cand.name}">`
+                        : cand.avatar;
+
+                    card.innerHTML = `
+                        <div class="podium-rank-badge">${cand.rank}</div>
+                        <div class="podium-avatar">${avatarHtml}</div>
+                        <div class="podium-name">${cand.name}</div>
+                        <div class="podium-role">${cand.role}</div>
+                        <div class="podium-xp">${cand.xp.toLocaleString()} XP</div>
+                    `;
+                    podiumRoot.appendChild(card);
+                });
+
+                // Render table rows
+                const rowsRoot = document.getElementById('leaderboard-rows-root');
+                rowsRoot.innerHTML = '';
+
+                filtered.forEach(cand => {
+                    // Find actual rank in the fully sorted list
+                    const rank = staticCandidates.indexOf(cand) + 1;
+                    
+                    const row = document.createElement('div');
+                    row.className = `lb-row ${cand.isSelf ? 'current-user' : ''}`;
+                    
+                    const avatarHtml = cand.avatarUrl && cand.avatarUrl !== 'custom_placeholder'
+                        ? `<img src="${cand.avatarUrl}" style="width:100%; height:100%; border-radius:50%; object-fit:contain;" alt="${cand.name}">`
+                        : cand.avatar;
+
+                    row.innerHTML = `
+                        <div class="lb-rank-num">#${rank}</div>
+                        <div class="lb-user-cell">
+                            <div class="lb-user-ava">${avatarHtml}</div>
+                            <span>${cand.name}</span>
+                        </div>
+                        <div style="font-size:0.9rem; font-weight:500; color:var(--text-secondary);">${cand.role}</div>
+                        <div>
+                            <span class="lb-user-tag">${cand.badge}</span>
+                        </div>
+                        <div class="lb-xp-val" style="text-align: right;">${cand.xp.toLocaleString()} XP</div>
+                    `;
+                    rowsRoot.appendChild(row);
+                });
+            };
+
+            renderUI();
+
+            // Search filter hook
+            const searchInput = document.getElementById('candidate-search');
+            searchInput.addEventListener('input', (e) => {
+                renderUI(e.target.value);
+            });
+        }
+    </script>
+</body>
+</html>

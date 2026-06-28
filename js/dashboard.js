@@ -1,4 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Sync XP Score from localStorage
+    const syncXP = () => {
+        let xp = localStorage.getItem('rolepilot_xp');
+        if (!xp) {
+            xp = '4250';
+            localStorage.setItem('rolepilot_xp', '4250');
+        }
+        const headerXpEl = document.getElementById('header-xp');
+        if (headerXpEl) {
+            headerXpEl.textContent = `XP: ${parseInt(xp).toLocaleString()} • Master Tier`;
+        }
+    };
+    syncXP();
+
     // 1. Theme Toggling (using the exact logic requested from login.html / theme.js)
     const themeToggleBtn = document.getElementById('theme-toggle');
     const root = document.documentElement;

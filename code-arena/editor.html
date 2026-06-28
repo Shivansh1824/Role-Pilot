@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solve Challenge - Role-Pilot</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Inline Theme Script (Crucial: Place immediately in <head> to prevent FOUC / flickering) -->
+    <script>
+      (function() {
+          const currentTheme = localStorage.getItem('theme') || 'dark';
+          if (currentTheme === 'light') {
+              document.documentElement.classList.add('light-theme');
+          } else {
+              document.documentElement.classList.remove('light-theme');
+          }
+      })();
+    </script>
+    
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Code Arena Stylesheet -->
+    <link rel="stylesheet" href="arena.css?v=1.2">
+    <!-- Canvas Confetti Library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Supabase JS Client Library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="dashboard-page">
+    <div class="bg-layers">
+        <div class="bg-layer dark-bg"></div>
+        <div class="bg-layer light-bg"></div>
+    </div>
+    <div class="landing-overlay"></div>
+    
+    <!-- Global App Header -->
+    <header class="app-header dashboard-header">
+        <div class="header-left">
+            <a href="../index.html" class="logo-wrapper">
+                <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--primary)" />
+                            <stop offset="100%" stop-color="var(--accent)" />
+                        </linearGradient>
+                    </defs>
+                    <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                    <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                    <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                    <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                    <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                    <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                </svg>
+                <span class="logo-text">Role<span>Pilot</span></span>
+            </a>
+        </div>
+        
+        <div class="header-center">
+            <nav class="header-nav">
+                <ul class="dashboard-nav-tabs">
+                    <li><a href="../dashboard.html" class="nav-tab-link">Dashboard</a></li>
+                    <li><a href="index.html" class="nav-tab-link active">Coding Arena</a></li>
+                    <li><a href="../mock-interviews.html" class="nav-tab-link">Mock Interviews</a></li>
+                    <li><a href="../ats-tailor.html" class="nav-tab-link">ATS Tailor</a></li>
+                    <li><a href="../leaderboard.html" class="nav-tab-link">Leaderboard</a></li>
+                </ul>
+            </nav>
+        </div>
+        
+        <div class="header-actions header-user-actions">
+            <div class="xp-badge">
+                <i class="fa-solid fa-bolt"></i>
+                <span id="header-xp">XP: 4,250 • Master Tier</span>
+            </div>
+            
+            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+            
+            <div class="profile-dropdown-wrapper">
+                <div class="profile-trigger" id="profile-trigger">SR</div>
+                <div class="dropdown-menu" id="profile-dropdown">
+                    <a href="#" class="dropdown-item"><i class="fa-solid fa-user-gear"></i> Profile Settings</a>
+                    <a href="#" class="dropdown-item"><i class="fa-solid fa-credit-card"></i> Billing</a>
+                    <div style="height: 1px; background: var(--glass-border); margin: 4px 0;"></div>
+                    <a href="#" class="dropdown-item" id="logout-btn" style="color: var(--error);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
+                </div>
+            </div>
+            
+            <button class="mobile-menu-toggle" id="mobile-menu-btn">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Split Panel Coding Workspace -->
+    <main class="workspace-container">
+        
+        <!-- Left Pane: Problem Description -->
+        <div class="workspace-pane">
+            <div class="pane-tabs-header">
+                <button class="pane-tab active" id="tab-desc-btn">Description</button>
+                <button class="pane-tab" id="tab-sub-btn">Submissions</button>
+            </div>
+            
+            <div class="pane-content-body" id="pane-tab-desc">
+                <div class="problem-header">
+                    <a href="index.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                        <i class="fa-solid fa-arrow-left-long"></i> Back to Challenges
+                    </a>
+                    <h2 id="problem-title">Loading Challenge...</h2>
+                    
+                    <div class="problem-meta-row">
+                        <span class="difficulty-badge" id="problem-difficulty">Easy</span>
+                        <span class="points-badge" id="problem-points">+50 XP</span>
+                    </div>
+                </div>
+
+                <div class="problem-body-desc">
+                    <p class="problem-description-text" id="problem-desc-text">
+                        Loading problem specifications and constraints...
+                    </p>
+                </div>
+
+                <!-- Live Example Cards -->
+                <div id="problem-examples-container" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    <!-- Filled dynamically -->
+                </div>
+
+                <!-- Constraints -->
+                <div class="problem-constraints">
+                    <h5>Constraints:</h5>
+                    <ul id="problem-constraints-list">
+                        <!-- Filled dynamically -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Left Pane: Submissions tab -->
+            <div class="pane-content-body" id="pane-tab-sub" style="display: none;">
+                <h3>Your Submissions</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">History of solutions submitted for this challenge.</p>
+                
+                <div class="table-responsive" style="margin-top: 1rem;">
+                    <table class="dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Language</th>
+                                <th>Status</th>
+                                <th>Complexity</th>
+                            </tr>
+                        </thead>
+                        <tbody id="submissions-tbody">
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">No past submissions found for this challenge.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Pane: Code Workspace & Editor -->
+        <div class="workspace-pane">
+            <!-- Editor Controls -->
+            <div class="editor-controls">
+                <select class="lang-selector" id="language-select">
+                    <option value="javascript">JavaScript (ES6)</option>
+                    <option value="python">Python 3</option>
+                </select>
+                <div style="font-family: monospace; font-size: 0.8rem; color: var(--text-muted);">editor.js</div>
+            </div>
+
+            <!-- Code input container with line numbers -->
+            <div class="code-textarea-container">
+                <div class="editor-line-numbers" id="editor-line-numbers">
+                    <!-- Lines filled dynamically -->
+                </div>
+                <textarea class="editor-code-input" id="code-editor" autocomplete="off" autofocus spellcheck="false" wrap="off"></textarea>
+            </div>
+
+            <!-- Console Panel -->
+            <div class="console-panel">
+                <div class="console-header">
+                    <h4>Console Results</h4>
+                    <span id="run-status-badge" style="font-size: 0.8rem;"></span>
+                </div>
+                <div class="console-body" id="console-output">
+                    Click "Run Code" to compile and check against example test cases...
+                </div>
+            </div>
+
+            <!-- Console Controls -->
+            <div class="console-action-bar">
+                <button class="btn btn-secondary-outline" id="run-code-btn" style="height: 38px; font-weight: 600;"><i class="fa-solid fa-play"></i> Run Code</button>
+                <button class="btn btn-primary-gradient" id="submit-code-btn" style="height: 38px; font-weight: 700; padding: 0 24px;"><i class="fa-solid fa-cloud-arrow-up"></i> Submit Solution</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Success Confetti and XP Rewards Modal -->
+    <div class="success-modal" id="success-modal">
+        <div class="success-modal-card">
+            <div class="modal-confetti-emitter" id="confetti-emitter"></div>
+            
+            <div class="success-icon-wrapper">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            
+            <h2>Accepted!</h2>
+            <p>Congratulations, your solution passed all automated test cases!</p>
+            
+            <div class="modal-xp-gained" id="modal-xp-gained-text">
+                <i class="fa-solid fa-bolt"></i> +50 XP
+            </div>
+            
+            <div class="complexity-eval-card">
+                <div class="complexity-item" style="border-right: 1px solid var(--glass-border);">
+                    <div class="complexity-lbl">Time Complexity</div>
+                    <div class="complexity-val" id="eval-time-complexity">O(N)</div>
+                </div>
+                <div class="complexity-item">
+                    <div class="complexity-lbl">Space Complexity</div>
+                    <div class="complexity-val" id="eval-space-complexity">O(N)</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; width: 100%;">
+                <a href="index.html" class="btn btn-secondary-outline" style="flex: 1; height: 46px;">Back to Arena</a>
+                <button class="btn btn-primary-gradient" id="modal-next-btn" style="flex: 1; height: 46px;">Next Challenge</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Proctoring Start Consent Modal -->
+    <div class="success-modal open" id="proctoring-start-modal" style="z-index: 10000; background: rgba(10, 15, 30, 0.45); backdrop-filter: blur(16px); display: flex; align-items: center; justify-content: center;">
+        <div class="success-modal-card" style="max-width: 480px; padding: 2.5rem; text-align: center; gap: 1.5rem; display: flex; flex-direction: column; align-items: center;">
+            <!-- Thinking/Security Shield in Motion -->
+            <div class="thinking-avatar-container">
+                <div class="thinking-ring ring-1" style="border-color: var(--accent);"></div>
+                <div class="thinking-ring ring-2" style="border-color: var(--primary);"></div>
+                <div class="thinking-ring ring-3" style="border-color: rgba(168, 85, 247, 0.3);"></div>
+                <div class="thinking-avatar" style="border-color: rgba(168, 85, 247, 0.4); color: var(--accent);">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+            </div>
+            <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin: 0;">Security Proctoring System</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">To maintain the integrity of this mock coding assessment, the workspace is monitored under standard developer security proctoring protocols.</p>
+            
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); border-radius: 8px; padding: 1.25rem; width: 100%; text-align: left; display: flex; flex-direction: column; gap: 1rem; box-sizing: border-box;">
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <i class="fa-solid fa-expand" style="color: var(--accent); margin-top: 3px; width: 16px; flex-shrink: 0;"></i>
+                    <span style="font-size: 0.8rem; color: var(--text-primary); line-height: 1.4;"><strong>Fullscreen Enforcement</strong>: The workspace runs strictly in fullscreen. Leaving fullscreen triggers a violation.</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <i class="fa-solid fa-eye" style="color: var(--accent); margin-top: 3px; width: 16px; flex-shrink: 0;"></i>
+                    <span style="font-size: 0.8rem; color: var(--text-primary); line-height: 1.4;"><strong>Tab & Window Tracking</strong>: Switching tabs, minimizing the window, or clicking outside will be flagged.</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color: var(--error); margin-top: 3px; width: 16px; flex-shrink: 0;"></i>
+                    <span style="font-size: 0.8rem; color: var(--text-primary); line-height: 1.4;"><strong>Termination Limit</strong>: Exceeding 3 fullscreen exits or 2 tab switches terminates and fails the challenge.</span>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary-gradient" id="btn-start-proctoring" style="width: 100%; height: 46px; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; color: white;">
+                Begin Assessment & Enter Fullscreen
+            </button>
+        </div>
+    </div>
+
+    <!-- Proctoring Violation Warning Overlay -->
+    <div class="success-modal" id="proctoring-violation-overlay" style="z-index: 10001; background: rgba(10, 15, 30, 0.55); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center;">
+        <div class="success-modal-card" style="max-width: 450px; padding: 2.5rem; text-align: center; gap: 1.5rem; border: 1px solid var(--error); display: flex; flex-direction: column; align-items: center;">
+            <!-- Violation Icon in Motion -->
+            <div class="thinking-avatar-container">
+                <div class="thinking-ring ring-1" style="border-color: var(--error); animation-duration: 2s;"></div>
+                <div class="thinking-ring ring-2" style="border-color: rgba(239, 68, 68, 0.3); animation-duration: 2s;"></div>
+                <div class="thinking-avatar" style="border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.08); box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--error); margin: 0;">Proctoring Violation</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">You left fullscreen mode or switched tabs/windows. This violation has been logged. Continuous violations will fail your assessment.</p>
+            
+            <div style="display: flex; gap: 1rem; width: 100%; margin: 0.5rem 0; box-sizing: border-box;">
+                <div style="flex: 1; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); padding: 12px; border-radius: 8px;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Fullscreen Exits</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;" id="val-fs-exits">0/3</div>
+                </div>
+                <div style="flex: 1; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); padding: 12px; border-radius: 8px;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted);">Window Blurs</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;" id="val-tab-switches">0/2</div>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary-gradient" id="btn-resume-proctoring" style="width: 100%; height: 46px; font-weight: 800; border: none; border-radius: 8px; cursor: pointer; color: white;">
+                Resume & Restore Fullscreen
+            </button>
+        </div>
+    </div>
+
+    <!-- Proctoring Terminal Failure Overlay -->
+    <div class="success-modal" id="proctoring-failed-overlay" style="z-index: 10002; background: rgba(10, 15, 30, 0.7); backdrop-filter: blur(25px); display: flex; align-items: center; justify-content: center;">
+        <div class="success-modal-card" style="max-width: 450px; padding: 3rem; text-align: center; gap: 1.5rem; border: 1px solid var(--error); display: flex; flex-direction: column; align-items: center;">
+            <!-- Failed Icon in Motion -->
+            <div class="thinking-avatar-container">
+                <div class="thinking-ring ring-1" style="border-color: var(--error); animation-duration: 1.5s;"></div>
+                <div class="thinking-avatar" style="border-color: var(--error); color: var(--error); background: rgba(239, 68, 68, 0.08); box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </div>
+            </div>
+            <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--error); margin: 0;">Assessment Failed</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">This assessment was terminated automatically due to exceeding the security proctoring violation limits. You must retry this step.</p>
+            
+            <a href="index.html" class="btn btn-secondary-outline" style="width: 100%; height: 46px; line-height: 44px; font-weight: 700; text-align: center; text-decoration: none; display: inline-block; box-sizing: border-box;">
+                Return to Arena Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Theme management and app logic scripts -->
+    <script src="../js/theme.js"></script>
+    <script type="module" src="arena.js?v=1.2"></script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Arena - Role-Pilot</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Inline Theme Script (Crucial: Place immediately in <head> to prevent FOUC / flickering) -->
+    <script>
+      (function() {
+          const currentTheme = localStorage.getItem('theme') || 'dark';
+          if (currentTheme === 'light') {
+              document.documentElement.classList.add('light-theme');
+          } else {
+              document.documentElement.classList.remove('light-theme');
+          }
+      })();
+    </script>
+    
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- Code Arena Stylesheet -->
+    <link rel="stylesheet" href="arena.css?v=1.2">
+    <!-- Supabase JS Client Library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="dashboard-page">
+    <div class="bg-layers">
+        <div class="bg-layer dark-bg"></div>
+        <div class="bg-layer light-bg"></div>
+    </div>
+    <div class="landing-overlay"></div>
+    
+    <!-- Global App Header -->
+    <header class="app-header dashboard-header">
+        <div class="header-left">
+            <a href="../index.html" class="logo-wrapper">
+                <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--primary)" />
+                            <stop offset="100%" stop-color="var(--accent)" />
+                        </linearGradient>
+                    </defs>
+                    <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                    <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                    <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                    <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                    <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                    <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                </svg>
+                <span class="logo-text">Role<span>Pilot</span></span>
+            </a>
+        </div>
+        
+        <div class="header-center">
+            <nav class="header-nav">
+                <ul class="dashboard-nav-tabs">
+                    <li><a href="../dashboard.html" class="nav-tab-link">Dashboard</a></li>
+                    <li><a href="index.html" class="nav-tab-link active">Coding Arena</a></li>
+                    <li><a href="../mock-interviews.html" class="nav-tab-link">Mock Interviews</a></li>
+                    <li><a href="../ats-tailor.html" class="nav-tab-link">ATS Tailor</a></li>
+                    <li><a href="../leaderboard.html" class="nav-tab-link">Leaderboard</a></li>
+                </ul>
+            </nav>
+        </div>
+        
+        <div class="header-actions header-user-actions">
+            <div class="xp-badge">
+                <i class="fa-solid fa-bolt"></i>
+                <span id="header-xp">XP: 4,250 • Master Tier</span>
+            </div>
+            
+            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+            
+            <div class="profile-dropdown-wrapper">
+                <div class="profile-trigger" id="profile-trigger">SR</div>
+                <div class="dropdown-menu" id="profile-dropdown">
+                    <a href="#" class="dropdown-item"><i class="fa-solid fa-user-gear"></i> Profile Settings</a>
+                    <a href="#" class="dropdown-item"><i class="fa-solid fa-credit-card"></i> Billing</a>
+                    <div style="height: 1px; background: var(--glass-border); margin: 4px 0;"></div>
+                    <a href="#" class="dropdown-item" id="logout-btn" style="color: var(--error);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
+                </div>
+            </div>
+            
+            <button class="mobile-menu-toggle" id="mobile-menu-btn">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="arena-layout">
+        <div class="problem-list-container">
+            
+            <!-- Left Side: User Profile Metrics Card -->
+            <div class="arena-profile-card">
+                <div class="arena-profile-header">
+                    <div class="arena-profile-avatar" id="avatar-circle">SR</div>
+                    <div class="arena-profile-info">
+                        <h3 id="display-name">Shivansh</h3>
+                        <p id="display-role">Senior Frontend Engineer</p>
+                        <p id="display-level" class="arena-level-badge" style="font-size: 0.75rem; color: var(--accent); margin-top: 4px; font-weight: 600;"></p>
+                    </div>
+                </div>
+
+                <div class="arena-stats-grid">
+                    <div class="stat-box">
+                        <h4 id="profile-xp-val">4,250</h4>
+                        <p>XP Score</p>
+                    </div>
+                    <div class="stat-box">
+                        <h4 id="solved-count">0/5</h4>
+                        <p>Solved</p>
+                    </div>
+                </div>
+
+                <!-- Difficulty Progress Meters -->
+                <div class="difficulty-meter">
+                    <div class="difficulty-row" id="easy-progress-row">
+                        <div class="difficulty-label">
+                            <span class="diff-easy-text">Easy</span>
+                            <span id="easy-progress-label">0/4</span>
+                        </div>
+                        <div class="meter-bar-bg">
+                            <div class="meter-bar-fill easy-fill" id="easy-progress-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="difficulty-row" id="medium-progress-row">
+                        <div class="difficulty-label">
+                            <span class="diff-medium-text">Medium</span>
+                            <span id="medium-progress-label">0/1</span>
+                        </div>
+                        <div class="meter-bar-bg">
+                            <div class="meter-bar-fill medium-fill" id="medium-progress-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="difficulty-row" id="hard-progress-row" style="display: none;">
+                        <div class="difficulty-label">
+                            <span class="diff-hard-text">Hard</span>
+                            <span id="hard-progress-label">0/0</span>
+                        </div>
+                        <div class="meter-bar-bg">
+                            <div class="meter-bar-fill hard-fill" id="hard-progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- Right Side: AI Ascent Path Timeline -->
+            <div class="problem-feed-card" style="gap: 2.5rem;">
+                <div class="feed-header" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 1.25rem; margin-bottom: 0.5rem;">
+                    <div>
+                        <h2 style="font-size: 1.8rem; font-weight: 800; display: flex; align-items: center; gap: 10px; margin: 0;">
+                            <i class="fa-solid fa-mountain" style="color: var(--accent);"></i> Coding Ascent Path
+                        </h2>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px; margin-bottom: 0;">Solve progressive AI-generated challenges to test your skills and level up.</p>
+                    </div>
+                </div>
+
+                <!-- Timeline Steps Container -->
+                <div class="ascent-timeline-container" id="ascent-timeline-root" style="display: flex; flex-direction: column; gap: 2rem; position: relative; padding-left: 1.5rem; border-left: 2px dashed var(--glass-border); margin-left: 1rem;">
+                    <!-- Steps will be populated dynamically by JS -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- AI Thinking Loading Overlay -->
+    <div class="success-modal" id="ai-loading-overlay">
+        <!-- Mock Editor Sneak Peek Background -->
+        <div class="mock-editor-sneakpeek">
+            <!-- Mock Left Pane (Problem Description) -->
+            <div class="mock-pane">
+                <div class="mock-line title-line"></div>
+                <div class="mock-line badge-line"></div>
+                <div class="mock-line text-line-1"></div>
+                <div class="mock-line text-line-2"></div>
+                <div class="mock-line text-line-3"></div>
+                <div class="mock-card"></div>
+            </div>
+            <!-- Mock Right Pane (Code Editor) -->
+            <div class="mock-pane">
+                <div class="mock-editor-header">
+                    <div class="mock-select"></div>
+                </div>
+                <div class="mock-code-body">
+                    <div class="mock-code-line"><span class="keyword">function</span> <span class="fn">solve</span>() {</div>
+                    <div class="mock-code-line indent-1"><span class="comment">// Generating starter code...</span></div>
+                    <div class="mock-code-line indent-1"><span class="keyword">let</span> result = <span class="string">"..."</span>;</div>
+                    <div class="mock-code-line indent-1"><span class="keyword">return</span> result;</div>
+                    <div class="mock-code-line">}</div>
+                </div>
+                <div class="mock-console"></div>
+            </div>
+        </div>
+
+        <!-- Central Modal Card -->
+        <div class="success-modal-card" style="max-width: 400px; padding: 3rem; text-align: center; gap: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;">
+            <!-- Thinking Avatar in Motion -->
+            <div class="thinking-avatar-container">
+                <div class="thinking-ring ring-1"></div>
+                <div class="thinking-ring ring-2"></div>
+                <div class="thinking-ring ring-3"></div>
+                <div class="thinking-avatar">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+            </div>
+            <div>
+                <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; color: var(--text-primary); margin-top: 0.5rem;">AI is Thinking...</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.45; margin: 0;">Elara is generating a unique, non-repeating challenge for your ascent step.</p>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace; letter-spacing: 0.05em; text-transform: uppercase;">
+                Contacting Gemini AI
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme management and app logic scripts -->
+    <script src="../js/theme.js"></script>
+    <script type="module" src="arena.js?v=1.2"></script>
+</body>
+</html>
