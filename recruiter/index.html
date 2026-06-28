@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Role-Pilot — Recruiter Console (Top 100 AI Shortlist)</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inline Theme Script (Crucial: Prevent FOUC) -->
+    <script>
+      (function() {
+          const currentTheme = localStorage.getItem('theme') || 'dark';
+          if (currentTheme === 'light') {
+              document.documentElement.classList.add('light-theme');
+          } else {
+              document.documentElement.classList.remove('light-theme');
+          }
+      })();
+    </script>
+    <!-- Recruiter Custom Styles -->
+    <link rel="stylesheet" href="recruiter.css">
+    <!-- Supabase JS Client Library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="recruiter-body">
+    <div class="bg-layers">
+        <div class="bg-layer dark-bg"></div>
+        <div class="bg-layer light-bg"></div>
+    </div>
+    <div class="landing-overlay"></div>
+
+    <!-- Recruiter Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <a href="../index.html" class="logo-wrapper">
+                <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="rec-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#a855f7" />
+                            <stop offset="100%" stop-color="#ec4899" />
+                        </linearGradient>
+                    </defs>
+                    <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#rec-grad)" opacity="0.35" />
+                    <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#rec-grad)" opacity="0.6" />
+                    <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#rec-grad)" opacity="0.8" />
+                    <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#rec-grad)" />
+                    <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#rec-grad)" opacity="0.85" />
+                    <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#rec-grad)" opacity="0.7" />
+                </svg>
+                <span class="logo-text">Role<span>Pilot</span></span>
+            </a>
+            <span class="console-badge"><i class="fa-solid fa-user-shield"></i> Recruiter Portal</span>
+        </div>
+        
+        <div class="header-center">
+            <nav class="header-nav">
+                <a href="#" class="nav-link active" id="nav-talent-pool"><i class="fa-solid fa-list-check"></i> Talent Pool</a>
+                <a href="#" class="nav-link" id="nav-resume-reader"><i class="fa-solid fa-file-pdf"></i> Resume Reader</a>
+            </nav>
+        </div>
+
+        <div class="header-actions">
+            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+            <a href="../index.html" class="btn btn-header-recruiter"><i class="fa-solid fa-arrow-left-long"></i> Candidate Portal</a>
+        </div>
+    </header>
+
+    <main class="console-main" id="stats-anchor">
+        <!-- Top Stats Row -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-users" style="color: var(--primary);"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Total Candidates Screened</span>
+                    <span class="stat-val">100,000</span>
+                    <span class="stat-caption">Parsed from candidates.jsonl</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-star" style="color: #fbbf24;"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Recruiter Shortlisted</span>
+                    <span class="stat-val" id="shortlist-count">1</span>
+                    <span class="stat-caption">Starred by recruiter</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-shield-halved" style="color: var(--error);"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Honeypots Blocked</span>
+                    <span class="stat-val">50</span>
+                    <span class="stat-caption">Security profile anomalies</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">Clean Match Rate</span>
+                    <span class="stat-val">51.5%</span>
+                    <span class="stat-caption">Passed strict filters</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Dashboard Workspace -->
+        <div class="dashboard-workspace">
+            <!-- Left Side: Job & Calibration Controls -->
+            <aside class="sidebar-panel" id="jd-section">
+                <!-- Job Details Card -->
+                <div class="panel-card job-details-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-file-invoice"></i> Target Job Profile</h3>
+                        <span class="badge badge-purple">Active</span>
+                    </div>
+                    <div class="select-job-container" style="margin-bottom: 1.25rem;">
+                        <label for="job-select" style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem; font-weight: 500;">Switch Active Position:</label>
+                        <select id="job-select" class="job-select-control">
+                            <option value="ai-engineer" selected>AI / LLM Backend Engineer</option>
+                            <option value="frontend-developer">Frontend Engineer (React)</option>
+                            <option value="data-scientist">Data Scientist (Python/ML)</option>
+                        </select>
+                    </div>
+                    <div class="job-meta">
+                        <h4 id="active-job-title">AI / LLM Backend Engineer</h4>
+                        <p class="company"><i class="fa-solid fa-building"></i> Redrob AI (Redrob runs on)</p>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.3rem;">
+                        <i class="fa-solid fa-filter" style="font-size: 0.7rem;"></i> Click skills to toggle filter &amp; re-rank candidates
+                    </div>
+                    <div class="job-requirements" id="active-job-skills">
+                        <!-- Populated dynamically by renderJDRequirements() -->
+                    </div>
+                    <div class="job-desc-preview">
+                        <strong>Brief JD Requirements:</strong>
+                        <p id="active-job-desc">Requires building intelligent retrieval systems. Focuses heavily on algorithmic complexity (O(N)), vector search matching, and behavioral dependability. Warns against keywords-stuffers with zero project implementations.</p>
+                    </div>
+                </div>
+
+                <!-- Calibration Controls Card -->
+                <div class="panel-card calibration-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-sliders"></i> Ranking Weight Calibration</h3>
+                        <button class="reset-btn" id="reset-weights-btn"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+                    </div>
+                    <div class="sliders-list">
+                        <div class="slider-item">
+                            <div class="slider-labels">
+                                <span class="slider-title">Semantic Resume Match</span>
+                                <span class="slider-val" id="weight-resume-val">35%</span>
+                            </div>
+                            <input type="range" class="weight-slider" id="weight-resume" min="10" max="60" value="35">
+                        </div>
+                        <div class="slider-item">
+                            <div class="slider-labels">
+                                <span class="slider-title">Technical Challenge score</span>
+                                <span class="slider-val" id="weight-code-val">30%</span>
+                            </div>
+                            <input type="range" class="weight-slider" id="weight-code" min="10" max="60" value="30">
+                        </div>
+                        <div class="slider-item">
+                            <div class="slider-labels">
+                                <span class="slider-title">Mock Interview Rate</span>
+                                <span class="slider-val" id="weight-interview-val">20%</span>
+                            </div>
+                            <input type="range" class="weight-slider" id="weight-interview" min="5" max="40" value="20">
+                        </div>
+                        <div class="slider-item">
+                            <div class="slider-labels">
+                                <span class="slider-title">Recruiter Response Rate</span>
+                                <span class="slider-val" id="weight-response-val">15%</span>
+                            </div>
+                            <input type="range" class="weight-slider" id="weight-response" min="5" max="40" value="15">
+                        </div>
+                    </div>
+                    <div class="calibration-footer">
+                        <p class="hint-text"><i class="fa-solid fa-circle-info"></i> Adjusting sliders dynamically updates the candidate scores in the leaderboard using local verified signals.</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Side: Leaderboard & Search -->
+            <section class="main-panel">
+                <div class="panel-card leaderboard-card">
+                    <div class="leaderboard-filters-row">
+                        <div class="search-box-wrapper">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="candidate-search" placeholder="Search by name, key skills, or details...">
+                        </div>
+                        
+                        <div class="filters-actions">
+                            <div class="select-wrapper">
+                                <i class="fa-solid fa-arrow-down-wide-short select-icon"></i>
+                                <select id="sort-select">
+                                    <option value="rank">Sort by: AI Rank</option>
+                                    <option value="match">Sort by: Match Score</option>
+                                    <option value="code">Sort by: Tech Arena Score</option>
+                                    <option value="interview">Sort by: Interview Rate</option>
+                                    <option value="response">Sort by: Response Rate</option>
+                                </select>
+                            </div>
+
+                            <button id="shortlist-filter-btn" class="btn-secondary-outline btn-icon" title="Toggle Shortlisted Only">
+                                <i class="fa-solid fa-star"></i> <span>Show Shortlisted</span>
+                            </button>
+
+                            <button id="anonymize-toggle" class="btn-secondary-outline btn-icon" title="Toggle Anonymized Profiles">
+                                <i class="fa-solid fa-eye-slash"></i> <span>Anonymize</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard Table Header -->
+                    <div class="leaderboard-list-container">
+                        <div class="list-header-row">
+                            <div class="col-rank">Rank</div>
+                            <div class="col-candidate">Candidate Profile</div>
+                            <div class="col-scores">Platform Scores</div>
+                            <div class="col-reason">AI Matching Rationalization</div>
+                            <div class="col-action">Action</div>
+                        </div>
+
+                        <!-- Candidates Container -->
+                        <div class="candidates-list" id="candidates-container">
+                            <!-- Populated Dynamically by JS -->
+                            <div class="loading-state">
+                                <div class="spinner"></div>
+                                <p>Extracting candidate signals and computing embeddings...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Resume Reader Workspace (Hidden by default) -->
+        <div class="resume-reader-workspace" style="display: none; margin-top: 1rem;">
+            <div class="panel-card resume-reader-card">
+                <div class="resume-reader-layout">
+                    <!-- Left: Uploaded list -->
+                    <aside class="resume-reader-sidebar">
+                        <div class="uploaded-resumes-list">
+                            <h3>Available Candidate Resumes</h3>
+                            <div class="resume-list-container" id="resume-items-list" style="max-height: 480px;">
+                                <!-- Populated Dynamically -->
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Right: Split View (PDF Preview and AI Analysis) -->
+                    <section class="resume-reader-detail">
+                        <div class="no-resume-selected" id="no-resume-message">
+                            <i class="fa-solid fa-file-invoice" style="font-size: 3.5rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                            <h3>No Resume Selected</h3>
+                            <p>Upload a resume or select one from the list to parse and analyze it with Role-Pilot AI.</p>
+                        </div>
+                        
+                        <div class="resume-split-view" id="resume-split-view" style="display: none;">
+                            <!-- Left Sub-Pane: Document Text Viewer -->
+                            <div class="sub-pane doc-viewer-pane">
+                                <div class="sub-pane-header">
+                                    <h4><i class="fa-solid fa-file-lines"></i> Document Content Preview</h4>
+                                    <span class="file-tag" id="preview-file-name">abhishek_sharma_resume.pdf</span>
+                                </div>
+                                <div class="doc-text-content" id="preview-doc-text">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                            
+                            <!-- Right Sub-Pane: Outreach Log & Communication -->
+                            <div class="sub-pane ai-analysis-pane">
+                                <div class="sub-pane-header">
+                                    <h4><i class="fa-solid fa-envelope-open-text"></i> Communication &amp; Response History</h4>
+                                    <span class="badge badge-purple" id="outreach-status-badge">Shortlisted</span>
+                                </div>
+                                <div class="ai-parsed-results">
+                                    <div class="parsed-section" id="outreach-sent-section">
+                                        <h5><i class="fa-solid fa-paper-plane" style="color: var(--primary);"></i> Sent Outreach Email</h5>
+                                        <div id="outreach-sent-content" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 8px; font-size: 0.8rem;">
+                                            <p style="color: var(--text-muted); font-style: italic;">No email sent yet. You can outreach to this candidate from the Talent Pool tab.</p>
+                                        </div>
+                                    </div>
+                                    <div class="parsed-section" id="outreach-reply-section" style="display: none;">
+                                        <h5><i class="fa-solid fa-reply" style="color: var(--success);"></i> Candidate Response</h5>
+                                        <div id="outreach-reply-content" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; font-size: 0.8rem; line-height: 1.45;">
+                                            <!-- Populated dynamically -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Detailed Candidate Modal -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="glass-modal">
+            <button class="modal-close" id="modal-close-btn">&times;</button>
+            
+            <div class="modal-grid">
+                <!-- Modal Left: Header, Avatar, Key Stats -->
+                <div class="modal-left-col">
+                    <div class="modal-user-profile">
+                        <div class="modal-avatar" id="modal-user-avatar">JD</div>
+                        <h2 id="modal-user-name">John Doe</h2>
+                        <span class="modal-role-title">AI / LLM Backend Engineer Candidate</span>
+                        <div class="modal-rank-badge">
+                            <span class="rank-num" id="modal-user-rank">Rank #1</span>
+                            <span class="match-pct" id="modal-user-match">96% Match</span>
+                        </div>
+                    </div>
+
+                    <!-- Score Breakdown Cards -->
+                    <div class="modal-breakdown">
+                        <h3>Role-Pilot Verified Metrics</h3>
+                        
+                        <div class="breakdown-metric-row">
+                            <div class="metric-info-label">
+                                <span><i class="fa-solid fa-laptop-code"></i> Coding Arena Score</span>
+                                <strong id="modal-score-code">94/100</strong>
+                            </div>
+                            <div class="metric-bar-bg">
+                                <div class="metric-bar-fill code-color" id="modal-bar-code" style="width: 94%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="breakdown-metric-row">
+                            <div class="metric-info-label">
+                                <span><i class="fa-solid fa-circle-check"></i> Interview Completion Rate</span>
+                                <strong id="modal-score-interview">95%</strong>
+                            </div>
+                            <div class="metric-bar-bg">
+                                <div class="metric-bar-fill interview-color" id="modal-bar-interview" style="width: 95%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="breakdown-metric-row">
+                            <div class="metric-info-label">
+                                <span><i class="fa-solid fa-reply"></i> Recruiter Response Rate</span>
+                                <strong id="modal-score-response">92%</strong>
+                            </div>
+                            <div class="metric-bar-bg">
+                                <div class="metric-bar-fill response-color" id="modal-bar-response" style="width: 92%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Right: Career History, AI Rationalization, Recruit Options -->
+                <div class="modal-right-col">
+                    <div class="modal-section">
+                        <h3><i class="fa-solid fa-robot"></i> AI Evaluation Report</h3>
+                        <p class="ai-rationale-detail" id="modal-ai-reasoning">
+                            Candidate shows exceptional capability in LLM Orchestration, particularly with PyTorch. System complexity optimization during Coding Arena challenge matches target threshold with O(N) execution. Behavioral responsiveness shows high consistency.
+                        </p>
+                    </div>
+
+                    <div class="modal-section">
+                        <h3><i class="fa-solid fa-user-graduate"></i> Professional Skills</h3>
+                        <div class="modal-skills-tags" id="modal-skills-container">
+                            <!-- Populated Dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="modal-section">
+                        <h3><i class="fa-solid fa-history"></i> Verified Career History</h3>
+                        <div class="modal-history-list" id="modal-history-container">
+                            <!-- Populated Dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Recruiter Contact/Actions Panel -->
+                    <div class="modal-recruiter-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn btn-action-recruit" id="btn-fasttrack" style="flex: 1; min-width: 140px;"><i class="fa-solid fa-bolt"></i> Fast-Track</button>
+                        <button class="btn-secondary-outline btn-action-recruit" id="btn-view-resume" style="flex: 1; min-width: 140px;"><i class="fa-solid fa-file-invoice"></i> View Resume</button>
+                        <button class="btn-secondary-outline btn-action-recruit" id="btn-email-candidate" style="flex: 1; min-width: 140px;"><i class="fa-solid fa-envelope"></i> Email Candidate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Outreach Modal -->
+    <div class="modal-overlay" id="email-modal">
+        <div class="glass-modal email-modal-content" style="max-width: 680px; width: 90%;">
+            <button class="modal-close" id="email-modal-close-btn">&times;</button>
+            <div class="email-modal-header" style="margin-bottom: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.75rem;">
+                <h3 style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-display); font-size: 1.25rem;"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent);"></i> AI Outreach Writer</h3>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Generating personalized outreach email via Gemini 2.5 Flash</p>
+            </div>
+            <div class="email-modal-body">
+                <!-- Loading State -->
+                <div class="email-loading-state" id="email-loading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 250px; text-align: center; gap: 1rem;">
+                    <div class="spinner" style="width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius: 50%; animation: fa-spin 1s linear infinite;"></div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Drafting tailored invitation using candidate's verified platform signals...</p>
+                </div>
+                <!-- Content State -->
+                <div class="email-content-state" id="email-content" style="display: none; flex-direction: column; gap: 1rem;">
+                    <div class="form-group-recruiter" style="display: flex; flex-direction: column; gap: 0.4rem;">
+                        <label for="email-to" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Candidate Name:</label>
+                        <input type="text" id="email-to" readonly style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.02); color: var(--text-muted); outline: none; font-size: 0.85rem;">
+                    </div>
+                    <div class="form-group-recruiter" style="display: flex; flex-direction: column; gap: 0.4rem;">
+                        <label for="email-subject" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Subject:</label>
+                        <input type="text" id="email-subject" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); color: var(--text-color); outline: none; font-size: 0.85rem; transition: border-color 0.3s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--glass-border)'">
+                    </div>
+                    <div class="form-group-recruiter" style="display: flex; flex-direction: column; gap: 0.4rem;">
+                        <label for="email-body" style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">Message Body:</label>
+                        <textarea id="email-body" rows="10" style="width: 100%; padding: 0.75rem 0.8rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.03); color: var(--text-color); outline: none; font-size: 0.85rem; line-height: 1.45; resize: vertical; font-family: var(--font-body); transition: border-color 0.3s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--glass-border)'"></textarea>
+                    </div>
+                    
+                    <!-- Refinement input -->
+                    <div class="email-refine-box" style="margin-top: 0.5rem; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); padding: 0.75rem; border-radius: 10px;">
+                        <div class="input-with-btn" style="display: flex; gap: 0.5rem;">
+                            <input type="text" id="email-refine-instruction" placeholder="Tell Gemini to modify the draft (e.g., 'make it sound casual', 'add compensation details')..." style="flex-grow: 1; padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.1); color: var(--text-color); outline: none; font-size: 0.8rem;">
+                            <button class="btn btn-secondary-outline btn-refine" id="btn-email-refine" style="padding: 0 1rem; border-radius: 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem;"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent);"></i> <span>Refine</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="email-modal-footer" style="display: none; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--glass-border); padding-top: 0.75rem; margin-top: 1rem;" id="email-footer">
+                <button class="btn-secondary-outline btn-action-recruit" id="btn-email-cancel" style="padding: 0.6rem 1.2rem; font-size: 0.85rem;"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                <button class="btn btn-action-recruit" id="btn-email-send" style="padding: 0.6rem 1.2rem; font-size: 0.85rem; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border: none; font-weight: 600; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;"><i class="fa-solid fa-paper-plane"></i> Send Invitation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="recruiter.js"></script>
+    <script>
+        // Inline script to bind theme toggle (matches main page theme toggle)
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const isLight = document.documentElement.classList.toggle('light-theme');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            document.getElementById('theme-toggle').textContent = isLight ? '🌙' : '☀️';
+        });
+        
+        // Initial icon state
+        const initialTheme = localStorage.getItem('theme') || 'dark';
+        document.getElementById('theme-toggle').textContent = initialTheme === 'light' ? '🌙' : '☀️';
+    </script>
+</body>
+</html>
