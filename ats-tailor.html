@@ -308,6 +308,11 @@
                                         <button class="btn btn-secondary-outline btn-sm remove-file-btn" id="remove-file-btn" title="Remove"><i class="fa-solid fa-xmark"></i></button>
                                     </div>
                                 </div>
+                                <div style="margin-top: var(--space-2); display: flex; justify-content: flex-end;">
+                                    <button class="btn btn-link btn-sm" id="upload-different-btn" style="color: var(--text-secondary); font-size: 0.8rem; padding: 0; display: flex; align-items: center; gap: 4px; border: none; background: none; cursor: pointer; text-decoration: underline;">
+                                        <i class="fa-solid fa-arrow-up-from-bracket"></i> Upload another resume
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -321,31 +326,45 @@
                                 <h3 class="step-title">Target Job Details</h3>
                             </div>
                             
-                            <div class="ats-role-selector">
-                                <label for="target-role-select">Target Role</label>
-                                <div class="select-wrapper">
-                                    <select id="target-role-select" class="role-dropdown">
-                                        <option value="Software Engineer" selected>Software Engineer</option>
-                                        <option value="Frontend Engineer">Frontend Engineer</option>
-                                        <option value="Backend Engineer">Backend Engineer</option>
-                                        <option value="Full Stack Developer">Full Stack Developer</option>
-                                        <option value="Data Scientist">Data Scientist</option>
-                                        <option value="Product Manager">Product Manager</option>
-                                        <option value="UI/UX Designer">UI/UX Designer</option>
-                                        <option value="DevOps Engineer">DevOps Engineer</option>
-                                        <option value="Mobile Developer">Mobile Developer</option>
-                                        <option value="QA Engineer">QA Engineer</option>
-                                        <option value="Cybersecurity Analyst">Cybersecurity Analyst</option>
-                                        <option value="Gen AI Engineer">Gen AI Engineer</option>
-                                        <option value="Prompt Engineer">Prompt Engineer</option>
-                                        <option value="MLOps Engineer">MLOps Engineer</option>
-                                        <option value="AI Product Manager">AI Product Manager</option>
-                                        <option value="AI Ethics Specialist">AI Ethics Specialist</option>
-                                        <option value="Customer Support">Customer Support</option>
-                                        <option value="Call Agent / Telesales">Call Agent / Telesales</option>
-                                        <option value="Client Relations Manager">Client Relations Manager</option>
-                                    </select>
-                                    <i class="fa-solid fa-chevron-down select-icon"></i>
+                            <div style="display: flex; gap: var(--space-4); margin-bottom: var(--space-4); flex-wrap: wrap;">
+                                <div class="ats-role-selector" style="flex: 3 1 220px; margin-bottom: 0;">
+                                    <label for="target-role-select">Target Role</label>
+                                    <div class="select-wrapper">
+                                        <select id="target-role-select" class="role-dropdown">
+                                            <option value="Software Engineer" selected>Software Engineer</option>
+                                            <option value="Frontend Engineer">Frontend Engineer</option>
+                                            <option value="Backend Engineer">Backend Engineer</option>
+                                            <option value="Full Stack Developer">Full Stack Dev</option>
+                                            <option value="Data Scientist">Data Scientist</option>
+                                            <option value="Product Manager">Product Mgr</option>
+                                            <option value="UI/UX Designer">UI/UX Designer</option>
+                                            <option value="DevOps Engineer">DevOps Engineer</option>
+                                            <option value="Mobile Developer">Mobile Dev</option>
+                                            <option value="QA Engineer">QA Engineer</option>
+                                            <option value="Cybersecurity Analyst">Cybersecurity</option>
+                                            <option value="Gen AI Engineer">Gen AI Engineer</option>
+                                            <option value="Prompt Engineer">Prompt Engineer</option>
+                                            <option value="MLOps Engineer">MLOps Engineer</option>
+                                            <option value="AI Product Manager">AI Product Mgr</option>
+                                            <option value="AI Ethics Specialist">AI Ethics</option>
+                                            <option value="Customer Support">Customer Support</option>
+                                            <option value="Call Agent / Telesales">Telesales / Agent</option>
+                                            <option value="Client Relations Manager">Client Relations</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="ats-role-selector" style="flex: 2 1 140px; margin-bottom: 0;">
+                                    <label for="target-experience-select">Experience</label>
+                                    <div class="select-wrapper">
+                                        <select id="target-experience-select" class="role-dropdown">
+                                            <option value="entry">Entry</option>
+                                            <option value="mid">Mid</option>
+                                            <option value="senior">Senior</option>
+                                            <option value="lead">Lead</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down select-icon"></i>
+                                    </div>
                                 </div>
                             </div>
                             

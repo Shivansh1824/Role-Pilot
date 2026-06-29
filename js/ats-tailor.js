@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const { data: profile } = await db
                 .from('profiles')
-                .select('target_role, avatar_url, full_name')
+                .select('target_role, experience_level, avatar_url, full_name')
                 .eq('id', session.user.id)
                 .maybeSingle();
 
@@ -23,6 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         roleSelect.value = profile.target_role;
                         roleSelect.dispatchEvent(new Event('change'));
+                    }
+                }
+
+                // Set target experience dropdown
+                if (profile.experience_level) {
+                    const expSelect = document.getElementById('target-experience-select');
+                    if (expSelect) {
+                        expSelect.value = profile.experience_level;
                     }
                 }
                 
@@ -147,11 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update UI with file name
             fileNameDisplay.textContent = file.name;
             
-            // Hide standard dropzone content, show selected state
-            Array.from(dropzone.children).forEach(child => {
-                if(child.tagName !== 'INPUT') child.style.display = 'none';
-            });
-            dropzone.style.padding = 'var(--space-4)';
+            // Hide dropzone entirely, show selected state
+            dropzone.style.display = 'none';
             selectedFileState.style.display = 'block';
             
             // Set resume step state as completed
@@ -168,10 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fileInput.value = ''; // Clear input
         
         // Restore dropzone UI
-        Array.from(dropzone.children).forEach(child => {
-            if(child.tagName !== 'INPUT') child.style.display = '';
-        });
-        dropzone.style.padding = 'var(--space-8) var(--space-4)';
+        dropzone.style.display = 'flex';
         selectedFileState.style.display = 'none';
         
         // Remove completed state
@@ -180,6 +182,13 @@ document.addEventListener('DOMContentLoaded', () => {
         
         resetAnalysis();
     });
+
+    const uploadDifferentBtn = document.getElementById('upload-different-btn');
+    if (uploadDifferentBtn) {
+        uploadDifferentBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+    }
 
     // --- Predefined AI Job Templates ---
     const jobTemplates = {
@@ -308,19 +317,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // Import Supabase to call Edge Function
             const db = await import('./supabase-client.js').then(m => m.getSupabaseClient());
             
-            // Call the Edge Function
-            const { data, error } = await db.functions.invoke('evaluate-resume', {
+            // --- STEP 1: PRE-VALIDATE INPUTS ---
+            const isAiTemplate = (jdText.trim() === (jobTemplates[targetRole] || "").trim());
+            const { data: valData, error: valError } = await db.functions.invoke('validate-inputs', {
                 body: {
-                    resume_id: "temp_id_for_now", // TODO: Replace with actual uploaded DB resume ID
                     resume_text: "Extracted resume text goes here", // TODO: Replace with parsed PDF text
                     job_title: targetRole,
-                    job_description: jdText
+                    job_description: jdText,
+                    is_ai_template: isAiTemplate
                 }
             });
 
-            // Handle AI Guardrail Validation Error (Step 0)
-            if (error || (data && data.validation_error)) {
-                const errorMessage = data?.validation_error || "The job description content does not seem to match the target role. Please paste a relevant job description.";
+            // Handle AI Guardrail Validation Error
+            if (valError || (valData && valData.validation_error)) {
+                const errorMessage = valData?.validation_error || "There was an error validating your inputs. Please try again.";
                 
                 // Show Red Error Box
                 const redError = document.getElementById('ai-validation-error');
@@ -335,6 +345,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 resetAnalysis(); // Stop scanning animation
                 return; // Stop the flow
+            }
+
+            // --- STEP 2: EVALUATE RESUME ---
+            const { data, error } = await db.functions.invoke('evaluate-resume', {
+                body: {
+                    resume_id: "temp_id_for_now", // TODO: Replace with actual uploaded DB resume ID
+                    resume_text: "Extracted resume text goes here", // TODO: Replace with parsed PDF text
+                    job_title: targetRole,
+                    job_description: jdText,
+                    experience_level: document.getElementById('target-experience-select')?.value || "mid"
+                }
+            });
+
+            if (error) {
+                console.error("Evaluation error:", error);
+                alert("Failed to analyze resume. Please try again.");
+                resetAnalysis();
+                return;
             }
 
             // If Validation passes, simulate the rest of the progress bar
