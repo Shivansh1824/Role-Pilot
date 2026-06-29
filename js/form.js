@@ -346,6 +346,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 5. Populate Custom Roles Dropdown
     const careerRoles = [
+        { id: 'software_engineer', name: 'Software Engineer', icon: 'fa-laptop-code' },
         { id: 'frontend', name: 'Frontend Engineer', icon: 'fa-code' },
         { id: 'backend', name: 'Backend Engineer', icon: 'fa-server' },
         { id: 'fullstack', name: 'Full Stack Developer', icon: 'fa-layer-group' },

@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Predefined AI Job Templates ---
     const jobTemplates = {
+        "Software Engineer": "We are seeking a Software Engineer to design, build, and maintain efficient, reusable, and reliable code. Candidates should have a strong understanding of computer science fundamentals (algorithms, data structures, OOP) and experience with at least one major programming language (Java, C++, C#, or Python). Collaborative problem-solving and software testing skills are essential.",
         "Frontend Engineer": "We are seeking a Frontend Engineer proficient in modern JavaScript frameworks (React, Vue, or Angular). The ideal candidate should have strong experience with responsive UI development, HTML5, CSS3, and state management. Experience with version control (Git) and web performance optimization is highly valued.",
         "Backend Engineer": "We are looking for a Backend Engineer with strong expertise in server-side languages (Node.js, Python, or Java) and building scalable RESTful APIs. The role requires experience with relational databases (PostgreSQL/MySQL), cloud infrastructure (AWS/GCP), and modern CI/CD pipelines.",
         "Full Stack Developer": "We are hiring a Full Stack Developer capable of designing and implementing end-to-end web applications. You should be comfortable working with frontend frameworks (React/Vue), backend technologies (Node.js/Python), and managing database architectures (SQL/NoSQL). Experience with cloud deployment and agile methodologies is required.",
