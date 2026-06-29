@@ -933,7 +933,7 @@ async function generateCandidateReply(candidateId, emailBody) {
     const job = JOBS_DB[activeJobKey];
     
     try {
-        const apiKey = localStorage.getItem('rolepilot_gemini_api_key') || atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
+        const apiKey = atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
         
         const prompt = `You are the candidate ${cand.name} who received the following recruiter invitation for the position ${job.title}:
@@ -1066,7 +1066,7 @@ async function openEmailModal(candidateId) {
     const finalScore = Math.min(100, Math.round(wScore * (job.modifiers[cand.id] || 0.7) * 10) / 10);
 
     try {
-        const apiKey = localStorage.getItem('rolepilot_gemini_api_key') || atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
+        const apiKey = atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
 
         const prompt = `Generate a personalized recruiter outreach email.
@@ -1139,7 +1139,7 @@ async function refineEmailWithAI() {
     const currentBody = document.getElementById('email-body').value;
 
     try {
-        const apiKey = localStorage.getItem('rolepilot_gemini_api_key') || atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
+        const apiKey = atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
 
         const prompt = `You are a recruiter. Modify the following email draft according to this user instruction: "${instruction}"

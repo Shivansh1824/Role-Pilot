@@ -2,15 +2,6 @@
 
 const PROBLEMS = {};
 
-// Initialize Gemini API Key with user's provided key if not set
-const initGeminiApiKey = () => {
-    const key = localStorage.getItem('rolepilot_gemini_api_key');
-    if (!key || key === 'AQ.Ab8RN6LTt3_q2dmyZtlC-7e0olml_speVkQX6nEYcrd0yXlWAQ' || key === 'AQ.Ab8' + 'RN6LTt3_q2dmyZtlC-7e0olml_speVkQX6nEYcrd0yXlWAQ') {
-        localStorage.setItem('rolepilot_gemini_api_key', atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc='));
-    }
-};
-initGeminiApiKey();
-
 // Load custom generated problems from localStorage and merge into PROBLEMS
 const loadCustomProblems = () => {
     const custom = localStorage.getItem('rolepilot_custom_problems');
@@ -600,7 +591,7 @@ function initIndexPage() {
                     if (overlay) overlay.classList.add('open');
                     
                     try {
-                        const apiKey = localStorage.getItem('rolepilot_gemini_api_key') || atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
+                        const apiKey = atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
                         const generatedIds = await generateProblemSetWithAI(apiKey, userLevel, diff);
                         if (generatedIds && generatedIds.length === 3) {
                             setAscentQuestions(generatedIds);
@@ -835,7 +826,7 @@ function initEditorPage() {
 
         const lang = languageSelect.value;
         const code = codeEditor.value;
-        const apiKey = localStorage.getItem('rolepilot_gemini_api_key') || atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
+        const apiKey = atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
 
         try {
             // Optional Local Compile Pre-check for JS
