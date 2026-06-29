@@ -331,14 +331,19 @@ document.addEventListener('DOMContentLoaded', () => {
             // Handle AI Guardrail Validation Error
             if (valError || (valData && valData.validation_error)) {
                 const errorMessage = valData?.validation_error || "There was an error validating your inputs. Please try again.";
+                const errorTitleText = (errorMessage.toLowerCase().includes("resume") || errorMessage.toLowerCase().includes("document")) 
+                    ? "Invalid Resume Document" 
+                    : "Invalid Job Description";
                 
                 // Show Red Error Box
                 const redError = document.getElementById('ai-validation-error');
                 const redErrorText = document.getElementById('ai-validation-error-text');
+                const redErrorTitle = document.getElementById('ai-validation-error-title');
                 const yellowWarning = document.getElementById('ai-template-warning');
                 
                 if (redError && redErrorText) {
                     redErrorText.textContent = errorMessage;
+                    if (redErrorTitle) redErrorTitle.textContent = errorTitleText;
                     redError.style.display = 'flex';
                     if (yellowWarning) yellowWarning.style.display = 'none'; // Hide yellow box
                 }
