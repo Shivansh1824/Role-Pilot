@@ -163,6 +163,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const stepResume = document.getElementById('step-resume');
             if (stepResume) stepResume.classList.add('completed');
             
+            // Extract Base64 to let Gemini AI natively read the PDF/Doc
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64String = e.target.result.split(',')[1];
+                window.resumeDocument = {
+                    mimeType: file.type || 'application/pdf',
+                    data: base64String
+                };
+            };
+            reader.readAsDataURL(file);
+            
             // Reset any previous analysis
             resetAnalysis();
         }
@@ -321,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isAiTemplate = (jdText.trim() === (jobTemplates[targetRole] || "").trim());
             const { data: valData, error: valError } = await db.functions.invoke('validate-inputs', {
                 body: {
-                    resume_text: "Extracted resume text goes here", // TODO: Replace with parsed PDF text
+                    resume_document: window.resumeDocument, // Sends base64 directly to Gemini natively
                     job_title: targetRole,
                     job_description: jdText,
                     is_ai_template: isAiTemplate
@@ -356,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data, error } = await db.functions.invoke('evaluate-resume', {
                 body: {
                     resume_id: "temp_id_for_now", // TODO: Replace with actual uploaded DB resume ID
-                    resume_text: "Extracted resume text goes here", // TODO: Replace with parsed PDF text
+                    resume_document: window.resumeDocument, 
                     job_title: targetRole,
                     job_description: jdText,
                     experience_level: document.getElementById('target-experience-select')?.value || "mid"

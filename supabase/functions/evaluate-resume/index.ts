@@ -12,7 +12,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { resume_id, resume_text, job_title, job_description, experience_level } = await req.json()
+    const { resume_id, resume_document, job_title, job_description, experience_level } = await req.json()
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
@@ -68,7 +68,7 @@ Return ONLY valid JSON matching EXACTLY this structure:
 </output_format>
 
 <candidate_document>
-${resume_text}
+The candidate's resume is attached to this request as an inline file.
 </candidate_document>
 
 <target_document>
@@ -81,7 +81,13 @@ Job Description: ${job_description}
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: extractionPrompt }] }],
+        contents: [{ 
+          role: 'user', 
+          parts: [
+            { text: extractionPrompt },
+            { inlineData: { mimeType: resume_document.mimeType, data: resume_document.data } }
+          ] 
+        }],
         generationConfig: { responseMimeType: "application/json", temperature: 0 }
       })
     };
