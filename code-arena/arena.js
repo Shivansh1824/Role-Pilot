@@ -140,7 +140,7 @@ Rules:
 3. Provide at least 3 testCases containing standard JSON types. Keep args as an array representing the function arguments.
 4. Keep the output as raw JSON array string only, no markdown markers.`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
         method: 'POST',
@@ -226,7 +226,7 @@ Rules:
 1. Be rigorous: if the code contains syntax errors or fails logic/constraints, set "passed" to false and "score" appropriately.
 2. Return raw JSON string only, no markdown formatting.`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
         method: 'POST',

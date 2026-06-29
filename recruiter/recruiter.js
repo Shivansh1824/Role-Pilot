@@ -934,7 +934,7 @@ async function generateCandidateReply(candidateId, emailBody) {
     
     try {
         const apiKey = atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         
         const prompt = `You are the candidate ${cand.name} who received the following recruiter invitation for the position ${job.title}:
         
@@ -1067,7 +1067,7 @@ async function openEmailModal(candidateId) {
 
     try {
         const apiKey = atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
         const prompt = `Generate a personalized recruiter outreach email.
 Recipient: ${cand.name}
@@ -1140,7 +1140,7 @@ async function refineEmailWithAI() {
 
     try {
         const apiKey = atob('QVEuQWI4Uk42STF2ZnNzemxHYUhMRF9ZcmRHcGJuc21LUy0tOUpHUmVqWERrZ3FRUlAxSWc=');
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
         const prompt = `You are a recruiter. Modify the following email draft according to this user instruction: "${instruction}"
 
