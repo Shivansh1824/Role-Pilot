@@ -180,8 +180,46 @@ document.addEventListener('DOMContentLoaded', () => {
         resetAnalysis();
     });
 
-    // Reactive listener for Job Description step
+    // --- Predefined AI Job Templates ---
+    const jobTemplates = {
+        "Frontend Engineer": "We are seeking a Frontend Engineer proficient in modern JavaScript frameworks (React, Vue, or Angular). The ideal candidate should have strong experience with responsive UI development, HTML5, CSS3, and state management. Experience with version control (Git) and web performance optimization is highly valued.",
+        "Backend Engineer": "We are looking for a Backend Engineer with strong expertise in server-side languages (Node.js, Python, or Java) and building scalable RESTful APIs. The role requires experience with relational databases (PostgreSQL/MySQL), cloud infrastructure (AWS/GCP), and modern CI/CD pipelines.",
+        "Full Stack Engineer": "We are hiring a Full Stack Engineer capable of designing and implementing end-to-end web applications. You should be comfortable working with frontend frameworks (React/Vue), backend technologies (Node.js/Python), and managing database architectures (SQL/NoSQL). Experience with cloud deployment and agile methodologies is required.",
+        "Product Manager": "We are looking for a Product Manager to lead cross-functional teams in delivering high-impact products. The ideal candidate has a strong mix of technical understanding, user empathy, and business strategy. Experience with agile workflows (Scrum/Kanban), writing user stories, and conducting user research is essential.",
+        "Data Scientist": "We are hiring a Data Scientist to build predictive models and analyze complex datasets. Required skills include Python, SQL, and machine learning libraries (TensorFlow, Scikit-learn, or PyTorch). Experience with data visualization and statistical analysis is required.",
+        "UI/UX Designer": "We are seeking a UI/UX Designer to create intuitive and aesthetically pleasing digital experiences. The candidate must be proficient in design tools (Figma, Sketch, Adobe Creative Suite) and have a strong portfolio demonstrating user-centered design principles, wireframing, and interactive prototyping."
+    };
+
+    const roleSelect = document.getElementById('target-role-select');
     const jobDescriptionInput = document.getElementById('job-description');
+    const templateWarning = document.getElementById('ai-template-warning');
+    
+    // Helper to check if current text is a generic template
+    const isTemplateActive = (text) => {
+        return Object.values(jobTemplates).includes(text.trim());
+    };
+
+    // Auto-fill template when role changes
+    if (roleSelect && jobDescriptionInput) {
+        roleSelect.addEventListener('change', (e) => {
+            const selectedRole = e.target.value;
+            // Only overwrite if the textarea is empty or contains an existing generic template
+            if (!jobDescriptionInput.value.trim() || isTemplateActive(jobDescriptionInput.value)) {
+                if (jobTemplates[selectedRole]) {
+                    jobDescriptionInput.value = jobTemplates[selectedRole];
+                    jobDescriptionInput.dispatchEvent(new Event('input')); // Trigger step validation & warning check
+                }
+            }
+        });
+        
+        // Initial population if empty
+        if (!jobDescriptionInput.value.trim() && jobTemplates[roleSelect.value]) {
+            jobDescriptionInput.value = jobTemplates[roleSelect.value];
+            if (templateWarning) templateWarning.style.display = 'flex';
+        }
+    }
+
+    // Reactive listener for Job Description step
     if (jobDescriptionInput) {
         const toggleJobStep = () => {
             const stepJob = document.getElementById('step-job');
@@ -190,6 +228,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     stepJob.classList.add('completed');
                 } else {
                     stepJob.classList.remove('completed');
+                }
+            }
+            
+            // Toggle Warning Alert
+            if (templateWarning) {
+                if (isTemplateActive(jobDescriptionInput.value)) {
+                    templateWarning.style.display = 'flex';
+                } else {
+                    templateWarning.style.display = 'none';
                 }
             }
         };
@@ -222,8 +269,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (scoreRingProgress) scoreRingProgress.style.strokeDashoffset = '339.29';
     }
 
-    analyzeBtn.addEventListener('click', () => {
-        // Validate inputs (simulate)
+    analyzeBtn.addEventListener('click', async () => {
+        // Validate inputs
         const isFileUploaded = selectedFileState && selectedFileState.style.display === 'block';
         if (!isFileUploaded) {
             alert('Please upload your resume first.');
@@ -231,34 +278,82 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const jdText = document.getElementById('job-description').value;
+        const targetRole = document.getElementById('target-role-select').value;
+        
         if (!jdText.trim()) {
             alert('Please paste a target job description first.');
             document.getElementById('job-description').focus();
             return;
         }
 
-        // Start scanning
+        // Start scanning UI
         switchState(scanningState, [emptyState, resultsContainer]);
+        if (scanProgressBar) scanProgressBar.style.width = '20%';
         
-        // Simulate progress bar
-        let progress = 0;
-        const scanInterval = setInterval(() => {
-            progress += Math.random() * 15;
-            if (progress > 100) progress = 100;
-            if (scanProgressBar) scanProgressBar.style.width = `${progress}%`;
+        try {
+            // Import Supabase to call Edge Function
+            const db = await import('./supabase-client.js').then(m => m.getSupabaseClient());
             
-            if (progress === 100) {
-                clearInterval(scanInterval);
-                setTimeout(showResults, 500);
+            // Call the Edge Function
+            const { data, error } = await db.functions.invoke('evaluate-resume', {
+                body: {
+                    resume_id: "temp_id_for_now", // TODO: Replace with actual uploaded DB resume ID
+                    resume_text: "Extracted resume text goes here", // TODO: Replace with parsed PDF text
+                    job_title: targetRole,
+                    job_description: jdText
+                }
+            });
+
+            // Handle AI Guardrail Validation Error (Step 0)
+            if (error || (data && data.validation_error)) {
+                const errorMessage = data?.validation_error || "The job description content does not seem to match the target role. Please paste a relevant job description.";
+                
+                // Show Red Error Box
+                const redError = document.getElementById('ai-validation-error');
+                const redErrorText = document.getElementById('ai-validation-error-text');
+                const yellowWarning = document.getElementById('ai-template-warning');
+                
+                if (redError && redErrorText) {
+                    redErrorText.textContent = errorMessage;
+                    redError.style.display = 'flex';
+                    if (yellowWarning) yellowWarning.style.display = 'none'; // Hide yellow box
+                }
+                
+                resetAnalysis(); // Stop scanning animation
+                return; // Stop the flow
             }
-        }, 300);
+
+            // If Validation passes, simulate the rest of the progress bar
+            let progress = 20;
+            const scanInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                if (scanProgressBar) scanProgressBar.style.width = `${progress}%`;
+                
+                if (progress === 100) {
+                    clearInterval(scanInterval);
+                    // Use actual Edge Function data to animate score
+                    const finalScore = data?.original_ats_score || 82;
+                    showResults(finalScore);
+                }
+            }, 300);
+
+        } catch (err) {
+            console.error("Analysis Error:", err);
+            alert("An error occurred during analysis.");
+            resetAnalysis();
+        }
     });
 
-    function showResults() {
+    function showResults(finalScore = 82) {
         switchState(resultsContainer, [scanningState, emptyState]);
         
-        // Animate Score to 82%
-        if (scoreValue && scoreRingProgress) animateScore(82);
+        // Hide Red/Yellow warnings on success
+        const redError = document.getElementById('ai-validation-error');
+        if (redError) redError.style.display = 'none';
+        
+        // Animate Score
+        if (scoreValue && scoreRingProgress) animateScore(finalScore);
     }
 
     function animateScore(targetScore) {

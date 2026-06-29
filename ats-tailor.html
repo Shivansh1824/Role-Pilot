@@ -337,6 +337,22 @@
                             </div>
                             
                             <textarea class="jd-textarea" id="job-description" placeholder="e.g. We are looking for a Senior Frontend Engineer with experience in React, TypeScript, and Node.js..."></textarea>
+                            
+                            <div id="ai-template-warning" style="display: none; margin-top: var(--space-3); padding: var(--space-3); background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 8px; color: #eab308; font-size: 0.85rem; align-items: flex-start; gap: 8px;">
+                                <i class="fa-solid fa-triangle-exclamation" style="margin-top: 3px;"></i>
+                                <div>
+                                    <strong style="display: block; margin-bottom: 4px;">AI Generic Template Active</strong>
+                                    For a highly accurate ATS score, please add more details about the specific job you are applying for, or replace this entire text with the exact Job Description from the company's career page.
+                                </div>
+                            </div>
+
+                            <div id="ai-validation-error" style="display: none; margin-top: var(--space-3); padding: var(--space-3); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #ef4444; font-size: 0.85rem; align-items: flex-start; gap: 8px;">
+                                <i class="fa-solid fa-circle-xmark" style="margin-top: 3px;"></i>
+                                <div>
+                                    <strong style="display: block; margin-bottom: 4px;">Invalid Job Description</strong>
+                                    <span id="ai-validation-error-text">The text provided does not match the target role.</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
