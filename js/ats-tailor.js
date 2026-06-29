@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             roleSelect.add(new Option(profile.target_role, profile.target_role));
                         }
                         roleSelect.value = profile.target_role;
+                        roleSelect.dispatchEvent(new Event('change'));
                     }
                 }
                 
