@@ -48,13 +48,138 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
+            
+            
+            // --- ONE-TIME MIGRATION TO FIX OLD NAMES ---
+            try {
+                const { data: resumesToFix } = await db.from('resumes')
+                    .select('*')
+                    .eq('user_id', session.user.id)
+                    .eq('title', 'Resume.pdf')
+                    .not('parsed_text', 'is', null);
+                    
+                if (resumesToFix && resumesToFix.length > 0) {
+                    for (let row of resumesToFix) {
+                        try {
+                            const parsed = JSON.parse(row.parsed_text);
+                            if (parsed?.basics?.name) {
+                                const safeName = parsed.basics.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_');
+                                await db.from('resumes').update({ title: `${safeName}_ATS_Scan.pdf` }).eq('id', row.id);
+                            }
+                        } catch(e) { console.warn("Failed to fix name for row", row.id); }
+                    }
+                }
+            } catch (migErr) {
+                console.error("Migration error:", migErr);
+            }
+            // -------------------------------------------
+
+            // Load Recent Resumes dynamically
+            await loadRecentResumes(db, session.user.id);
+            
+            // Define global historical viewer function
+            window.viewHistoricalAnalysis = async (resumeId, fileUrl, fileName) => {
+                try {
+                    // Fetch evaluation data
+                    const { data: evalData, error: evalError } = await db
+                        .from('resume_evaluations')
+                        .select('*')
+                        .eq('resume_id', resumeId)
+                        .single();
+                        
+                    if (evalError || !evalData) {
+                        throw new Error("Could not find historical analysis data for this resume.");
+                    }
+                    
+                    // Generate Signed URL for the PDF
+                    const { data: signedUrlData, error: signedUrlError } = await db
+                        .storage
+                        .from('resumes')
+                        .createSignedUrl(fileUrl, 3600); // 1 hour expiry
+                        
+                    if (signedUrlError || !signedUrlData) {
+                        throw new Error("Failed to retrieve document securely.");
+                    }
+                    
+                    // Populate iframe source
+                    const viewerBody = document.getElementById('document-viewer-body');
+                    const viewerFileName = document.getElementById('viewer-file-name');
+                    if (viewerBody && viewerFileName) {
+                        viewerFileName.textContent = fileName;
+                        // Use signed URL for iframe
+                        viewerBody.innerHTML = `<iframe src="${signedUrlData.signedUrl}#toolbar=0" class="document-iframe" title="Resume Document"></iframe>`;
+                    }
+                    
+                    // Directly show results without any loading screen or delay
+                    showResults(evalData.original_ats_score || 0);
+                    
+                } catch (err) {
+                    console.error("Historical Analysis Error:", err);
+                    alert(err.message || "An error occurred while loading the historical analysis.");
+                    resetAnalysis();
+                }
+            };
+
         } catch (err) {
             console.error("Supabase Init Error:", err);
         }
     };
-    initSupabaseSession();
 
-    // DOM Elements
+    const loadRecentResumes = async (db, userId) => {
+        const listContainer = document.getElementById('recent-resumes-list');
+        const countBadge = document.getElementById('recent-resumes-count');
+        if (!listContainer || !countBadge) return;
+
+        try {
+            const { data, error } = await db
+                .from('resumes')
+                .select('*, resume_evaluations!inner(id)')
+                .eq('user_id', userId)
+                .not('parsed_text', 'is', null)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            if (error) throw error;
+
+            countBadge.textContent = `${data.length} Resume${data.length !== 1 ? 's' : ''}`;
+            
+            if (data.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-state" style="padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+                        <i class="fa-regular fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                        <p>No recent resumes found.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = '';
+            
+            data.forEach(resume => {
+                const dateStr = new Date(resume.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                const itemHtml = `
+                    <div class="file-info">
+                        <i class="fa-regular fa-file-pdf file-icon" style="color: var(--primary); font-size: 1.5rem;"></i>
+                        <div class="file-details">
+                            <div class="file-name" style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary); word-break: break-word; padding-right: 10px;" title="${resume.title}">${resume.title}</div>
+                            <div class="file-date" style="font-size: 0.8rem; color: var(--text-muted);">${dateStr}</div>
+                        </div>
+                        <div class="file-actions">
+                            <button class="btn btn-secondary-outline btn-sm" title="View" style="padding: 6px 10px;" onclick="window.viewHistoricalAnalysis('${resume.id}', '${resume.file_url}', '${resume.title.replace(/'/g, "\\'")}')"><i class="fa-regular fa-eye"></i></button>
+                        </div>
+                    </div>
+                `;
+                listContainer.innerHTML += itemHtml;
+            });
+
+        } catch (err) {
+            console.error("Error fetching resumes:", err);
+            listContainer.innerHTML = `<p style="color:var(--error); font-size:0.85rem; padding: 1rem; text-align: center;">Failed to load resumes.</p>`;
+        }
+    };
+
+    initSupabaseSession();    // DOM Elements
     const dropzone = document.getElementById('resume-dropzone');
     const fileInput = document.getElementById('file-input');
     const selectedFileState = document.getElementById('selected-file-state');
@@ -63,9 +188,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const analyzeBtn = document.getElementById('analyze-btn');
     
     // Analysis Panels
-    const emptyState = document.getElementById('empty-analysis-state');
-    const scanningState = document.getElementById('scanning-state');
-    const resultsContainer = document.getElementById('results-container');
+    const atsSetupView = document.getElementById('ats-setup-view');
+    const atsLoadingView = document.getElementById('ats-loading-view');
+    const atsResultView = document.getElementById('ats-result-view');
     const scanProgressBar = document.getElementById('scan-progress-bar');
     
     // Score Elements
@@ -298,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetAnalysis() {
-        switchState(emptyState, [scanningState, resultsContainer]);
+        switchState(atsSetupView, [atsLoadingView, atsResultView]);
         if (scanProgressBar) scanProgressBar.style.width = '0%';
         if (scoreValue) scoreValue.textContent = '0';
         if (scoreRingProgress) scoreRingProgress.style.strokeDashoffset = '339.29';
@@ -322,12 +447,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Start scanning UI
-        switchState(scanningState, [emptyState, resultsContainer]);
+        switchState(atsLoadingView, [atsSetupView, atsResultView]);
+        
+        // Populate iframe source if PDF
+        const viewerBody = document.getElementById('document-viewer-body');
+        const viewerFileName = document.getElementById('viewer-file-name');
+        if (window.resumeFileObj && viewerBody && viewerFileName) {
+            viewerFileName.textContent = window.resumeFileObj.name;
+            if (window.resumeFileObj.type === 'application/pdf') {
+                const objectUrl = URL.createObjectURL(window.resumeFileObj);
+                viewerBody.innerHTML = `<iframe src="${objectUrl}#toolbar=0" class="document-iframe" title="Resume Document"></iframe>`;
+            } else {
+                viewerBody.innerHTML = `<div class="viewer-placeholder"><i class="fa-solid fa-file-word" style="color: var(--primary);"></i><p>Document preview unavailable for DOCX. File is ready for analysis.</p></div>`;
+            }
+        }
+        
         if (scanProgressBar) scanProgressBar.style.width = '20%';
+        
+        let uploadedFilePath = null;
+        let insertedResumeId = null;
+        let db = null;
         
         try {
             // Import Supabase to call Edge Function
-            const db = await import('./supabase-client.js').then(m => m.getSupabaseClient());
+            db = await import('./supabase-client.js').then(m => m.getSupabaseClient());
             
             // --- STEP 1: PRE-VALIDATE INPUTS ---
             const isAiTemplate = (jdText.trim() === (jobTemplates[targetRole] || "").trim());
@@ -387,6 +530,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error("Failed to upload resume document.");
             }
             
+            uploadedFilePath = filePath; // Track for potential cleanup
+            
             // Insert record into resumes table
             const { data: resumeRecord, error: insertError } = await db
                 .from('resumes')
@@ -404,13 +549,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error("Failed to register resume in database.");
             }
             
+            insertedResumeId = resumeRecord.id; // Track for potential cleanup
+            
             if (scanProgressBar) scanProgressBar.style.width = '60%';
 
             // --- STEP 2: EVALUATE RESUME ---
             const { data, error } = await db.functions.invoke('evaluate-resume', {
                 body: {
                     resume_id: resumeRecord.id, // REAL ID mapped to the database!
-                    resume_document: window.resumeDocument, 
+                    file_path: filePath,
+                    mime_type: fileObj.type || 'application/pdf',
                     job_title: targetRole,
                     job_description: jdText,
                     experience_level: document.getElementById('target-experience-select')?.value || "mid"
@@ -419,9 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (error) {
                 console.error("Evaluation error:", error);
-                alert("Failed to analyze resume. Please try again.");
-                resetAnalysis();
-                return;
+                throw new Error("Failed to analyze resume. Please try again.");
             }
 
             // If Validation passes, simulate the rest of the progress bar
@@ -435,19 +581,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     clearInterval(scanInterval);
                     // Use actual Edge Function data to animate score
                     const finalScore = data?.original_ats_score || 82;
+                    
+                    // Refresh the Recent Resumes list so it shows the new dynamically named file!
+                    loadRecentResumes(db, userId);
+                    
                     showResults(finalScore);
                 }
             }, 300);
 
         } catch (err) {
             console.error("Analysis Error:", err);
+            
+            // SECURITY / HYGIENE PROTOCOL: Cleanup orphaned records if analysis failed
+            if (db) {
+                if (insertedResumeId) {
+                    await db.from('resumes').delete().eq('id', insertedResumeId).catch(e => console.error("Cleanup DB Error:", e));
+                }
+                if (uploadedFilePath) {
+                    await db.storage.from('resumes').remove([uploadedFilePath]).catch(e => console.error("Cleanup Storage Error:", e));
+                }
+            }
+            
             alert(err.message || "An error occurred during analysis.");
             resetAnalysis();
         }
     });
 
     function showResults(finalScore = 82) {
-        switchState(resultsContainer, [scanningState, emptyState]);
+        switchState(atsResultView, [atsLoadingView, atsSetupView]);
         
         // Hide Red/Yellow warnings on success
         const redError = document.getElementById('ai-validation-error');
@@ -482,5 +643,15 @@ document.addEventListener('DOMContentLoaded', () => {
             scoreRingProgress.style.strokeDashoffset = offset;
             
         }, intervalTime);
+    }
+    
+    // Set up back button
+    const backBtn = document.getElementById('back-to-setup-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            resetAnalysis();
+            const rBtn = document.getElementById('remove-file-btn');
+            if (rBtn) rBtn.click();
+        });
     }
 });

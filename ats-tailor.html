@@ -78,7 +78,8 @@
         
 
         
-        <!-- Split Screen Layout -->
+        <!-- View 1: Setup -->
+        <div id="ats-setup-view">
         <section class="ats-split-layout">
             <!-- LEFT PANELS -->
             <div class="left-panels-container">
@@ -165,108 +166,9 @@
                     </div>
                 </div>
 
-                <!-- SCANNING STATE (Hidden by default) -->
-                <div id="scanning-state" class="glass-panel scanning-state" style="display: none;">
-                    <div class="scanner-animation">
-                        <i class="fa-solid fa-file-pdf"></i>
-                        <div class="scanner-bar"></div>
-                    </div>
-                    <h3>Analyzing Resume...</h3>
-                    <p>Extracting credentials and matching against job requirements.</p>
-                    <div class="progress-container">
-                        <div class="progress-bar" id="scan-progress-bar" style="width: 0%;"></div>
-                    </div>
-                </div>
+                
 
-                <!-- RESULTS CONTAINER (Hidden by default) -->
-                <div id="results-container" class="results-container" style="display: none;">
-                    <!-- Score Card -->
-                    <div class="glass-panel score-card" style="margin-bottom: var(--space-6);">
-                        <div class="score-ring-container">
-                            <svg class="score-ring" viewBox="0 0 120 120">
-                                <circle class="ring-bg" cx="60" cy="60" r="54"></circle>
-                                <circle class="ring-progress" id="score-ring-progress" cx="60" cy="60" r="54" stroke-dasharray="339.29" stroke-dashoffset="339.29"></circle>
-                            </svg>
-                            <div class="score-text">
-                                <span class="score-value" id="score-value">0</span>
-                                <span class="score-percent">%</span>
-                                <span class="score-label">Match</span>
-                            </div>
-                        </div>
-                        <div class="score-details">
-                            <h3 class="panel-title" style="margin-bottom: var(--space-2);">Analysis Completed</h3>
-                            <p style="color: var(--text-secondary); line-height: 1.5; font-size: var(--text-sm);">
-                                Your resume has a strong foundation for this role, but misses key keyword targets and action verbs required by ATS parsers.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Keyword Matrix -->
-                    <div class="glass-panel keyword-matrix" style="margin-bottom: var(--space-6);">
-                        <h3 class="panel-title" style="margin-bottom: var(--space-4);"><i class="fa-solid fa-tags"></i> Keyword Gap Analysis</h3>
-                        <div class="keyword-group">
-                            <h4 style="font-size: var(--text-sm); margin-bottom: var(--space-2); color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">Matched Keywords <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; text-transform: uppercase;">6 Matched</span></h4>
-                            <div class="pill-container">
-                                <span class="keyword-pill matched"><i class="fa-solid fa-circle-check"></i> HTML5/CSS3</span>
-                                <span class="keyword-pill matched"><i class="fa-solid fa-circle-check"></i> JavaScript</span>
-                                <span class="keyword-pill matched"><i class="fa-solid fa-circle-check"></i> React</span>
-                                <span class="keyword-pill matched"><i class="fa-solid fa-circle-check"></i> Git</span>
-                                <span class="keyword-pill matched"><i class="fa-solid fa-circle-check"></i> Webpack</span>
-                                <span class="keyword-pill matched"><i class="fa-solid fa-circle-check"></i> Responsive Design</span>
-                            </div>
-                        </div>
-                        <div class="keyword-group" style="margin-top: var(--space-4);">
-                            <h4 style="font-size: var(--text-sm); margin-bottom: var(--space-2); color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">Missing Keywords <span class="badge-danger">4 Missing</span></h4>
-                            <div class="pill-container">
-                                <span class="keyword-pill missing"><i class="fa-solid fa-triangle-exclamation"></i> TypeScript</span>
-                                <span class="keyword-pill missing"><i class="fa-solid fa-triangle-exclamation"></i> Next.js</span>
-                                <span class="keyword-pill missing"><i class="fa-solid fa-triangle-exclamation"></i> Tailwind CSS</span>
-                                <span class="keyword-pill missing"><i class="fa-solid fa-triangle-exclamation"></i> CI/CD Pipeline</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Action Checklist -->
-                    <div class="glass-panel action-checklist-panel" style="margin-bottom: var(--space-6);">
-                        <h3 class="panel-title" style="margin-bottom: var(--space-4);"><i class="fa-solid fa-list-check"></i> Prioritized Fixes</h3>
-                        <div class="action-checklist">
-                            <label class="checklist-item">
-                                <input type="checkbox" class="checklist-checkbox" />
-                                <span class="checkmark"></span>
-                                <span class="checklist-content">
-                                    <span class="checklist-title">Add TypeScript to Skill Matrix</span>
-                                    <span class="checklist-desc">The job description mentions TypeScript as a core requirement. Add it to your skills block.</span>
-                                </span>
-                            </label>
-                            <label class="checklist-item">
-                                <input type="checkbox" class="checklist-checkbox" />
-                                <span class="checkmark"></span>
-                                <span class="checklist-content">
-                                    <span class="checklist-title">Integrate Next.js & Tailwind CSS projects</span>
-                                    <span class="checklist-desc">Detail 1-2 projects where you utilized modern meta-frameworks and utilities to build UI.</span>
-                                </span>
-                            </label>
-                            <label class="checklist-item">
-                                <input type="checkbox" class="checklist-checkbox" />
-                                <span class="checkmark"></span>
-                                <span class="checklist-content">
-                                    <span class="checklist-title">Revise passive phrasing</span>
-                                    <span class="checklist-desc">Convert sentences starting with "Responsible for..." to active verbs like "Architected...", "Optimized...".</span>
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Positive Points -->
-                    <div class="glass-panel positive-points-panel">
-                        <h3 class="panel-title" style="margin-bottom: var(--space-4);"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i> Strong Features</h3>
-                        <ul class="positive-list">
-                            <li><i class="fa-solid fa-check"></i> <strong>File Format Validated:</strong> Machine-readable single-column PDF.</li>
-                            <li><i class="fa-solid fa-check"></i> <strong>Clean Section Headings:</strong> Standardized Experience, Education, and Skills tags.</li>
-                            <li><i class="fa-solid fa-check"></i> <strong>Contact Information Present:</strong> Email, phone number, and LinkedIn links are valid.</li>
-                        </ul>
-                    </div>
-                </div>
+                
             </div>
 
             <!-- RIGHT PANEL: Input Area -->
@@ -397,39 +299,146 @@
                 <div class="glass-panel">
                     <div class="panel-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
                         <h3 class="panel-title" style="margin-bottom: 0;"><i class="fa-solid fa-clock-rotate-left" style="color: var(--accent);"></i> Recent Resumes</h3>
-                        <span class="resume-count-badge" style="background: rgba(255, 255, 255, 0.08); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary); border: 1px solid var(--glass-border); font-weight: 500;">2 Resumes</span>
+                        <span class="resume-count-badge" id="recent-resumes-count" style="background: rgba(255, 255, 255, 0.08); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary); border: 1px solid var(--glass-border); font-weight: 500;">0 Resumes</span>
                     </div>
                     
-                    <div class="history-file-list" style="display: flex; flex-direction: column; gap: var(--space-3);">
-                        <!-- Item 1 -->
-                        <div class="file-info">
-                            <i class="fa-regular fa-file-pdf file-icon" style="color: var(--primary); font-size: 1.5rem;"></i>
-                            <div class="file-details">
-                                <div class="file-name" style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);">Frontend Engineer</div>
-                                <div class="file-date" style="font-size: 0.8rem; color: var(--text-muted);">Today, 10:45 AM</div>
-                            </div>
-                            <div class="file-actions">
-                                <button class="btn btn-secondary-outline btn-sm" title="View" style="padding: 6px 10px;"><i class="fa-regular fa-eye"></i></button>
-                                <button class="btn btn-secondary-outline btn-sm" style="color: var(--error); border-color: rgba(248, 113, 113, 0.3); padding: 6px 10px;" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
-                            </div>
-                        </div>
-                        <!-- Item 2 -->
-                        <div class="file-info">
-                            <i class="fa-regular fa-file-pdf file-icon" style="color: var(--primary); font-size: 1.5rem;"></i>
-                            <div class="file-details">
-                                <div class="file-name" style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);">UI/UX Designer</div>
-                                <div class="file-date" style="font-size: 0.8rem; color: var(--text-muted);">Yesterday</div>
-                            </div>
-                            <div class="file-actions">
-                                <button class="btn btn-secondary-outline btn-sm" title="View" style="padding: 6px 10px;"><i class="fa-regular fa-eye"></i></button>
-                                <button class="btn btn-secondary-outline btn-sm" style="color: var(--error); border-color: rgba(248, 113, 113, 0.3); padding: 6px 10px;" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
-                            </div>
+                    <div class="history-file-list" id="recent-resumes-list" style="display: flex; flex-direction: column; gap: var(--space-3);">
+                        <div class="empty-state" style="padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+                            <i class="fa-regular fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                            <p>Loading recent resumes...</p>
                         </div>
                     </div>
                 </div>
             </div>
 
         </section>
+        </div>
+
+        <!-- View 2: Loading State -->
+        <div id="ats-loading-view" class="ats-full-view" style="display: none;">
+            <div class="loading-content">
+                <div class="scanner-animation">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <div class="scanner-bar"></div>
+                </div>
+                <h3 id="loading-title">Analyzing Resume...</h3>
+                <p id="loading-text">Extracting credentials and matching against job requirements.</p>
+                <div class="progress-container" style="max-width: 400px;">
+                    <div class="progress-bar" id="scan-progress-bar" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 3: Results State -->
+        <div id="ats-result-view" class="ats-full-view ats-result-layout" style="display: none;">
+            <!-- Left Column: Analysis Results (Previously Right) -->
+            <div class="results-content-column">
+                    <!-- Score Card -->
+                    <div class="glass-panel score-card" style="margin-bottom: var(--space-6);">
+                        <div class="score-ring-container">
+                            <svg class="score-ring" viewBox="0 0 120 120">
+                                <circle class="ring-bg" cx="60" cy="60" r="54"></circle>
+                                <circle class="ring-progress" id="score-ring-progress" cx="60" cy="60" r="54" stroke-dasharray="339.29" stroke-dashoffset="339.29"></circle>
+                            </svg>
+                            <div class="score-text">
+                                <span class="score-value" id="score-value">0</span>
+                                <span class="score-percent">%</span>
+                                <span class="score-label">Match</span>
+                            </div>
+                        </div>
+                        <div class="score-details">
+                            <h3 class="panel-title" style="margin-bottom: var(--space-2);">Analysis Completed</h3>
+                            <p style="color: var(--text-secondary); line-height: 1.5; font-size: var(--text-sm);">
+                                Your resume has a strong foundation for this role, but misses key keyword targets and action verbs required by ATS parsers.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Keyword Matrix -->
+                    <div class="glass-panel keyword-matrix" style="margin-bottom: var(--space-6);">
+                        <h3 class="panel-title" style="margin-bottom: var(--space-4);"><i class="fa-solid fa-tags"></i> Keyword Gap Analysis</h3>
+                        <div class="keyword-group">
+                            <h4 style="font-size: var(--text-sm); margin-bottom: var(--space-2); color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">Matched Keywords <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; text-transform: uppercase;">6 Matched</span></h4>
+                            <div class="pill-container">
+                                <span class="keyword-pill matched"><i class="fa-solid fa-circle-check"></i> HTML5/CSS3</span>
+                                <span class="keyword-pill matched"><i class="fa-solid fa-circle-check"></i> JavaScript</span>
+                                <span class="keyword-pill matched"><i class="fa-solid fa-circle-check"></i> React</span>
+                                <span class="keyword-pill matched"><i class="fa-solid fa-circle-check"></i> Git</span>
+                                <span class="keyword-pill matched"><i class="fa-solid fa-circle-check"></i> Webpack</span>
+                                <span class="keyword-pill matched"><i class="fa-solid fa-circle-check"></i> Responsive Design</span>
+                            </div>
+                        </div>
+                        <div class="keyword-group" style="margin-top: var(--space-4);">
+                            <h4 style="font-size: var(--text-sm); margin-bottom: var(--space-2); color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">Missing Keywords <span class="badge-danger">4 Missing</span></h4>
+                            <div class="pill-container">
+                                <span class="keyword-pill missing"><i class="fa-solid fa-triangle-exclamation"></i> TypeScript</span>
+                                <span class="keyword-pill missing"><i class="fa-solid fa-triangle-exclamation"></i> Next.js</span>
+                                <span class="keyword-pill missing"><i class="fa-solid fa-triangle-exclamation"></i> Tailwind CSS</span>
+                                <span class="keyword-pill missing"><i class="fa-solid fa-triangle-exclamation"></i> CI/CD Pipeline</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Checklist -->
+                    <div class="glass-panel action-checklist-panel" style="margin-bottom: var(--space-6);">
+                        <h3 class="panel-title" style="margin-bottom: var(--space-4);"><i class="fa-solid fa-list-check"></i> Prioritized Fixes</h3>
+                        <div class="action-checklist">
+                            <label class="checklist-item">
+                                <input type="checkbox" class="checklist-checkbox" />
+                                <span class="checkmark"></span>
+                                <span class="checklist-content">
+                                    <span class="checklist-title">Add TypeScript to Skill Matrix</span>
+                                    <span class="checklist-desc">The job description mentions TypeScript as a core requirement. Add it to your skills block.</span>
+                                </span>
+                            </label>
+                            <label class="checklist-item">
+                                <input type="checkbox" class="checklist-checkbox" />
+                                <span class="checkmark"></span>
+                                <span class="checklist-content">
+                                    <span class="checklist-title">Integrate Next.js & Tailwind CSS projects</span>
+                                    <span class="checklist-desc">Detail 1-2 projects where you utilized modern meta-frameworks and utilities to build UI.</span>
+                                </span>
+                            </label>
+                            <label class="checklist-item">
+                                <input type="checkbox" class="checklist-checkbox" />
+                                <span class="checkmark"></span>
+                                <span class="checklist-content">
+                                    <span class="checklist-title">Revise passive phrasing</span>
+                                    <span class="checklist-desc">Convert sentences starting with "Responsible for..." to active verbs like "Architected...", "Optimized...".</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Positive Points -->
+                    <div class="glass-panel positive-points-panel">
+                        <h3 class="panel-title" style="margin-bottom: var(--space-4);"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i> Strong Features</h3>
+                        <ul class="positive-list">
+                            <li><i class="fa-solid fa-check"></i> <strong>File Format Validated:</strong> Machine-readable single-column PDF.</li>
+                            <li><i class="fa-solid fa-check"></i> <strong>Clean Section Headings:</strong> Standardized Experience, Education, and Skills tags.</li>
+                            <li><i class="fa-solid fa-check"></i> <strong>Contact Information Present:</strong> Email, phone number, and LinkedIn links are valid.</li>
+                        </ul>
+                    </div>
+            </div>
+
+            <!-- Right Column: Document Viewer (Previously Left) -->
+            <div class="results-viewer-column">
+                <div class="document-viewer-panel glass-panel">
+                    <div class="viewer-header">
+                        <h3 class="panel-title"><i class="fa-regular fa-file-pdf" style="color: var(--primary);"></i> <span id="viewer-file-name">Resume Document</span></h3>
+                    </div>
+                    <div class="viewer-body" id="document-viewer-body">
+                        <!-- Iframe will be injected here -->
+                        <div class="viewer-placeholder">
+                            <i class="fa-solid fa-file-invoice"></i>
+                            <p>Loading document preview...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-secondary-outline mt-4" id="back-to-setup-btn" style="width: 100%;"><i class="fa-solid fa-arrow-left"></i> Analyze Another Resume</button>
+            </div>
+        </div>
     </main>
 
     <script type="module" src="js/ats-tailor.js"></script>

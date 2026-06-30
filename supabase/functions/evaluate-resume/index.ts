@@ -1,4 +1,15 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { createClient } from '@supabase/supabase-js'
+
+// Helper for robust JSON parsing
+function parseMarkdownJson(text: string) {
+  try {
+    const jsonMatch = text.match(/```(?:json)?\n([\s\S]*?)\n```/);
+    const jsonText = jsonMatch ? jsonMatch[1] : text;
+    return JSON.parse(jsonText.trim());
+  } catch (_e) {
+    return JSON.parse(text); // Fallback
+  }
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,7 +23,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { resume_id, resume_document, job_title, job_description, experience_level } = await req.json()
+    const { resume_id, file_path, mime_type, job_title, job_description, experience_level } = await req.json()
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
@@ -31,10 +42,12 @@ Deno.serve(async (req: Request) => {
     }
 
     // 1. High Reasoning Model for Extraction (Needs to understand messy resume layouts and implicit skills)
-    const extractionModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro:generateContent?key=${apiKey}`
+    const extractionModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=${apiKey}`
     
     // 2. Low Reasoning/Fast Model for Summary (Just formatting math into English text)
     const summaryModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`
+
+
 
 
 
@@ -107,6 +120,27 @@ Target Experience Level: ${experience_level || "mid"}
 Job Description: ${job_description}
 </target_document>`;
 
+    // If we have a file_path, download the resume from Supabase Storage
+    let documentBase64 = "";
+    if (file_path && supabaseClient) {
+        const { data: fileBlob, error: downloadError } = await supabaseClient.storage.from('resumes').download(file_path);
+        if (downloadError || !fileBlob) {
+            throw new Error(`Failed to download resume from storage: ${downloadError?.message}`);
+        }
+        const arrayBuffer = await fileBlob.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        // Convert to base64 efficiently avoiding stack overflow on large arrays
+        let binaryString = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+            binaryString += String.fromCharCode.apply(null, Array.from(uint8Array.slice(i, i + chunkSize)));
+        }
+        documentBase64 = btoa(binaryString);
+    } else {
+        throw new Error("Missing file_path or Supabase client configuration.");
+    }
+
     const fetchOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -115,7 +149,7 @@ Job Description: ${job_description}
           role: 'user', 
           parts: [
             { text: extractionPrompt },
-            { inlineData: { mimeType: resume_document.mimeType, data: resume_document.data } }
+            { inlineData: { mimeType: mime_type || 'application/pdf', data: documentBase64 } }
           ] 
         }],
         generationConfig: { responseMimeType: "application/json", temperature: 0 }
@@ -135,7 +169,7 @@ Job Description: ${job_description}
     }
     const extractData = await extractRes.json()
     const rawExtractText = extractData.candidates?.[0]?.content?.parts?.[0]?.text || "{}"
-    const extracted = JSON.parse(rawExtractText)
+    const extracted = parseMarkdownJson(rawExtractText)
 
     // --- STEP 2: DETERMINISTIC MATH SCORING ---
     let skillScore = 0;
@@ -207,7 +241,7 @@ Return ONLY valid JSON matching EXACTLY this structure:
 
     const summaryData = await summaryRes.json()
     const rawSummaryText = summaryData.candidates?.[0]?.content?.parts?.[0]?.text || "{}"
-    const aiSummary = JSON.parse(rawSummaryText)
+    const aiSummary = parseMarkdownJson(rawSummaryText)
 
     const responsePayload = {
       original_ats_score: finalScore,
@@ -219,7 +253,7 @@ Return ONLY valid JSON matching EXACTLY this structure:
 
     // --- STEP 4: DATABASE INSERTION ---
     if (supabaseClient && resume_id) {
-       await supabaseClient.from('resume_evaluations').insert({
+       const { error: evalDbError } = await supabaseClient.from('resume_evaluations').insert({
           resume_id: resume_id,
           original_ats_score: finalScore,
           target_job_description: job_description,
@@ -229,10 +263,24 @@ Return ONLY valid JSON matching EXACTLY this structure:
           missing_skills: missing_skills
        });
        
+       if (evalDbError) {
+           throw new Error(`Failed to save evaluation to database: ${evalDbError.message}`);
+       }
+       
        if (extracted.candidate_profile) {
-           await supabaseClient.from('resumes').update({
+           const updatePayload: Record<string, unknown> = {
                parsed_text: JSON.stringify(extracted.candidate_profile)
-           }).eq('id', resume_id);
+           };
+
+           // Dynamically generate the file name: name_target_role
+           if (extracted.candidate_profile?.basics?.name && job_title) {
+               const safeName = extracted.candidate_profile.basics.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_');
+               const safeRole = job_title.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_');
+               const ext = file_path ? file_path.split('.').pop() : 'pdf';
+               updatePayload.title = `${safeName}_${safeRole}.${ext}`;
+           }
+
+           await supabaseClient.from('resumes').update(updatePayload).eq('id', resume_id);
        }
     }
 
