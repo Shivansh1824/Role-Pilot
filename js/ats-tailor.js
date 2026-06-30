@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         .single();
                         
                     if (evalError || !evalData) {
-                        throw new Error("Could not find historical analysis data for this resume.");
+                        throw new Error("This resume was analyzed before database permissions were updated, so its score details were not saved. Please upload and re-run the analysis to view it.");
                     }
                     
                     // Generate Signed URL for the PDF
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const { data, error } = await db
                 .from('resumes')
-                .select('*, resume_evaluations!inner(id)')
+                .select('*, resume_evaluations(id)')
                 .eq('user_id', userId)
                 .not('parsed_text', 'is', null)
                 .order('created_at', { ascending: false })
