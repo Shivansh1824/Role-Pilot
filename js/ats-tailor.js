@@ -152,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleFiles(files) {
         if (files.length > 0) {
             const file = files[0];
+            window.resumeFileObj = file; // Store raw file for Supabase upload
             // Update UI with file name
             fileNameDisplay.textContent = file.name;
             
@@ -363,10 +364,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 return; // Stop the flow
             }
 
+            // --- STEP 1.5: UPLOAD & REGISTER RESUME IN DB ---
+            if (scanProgressBar) scanProgressBar.style.width = '40%';
+            
+            const { data: userData, error: authError } = await db.auth.getUser();
+            if (authError || !userData?.user) {
+                throw new Error("You must be logged in to upload a resume.");
+            }
+            
+            const userId = userData.user.id;
+            const fileObj = window.resumeFileObj;
+            const fileExt = fileObj.name.split('.').pop();
+            const filePath = `${userId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+            
+            // Upload to Supabase Storage 'resumes' bucket
+            const { error: uploadError } = await db.storage
+                .from('resumes')
+                .upload(filePath, fileObj);
+                
+            if (uploadError) {
+                console.error("Storage upload error:", uploadError);
+                throw new Error("Failed to upload resume document.");
+            }
+            
+            // Insert record into resumes table
+            const { data: resumeRecord, error: insertError } = await db
+                .from('resumes')
+                .insert({
+                    user_id: userId,
+                    title: fileObj.name,
+                    file_url: filePath,
+                    is_primary: false
+                })
+                .select()
+                .single();
+                
+            if (insertError || !resumeRecord) {
+                console.error("Database insert error:", insertError);
+                throw new Error("Failed to register resume in database.");
+            }
+            
+            if (scanProgressBar) scanProgressBar.style.width = '60%';
+
             // --- STEP 2: EVALUATE RESUME ---
             const { data, error } = await db.functions.invoke('evaluate-resume', {
                 body: {
-                    resume_id: "temp_id_for_now", // TODO: Replace with actual uploaded DB resume ID
+                    resume_id: resumeRecord.id, // REAL ID mapped to the database!
                     resume_document: window.resumeDocument, 
                     job_title: targetRole,
                     job_description: jdText,
@@ -398,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (err) {
             console.error("Analysis Error:", err);
-            alert("An error occurred during analysis.");
+            alert(err.message || "An error occurred during analysis.");
             resetAnalysis();
         }
     });
