@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+          const currentTheme = localStorage.getItem('theme') || 'dark';
+          if (currentTheme === 'light') {
+              document.documentElement.classList.add('light-theme');
+          } else {
+              document.documentElement.classList.remove('light-theme');
+          }
+      })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ats-tailor.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>ATS Analysis Results - Role-Pilot</title>
+</head>
+<body class="dashboard-page">
+    <div class="bg-layers">
+        <div class="bg-layer dark-bg"></div>
+        <div class="bg-layer light-bg"></div>
+    </div>
+    <div class="landing-overlay"></div>
+    
+    <!-- Global App Header -->
+    <header class="app-header dashboard-header">
+        <div class="header-left">
+            <a href="index.html" class="logo-wrapper">
+                <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--primary)" />
+                            <stop offset="100%" stop-color="var(--accent)" />
+                        </linearGradient>
+                    </defs>
+                    <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                    <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                    <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                    <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                    <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                    <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                </svg>
+                <span class="logo-text">Role<span>Pilot</span></span>
+            </a>
+        </div>
+        
+        <div class="header-center">
+            <nav class="header-nav">
+                <ul class="dashboard-nav-tabs">
+                    <li><a href="dashboard.html" class="nav-tab-link">Dashboard</a></li>
+                    <li><a href="#" class="nav-tab-link">Coding Arena</a></li>
+                    <li><a href="#" class="nav-tab-link">Mock Interviews</a></li>
+                    <li><a href="ats-tailor.html" class="nav-tab-link active">ATS Tailor</a></li>
+                    <li><a href="#" class="nav-tab-link">Leaderboard</a></li>
+                </ul>
+            </nav>
+        </div>
+        
+        <div class="header-actions header-user-actions">
+            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+            
+            <div class="profile-dropdown-wrapper">
+                <div class="profile-trigger" id="profile-trigger">SR</div>
+            </div>
+            
+            <button class="mobile-menu-toggle" id="mobile-menu-btn">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="dashboard-container ats-workspace" style="padding-top: var(--space-6);">
+        <!-- Results State -->
+        <div id="ats-result-view" class="ats-full-view ats-result-layout state-animate">
+            <!-- Loading Overlay -->
+            <div id="result-loading-overlay" style="position: absolute; inset: 0; background: var(--bg-main); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div class="scanner-animation" style="font-size: 4rem; margin-bottom: 2rem;">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <div class="scanner-bar"></div>
+                </div>
+                <h3>Loading Analysis Results...</h3>
+            </div>
+            
+            <!-- Left Column: Analysis Results -->
+            <div class="results-content-column">
+                <!-- Score Card -->
+                <div class="glass-panel score-card" style="margin-bottom: var(--space-6);">
+                    <div class="score-ring-container">
+                        <svg class="score-ring" viewBox="0 0 120 120">
+                            <circle class="ring-bg" cx="60" cy="60" r="54"></circle>
+                            <circle class="ring-progress" id="score-ring-progress" cx="60" cy="60" r="54" stroke-dasharray="339.29" stroke-dashoffset="339.29"></circle>
+                        </svg>
+                        <div class="score-text">
+                            <span class="score-value" id="score-value">0</span>
+                            <span class="score-percent">%</span>
+                            <span class="score-label">Match</span>
+                        </div>
+                    </div>
+                    <div class="score-details">
+                        <h3 class="panel-title" style="margin-bottom: var(--space-2);">Analysis Completed</h3>
+                        <p id="ai-score-reasoning" style="color: var(--text-secondary); line-height: 1.5; font-size: var(--text-sm);">
+                            Loading AI evaluation data...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Keyword Matrix -->
+                <div class="glass-panel keyword-matrix" style="margin-bottom: var(--space-6);">
+                    <h3 class="panel-title" style="margin-bottom: var(--space-4);"><i class="fa-solid fa-tags"></i> Keyword Gap Analysis</h3>
+                    <div class="keyword-group">
+                        <h4 style="font-size: var(--text-sm); margin-bottom: var(--space-2); color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">Matched Keywords <span id="matched-count" style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; text-transform: uppercase;">0 Matched</span></h4>
+                        <div class="pill-container" id="matched-keywords-container">
+                            <!-- Dynamically populated matched skills -->
+                        </div>
+                    </div>
+                    <div class="keyword-group" style="margin-top: var(--space-4);">
+                        <h4 style="font-size: var(--text-sm); margin-bottom: var(--space-2); color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">Missing Keywords <span id="missing-count" class="badge-danger">0 Missing</span></h4>
+                        <div class="pill-container" id="missing-keywords-container">
+                            <!-- Dynamically populated missing skills -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Checklist -->
+                <div class="glass-panel action-checklist-panel" style="margin-bottom: var(--space-6);">
+                    <h3 class="panel-title" style="margin-bottom: var(--space-4);"><i class="fa-solid fa-list-check"></i> Prioritized Fixes</h3>
+                    <div class="action-checklist" id="action-checklist-container">
+                        <!-- Dynamically populated checklist -->
+                    </div>
+                </div>
+
+                <!-- Positive Points -->
+                <div class="glass-panel positive-points-panel">
+                    <h3 class="panel-title" style="margin-bottom: var(--space-4);"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i> Strong Features</h3>
+                    <ul class="positive-list">
+                        <li><i class="fa-solid fa-check"></i> <strong>File Format Validated:</strong> Machine-readable single-column PDF.</li>
+                        <li><i class="fa-solid fa-check"></i> <strong>Clean Section Headings:</strong> Standardized Experience, Education, and Skills tags.</li>
+                        <li><i class="fa-solid fa-check"></i> <strong>Contact Information Present:</strong> Email, phone number, and LinkedIn links are valid.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Right Column: Document Viewer -->
+            <div class="results-viewer-column">
+                <div class="document-viewer-panel glass-panel">
+                    <div class="viewer-header">
+                        <h3 class="panel-title"><i class="fa-regular fa-file-pdf" style="color: var(--primary);"></i> <span id="viewer-file-name">Resume Document</span></h3>
+                    </div>
+                    <div class="viewer-body" id="document-viewer-body">
+                        <!-- Iframe will be injected here -->
+                        <div class="viewer-placeholder">
+                            <i class="fa-solid fa-file-invoice"></i>
+                            <p>Loading document preview...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <a href="ats-tailor.html" class="btn btn-secondary-outline mt-4" style="width: 100%; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="fa-solid fa-arrow-left"></i> Analyze Another Resume
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="js/ats-result.js"></script>
+</body>
+</html>

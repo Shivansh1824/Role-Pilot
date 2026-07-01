@@ -78,46 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadRecentResumes(db, session.user.id);
             
             // Define global historical viewer function
-            window.viewHistoricalAnalysis = async (resumeId, fileUrl, fileName) => {
-                try {
-                    // Fetch evaluation data
-                    const { data: evalData, error: evalError } = await db
-                        .from('resume_evaluations')
-                        .select('*')
-                        .eq('resume_id', resumeId)
-                        .single();
-                        
-                    if (evalError || !evalData) {
-                        throw new Error("This resume was analyzed before database permissions were updated, so its score details were not saved. Please upload and re-run the analysis to view it.");
-                    }
-                    
-                    // Generate Signed URL for the PDF
-                    const { data: signedUrlData, error: signedUrlError } = await db
-                        .storage
-                        .from('resumes')
-                        .createSignedUrl(fileUrl, 3600); // 1 hour expiry
-                        
-                    if (signedUrlError || !signedUrlData) {
-                        throw new Error("Failed to retrieve document securely.");
-                    }
-                    
-                    // Populate iframe source
-                    const viewerBody = document.getElementById('document-viewer-body');
-                    const viewerFileName = document.getElementById('viewer-file-name');
-                    if (viewerBody && viewerFileName) {
-                        viewerFileName.textContent = fileName;
-                        // Use signed URL for iframe
-                        viewerBody.innerHTML = `<iframe src="${signedUrlData.signedUrl}#toolbar=0" class="document-iframe" title="Resume Document"></iframe>`;
-                    }
-                    
-                    // Directly show results without any loading screen or delay
-                    showResults(evalData.original_ats_score || 0);
-                    
-                } catch (err) {
-                    console.error("Historical Analysis Error:", err);
-                    alert(err.message || "An error occurred while loading the historical analysis.");
-                    resetAnalysis();
-                }
+            window.viewHistoricalAnalysis = (resumeId, fileUrl, fileName) => {
+                window.location.href = 'ats-result.html?id=' + resumeId;
             };
 
         } catch (err) {
@@ -190,13 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Analysis Panels
     const atsSetupView = document.getElementById('ats-setup-view');
     const atsLoadingView = document.getElementById('ats-loading-view');
-    const atsResultView = document.getElementById('ats-result-view');
     const scanProgressBar = document.getElementById('scan-progress-bar');
-    
-    // Score Elements
-    const scoreValue = document.getElementById('score-value');
-    const scoreRingProgress = document.getElementById('score-ring-progress');
-    const scoreCard = document.querySelector('.score-card');
 
     // Theme Toggle Logic (Shared with global header)
     const themeBtn = document.getElementById('theme-toggle');
@@ -415,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         if (showElement) {
-            showElement.style.display = 'flex';
+            showElement.style.display = '';
             // Force reflow to restart CSS keyframes
             void showElement.offsetWidth;
             showElement.classList.add('state-animate');
@@ -423,10 +379,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetAnalysis() {
-        switchState(atsSetupView, [atsLoadingView, atsResultView]);
+        switchState(atsSetupView, [atsLoadingView]);
         if (scanProgressBar) scanProgressBar.style.width = '0%';
-        if (scoreValue) scoreValue.textContent = '0';
-        if (scoreRingProgress) scoreRingProgress.style.strokeDashoffset = '339.29';
     }
 
     analyzeBtn.addEventListener('click', async () => {
@@ -455,8 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.resumeFileObj && viewerBody && viewerFileName) {
             viewerFileName.textContent = window.resumeFileObj.name;
             if (window.resumeFileObj.type === 'application/pdf') {
-                const objectUrl = URL.createObjectURL(window.resumeFileObj);
-                viewerBody.innerHTML = `<iframe src="${objectUrl}#toolbar=0" class="document-iframe" title="Resume Document"></iframe>`;
+                viewerBody.innerHTML = `<iframe src="${URL.createObjectURL(window.resumeFileObj)}#toolbar=0&view=FitH" class="document-iframe" title="Resume Document"></iframe>`;
             } else {
                 viewerBody.innerHTML = `<div class="viewer-placeholder"><i class="fa-solid fa-file-word" style="color: var(--primary);"></i><p>Document preview unavailable for DOCX. File is ready for analysis.</p></div>`;
             }
@@ -585,7 +538,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Refresh the Recent Resumes list so it shows the new dynamically named file!
                     loadRecentResumes(db, userId);
                     
-                    showResults(finalScore);
+                    // Redirect to the dedicated ATS Result page
+                    window.location.href = 'ats-result.html?id=' + resumeRecord.id;
                 }
             }, 300);
 
@@ -606,52 +560,4 @@ document.addEventListener('DOMContentLoaded', () => {
             resetAnalysis();
         }
     });
-
-    function showResults(finalScore = 82) {
-        switchState(atsResultView, [atsLoadingView, atsSetupView]);
-        
-        // Hide Red/Yellow warnings on success
-        const redError = document.getElementById('ai-validation-error');
-        if (redError) redError.style.display = 'none';
-        
-        // Animate Score
-        if (scoreValue && scoreRingProgress) animateScore(finalScore);
-    }
-
-    function animateScore(targetScore) {
-        let currentScore = 0;
-        const duration = 1500; // ms
-        const intervalTime = 20;
-        const steps = duration / intervalTime;
-        const increment = targetScore / steps;
-        
-        // 339.29 is the circumference of r=54 circle
-        const circumference = 339.29; 
-        
-        const counter = setInterval(() => {
-            currentScore += increment;
-            if (currentScore >= targetScore) {
-                currentScore = targetScore;
-                clearInterval(counter);
-            }
-            
-            // Update Number
-            scoreValue.textContent = Math.round(currentScore);
-            
-            // Update Ring Offset
-            const offset = circumference - (currentScore / 100) * circumference;
-            scoreRingProgress.style.strokeDashoffset = offset;
-            
-        }, intervalTime);
-    }
-    
-    // Set up back button
-    const backBtn = document.getElementById('back-to-setup-btn');
-    if (backBtn) {
-        backBtn.addEventListener('click', () => {
-            resetAnalysis();
-            const rBtn = document.getElementById('remove-file-btn');
-            if (rBtn) rBtn.click();
-        });
-    }
 });
