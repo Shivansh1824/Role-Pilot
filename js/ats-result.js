@@ -113,6 +113,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             viewerFileName.textContent = resume.title || "Resume Document";
             viewerBody.innerHTML = `<iframe src="${pdfUrl}#toolbar=0&view=FitH" class="document-iframe" title="Resume Document"></iframe>`;
         }
+
+        // --- Populate Target Job Profile ---
+        const targetJobPanel = document.querySelector('.target-job-panel');
+        if (targetJobPanel) {
+            if (evalData && evalData.job_title) {
+                targetJobPanel.style.display = 'block';
+                const jobTitleEl = document.getElementById('target-job-title');
+                const jobDescEl = document.getElementById('target-job-description');
+                if (jobTitleEl) jobTitleEl.textContent = evalData.job_title;
+                if (jobDescEl) jobDescEl.textContent = evalData.job_description || 'No description provided.';
+            } else {
+                targetJobPanel.style.display = 'none';
+            }
+        }
         
         // --- Populate AI Extracted Profile ---
         let profile = null;
