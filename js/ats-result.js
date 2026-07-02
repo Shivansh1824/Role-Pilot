@@ -1,4 +1,44 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // Theme Toggle Logic
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            const html = document.documentElement;
+            const isLight = html.classList.toggle('light-theme');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            themeBtn.textContent = isLight ? '🌙' : '☀️';
+        });
+        if (document.documentElement.classList.contains('light-theme')) {
+            themeBtn.textContent = '🌙';
+        }
+    }
+
+    // SVG Gradient Injection for the Ring
+    const svgNS = "http://www.w3.org/2000/svg";
+    const defs = document.createElementNS(svgNS, 'defs');
+    const gradient = document.createElementNS(svgNS, 'linearGradient');
+    gradient.setAttribute('id', 'score-gradient');
+    gradient.setAttribute('x1', '0%');
+    gradient.setAttribute('y1', '100%');
+    gradient.setAttribute('x2', '100%');
+    gradient.setAttribute('y2', '0%');
+    
+    const stop1 = document.createElementNS(svgNS, 'stop');
+    stop1.setAttribute('offset', '0%');
+    stop1.setAttribute('stop-color', 'var(--primary)');
+    
+    const stop2 = document.createElementNS(svgNS, 'stop');
+    stop2.setAttribute('offset', '100%');
+    stop2.setAttribute('stop-color', 'var(--accent)');
+    
+    gradient.appendChild(stop1);
+    gradient.appendChild(stop2);
+    defs.appendChild(gradient);
+    const scoreRing = document.querySelector('.score-ring');
+    if (scoreRing) {
+        scoreRing.appendChild(defs);
+    }
+
     // 1. Get Resume ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     const resumeId = urlParams.get('id');

@@ -170,28 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // SVG Gradient Injection for the Ring
-    const svgNS = "http://www.w3.org/2000/svg";
-    const defs = document.createElementNS(svgNS, 'defs');
-    const gradient = document.createElementNS(svgNS, 'linearGradient');
-    gradient.setAttribute('id', 'score-gradient');
-    gradient.setAttribute('x1', '0%');
-    gradient.setAttribute('y1', '100%');
-    gradient.setAttribute('x2', '100%');
-    gradient.setAttribute('y2', '0%');
-    
-    const stop1 = document.createElementNS(svgNS, 'stop');
-    stop1.setAttribute('offset', '0%');
-    stop1.setAttribute('stop-color', 'var(--primary)');
-    
-    const stop2 = document.createElementNS(svgNS, 'stop');
-    stop2.setAttribute('offset', '100%');
-    stop2.setAttribute('stop-color', 'var(--accent)');
-    
-    gradient.appendChild(stop1);
-    gradient.appendChild(stop2);
-    defs.appendChild(gradient);
-    document.querySelector('.score-ring').appendChild(defs);
 
     // --- File Drag and Drop Logic ---
 
@@ -328,11 +306,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Initial population if empty
-        if (!jobDescriptionInput.value.trim() && jobTemplates[roleSelect.value]) {
-            jobDescriptionInput.value = jobTemplates[roleSelect.value];
-            if (templateWarning) templateWarning.style.display = 'flex';
-        }
+        // Initial population if empty (using setTimeout to bypass browser form-state restoration)
+        setTimeout(() => {
+            if (!jobDescriptionInput.value.trim() && jobTemplates[roleSelect.value]) {
+                jobDescriptionInput.value = jobTemplates[roleSelect.value];
+                if (templateWarning) templateWarning.style.display = 'flex';
+                jobDescriptionInput.dispatchEvent(new Event('input')); // Trigger step validation
+            }
+        }, 100);
     }
 
     // Reactive listener for Job Description step
@@ -401,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Start scanning UI
-        switchState(atsLoadingView, [atsSetupView, atsResultView]);
+        switchState(atsLoadingView, [atsSetupView]);
         
         // Populate iframe source if PDF
         const viewerBody = document.getElementById('document-viewer-body');
