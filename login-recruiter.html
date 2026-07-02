@@ -60,70 +60,57 @@
         <div class="login-left-panel">
             <div class="login-brand-content">
                 <div class="hero-badge">
-                    <i class="fa-solid fa-robot"></i> AI Interview Copilot
+                    <i class="fa-solid fa-ranking-star"></i> AI Talent Discovery
                 </div>
-                <h1>Accelerate your career with <br><span>real-time AI feedback.</span></h1>
-                <p>Bypass ATS filters, write optimal code, and master behavioral loops. Practice in a realistic, low-stakes environment powered by voice-adaptive AI agents.</p>
+                <h1>Discover the top 1% with <br><span>semantic AI ranking.</span></h1>
+                <p>Access our pool of 100,000+ candidates. Rank verified talent instantly based on their live coding scores, mock interview reliability, and semantic ATS matches against your JD.</p>
                 
-                <!-- 2026 Glassmorphic Live Preview Widget -->
+                <!-- Recruiter Widget -->
                 <div class="login-preview-widget">
                     <div class="widget-header">
                         <div class="widget-title">
                             <span class="status-pulse-dot"></span>
-                            <span>Live Interview Simulation</span>
+                            <span>Candidate Match Score</span>
                         </div>
-                        <span class="widget-mode">Coding Round</span>
+                        <span class="widget-mode">AI Engineer</span>
                     </div>
-                    <div class="widget-body">
-                        <div class="chat-bubbles">
-                            <div class="bubble coach-bubble">
-                                <div class="bubble-meta">AI Coach Elara</div>
-                                <div class="bubble-text">"Your explanation of closures is clear. Let's optimize memory usage in your solution now."</div>
-                            </div>
-                            <div class="bubble candidate-bubble">
-                                <div class="bubble-meta">You</div>
-                                <div class="bubble-text">"I can optimize this by avoiding nested loops and using a Hash Map."</div>
-                            </div>
-                        </div>
-                        <div class="voice-wave-container">
-                            <span class="wave-bar"></span>
-                            <span class="wave-bar"></span>
-                            <span class="wave-bar"></span>
-                            <span class="wave-bar"></span>
-                            <span class="wave-bar"></span>
-                            <span class="wave-bar"></span>
+                    <div class="widget-body" style="padding-top: 10px;">
+                        <div class="ats-doc-preview">
+                            <div class="doc-line title" style="color: var(--primary);">Alex K. - Top 5% Global</div>
+                            <div class="doc-line highlight-green" style="color: var(--success); font-size: 0.85rem; margin-top: 5px;"><i class="fa-solid fa-check-circle"></i> Match: Vector Search, Python, RAG</div>
+                            <div class="doc-line" style="font-size: 0.8rem; margin-top: 8px;">Role-Pilot Verified Coding Score: 95/100</div>
                         </div>
                     </div>
                     
                     <!-- Floating metrics badges -->
                     <div class="floating-metric metric-ats">
-                        <i class="fa-solid fa-file-shield"></i>
+                        <i class="fa-solid fa-bullseye"></i>
                         <div>
-                            <span class="metric-label">ATS Match</span>
-                            <span class="metric-value">91%</span>
+                            <span class="metric-label">JD Match</span>
+                            <span class="metric-value">98%</span>
                         </div>
                     </div>
                     <div class="floating-metric metric-xp">
-                        <i class="fa-solid fa-trophy"></i>
+                        <i class="fa-solid fa-bolt"></i>
                         <div>
-                            <span class="metric-label">Leaderboard</span>
-                            <span class="metric-value">Top 5</span>
+                            <span class="metric-label">Coding</span>
+                            <span class="metric-value">O(N) Optimal</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="login-trust-metrics-cards">
                     <div class="metric-card">
-                        <i class="fa-solid fa-file-circle-check"></i>
-                        <span>Instant ATS Diagnostics</span>
+                        <i class="fa-solid fa-code"></i>
+                        <span>Verified Live Coding</span>
                     </div>
                     <div class="metric-card">
                         <i class="fa-solid fa-microphone-lines"></i>
-                        <span>Voice-Interactive Mock</span>
+                        <span>Reliability Signals</span>
                     </div>
                     <div class="metric-card">
-                        <i class="fa-solid fa-trophy"></i>
-                        <span>Global Leaderboard</span>
+                        <i class="fa-solid fa-list-ol"></i>
+                        <span>The Top 100 Shortlist</span>
                     </div>
                 </div>
             </div>
@@ -140,13 +127,13 @@
                 </div>
 
                 <div class="auth-header">
-                    <h2 id="auth-title">Welcome to Role<span>Pilot</span></h2>
-                    <p id="auth-subtitle">Sign in to access your<br>AI career navigator.</p>
+                    <h2 id="auth-title">Recruiter<span>Login</span></h2>
+                    <p id="auth-subtitle">Sign in to access your<br>talent discovery dashboard.</p>
                 </div>
 
                 <div class="auth-mode-toggle">
-                    <a href="login.html" class="mode-btn active">Candidate</a>
-                    <a href="login-recruiter.html" class="mode-btn">Recruiter / Employer</a>
+                    <a href="login.html" class="mode-btn">Candidate</a>
+                    <a href="login-recruiter.html" class="mode-btn active">Recruiter / Employer</a>
                 </div>
 
                 <form id="login-form">
@@ -210,6 +197,6 @@
         </div>
     </main>
 
-    <script type="module" src="js/login.js"></script>
+    <script type="module" src="js/login-recruiter.js"></script>
 </body>
 </html>

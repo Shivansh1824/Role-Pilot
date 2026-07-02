@@ -209,10 +209,10 @@ async function initDb() {
                 .eq('id', session.user.id)
                 .maybeSingle();
                 
-            if (profile && profile.username && profile.avatar_url && profile.target_role && profile.experience_level) {
-                window.location.href = 'dashboard.html';
+            if (profile && profile.username && profile.avatar_url && profile.target_role === 'Recruiter') {
+                window.location.href = 'dashboard-recruiter.html';
             } else {
-                window.location.href = 'form.html';
+                window.location.href = 'form-recruiter.html';
             }
             return;
         }
@@ -305,9 +305,9 @@ async function checkUserStatus() {
 
             const exists = !!data;
             
-            if (exists && data.target_role === 'Recruiter') {
+            if (exists && data.target_role !== 'Recruiter') {
                 if (authError) {
-                    authError.innerHTML = 'This email is registered as a Recruiter.<br>Please use the Recruiter portal.';
+                    authError.innerHTML = 'This email is registered as a Candidate.<br>Please use the Candidate portal.';
                     authError.style.display = 'block';
                 }
                 emailInput.classList.add('error');
@@ -417,7 +417,7 @@ loginForm.addEventListener('submit', async (e) => {
                 if (error) throw error;
 
                 if (data && data.session) {
-                    window.location.href = 'form.html';
+                    window.location.href = 'form-recruiter.html';
                 } else {
                     // Show dynamic 8-digit OTP screen inside the card
                     loginForm.style.display = 'none';
@@ -606,7 +606,7 @@ loginForm.addEventListener('submit', async (e) => {
                                 otpFields.forEach(field => field.style.borderColor = 'var(--error)');
                             } else {
                                 successState.style.display = 'none';
-                                window.location.href = 'form.html';
+                                window.location.href = 'form-recruiter.html';
                             }
                         } catch (err) {
                             verifyBtn.disabled = false;
@@ -647,15 +647,15 @@ loginForm.addEventListener('submit', async (e) => {
                     .eq('id', user.id)
                     .maybeSingle();
 
-                if (profile && profile.target_role === 'Recruiter') {
+                if (profile && profile.target_role !== 'Recruiter' && profile.target_role !== null) {
                     await db.auth.signOut();
-                    throw new Error("This email is registered as a Recruiter. Please use the Recruiter portal.");
+                    throw new Error("This email is registered as a Candidate. Please use the Candidate portal.");
                 }
 
-                if (profile && profile.username && profile.avatar_url && profile.target_role && profile.experience_level) {
-                    window.location.href = 'dashboard.html';
+                if (profile && profile.username && profile.avatar_url && profile.target_role === 'Recruiter') {
+                    window.location.href = 'dashboard-recruiter.html';
                 } else {
-                    window.location.href = 'form.html';
+                    window.location.href = 'form-recruiter.html';
                 }
             } catch (error) {
                 showAlert('error', error.message || 'Failed to sign in. Please check your credentials.');
@@ -691,7 +691,7 @@ if (googleSigninBtn) {
             const { error } = await db.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: window.location.origin + '/form.html'
+                    redirectTo: window.location.origin + '/form-recruiter.html'
                 }
             });
             if (error) throw error;
