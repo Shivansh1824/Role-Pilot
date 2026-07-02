@@ -1183,3 +1183,40 @@
     height: 100%;
     border: none;
 }
+
+/* Pulse Dots Loading Animation */
+.pulse-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 6px;
+}
+
+.pulse-dots span {
+    width: 5px;
+    height: 5px;
+    background-color: var(--primary);
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse-dots-key 1.4s infinite ease-in-out both;
+}
+
+.pulse-dots span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.pulse-dots span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes pulse-dots-key {
+    0%, 80%, 100% { 
+        transform: scale(0.6);
+        opacity: 0.3;
+    } 
+    40% { 
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+

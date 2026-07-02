@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from "@supabase/supabase-js"
 
 // Helper for robust JSON parsing
 function parseMarkdownJson(text: string) {
@@ -35,17 +35,29 @@ Deno.serve(async (req: Request) => {
     // Initialize Supabase client to save results (using the user's auth token)
     const authHeader = req.headers.get('Authorization')
     let supabaseClient = null;
+    let userId = null;
+    
     if (supabaseUrl && supabaseAnonKey && authHeader) {
       supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
         global: { headers: { Authorization: authHeader } }
       })
+      
+      // Fetch authenticated user info securely
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+      if (userError || !user) {
+        throw new Error("Unauthorized user session")
+      }
+      userId = user.id;
     }
 
-    // 1. High Reasoning Model for Extraction (Needs to understand messy resume layouts and implicit skills)
-    const extractionModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=${apiKey}`
+    // 1. Primary Model (Highest quality, strict quota)
+    const proModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=${apiKey}`
     
-    // 2. Low Reasoning/Fast Model for Summary (Just formatting math into English text)
-    const summaryModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`
+    // 2. Secondary Model (Great quality, massive free tier)
+    const flashModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`
+
+    // 3. Tertiary Fallback & Summary Model (Ultra fast, lightweight)
+    const flashLiteModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`
 
 
 
@@ -156,15 +168,20 @@ Job Description: ${job_description}
       })
     };
 
-    let extractRes = await fetch(extractionModelUrl, fetchOptions);
+    // --- 3-TIER CASCADE FALLBACK SYSTEM ---
+    let extractRes = await fetch(proModelUrl, fetchOptions);
 
-    // Fallback logic: If 3.1 Pro fails (busy, rate limited, etc.), fallback to 3.5 Flash
     if (!extractRes.ok) {
-      console.warn(`3.1 Pro Extraction failed (${extractRes.status}). Falling back to 3.5 Flash...`);
-      extractRes = await fetch(summaryModelUrl, fetchOptions);
+      console.warn(`Tier 1 (3.1 Pro) failed with status: ${extractRes.status}. Cascading to Tier 2 (3.5 Flash)...`);
+      extractRes = await fetch(flashModelUrl, fetchOptions);
       
       if (!extractRes.ok) {
-        throw new Error("Failed extraction phase with both primary and fallback models");
+        console.warn(`Tier 2 (3.5 Flash) failed with status: ${extractRes.status}. Cascading to Tier 3 (3.1 Flash Lite)...`);
+        extractRes = await fetch(flashLiteModelUrl, fetchOptions);
+        
+        if (!extractRes.ok) {
+           throw new Error("Critical Failure: All 3 AI models (Pro, Flash, and Flash Lite) have failed or exhausted quotas.");
+        }
       }
     }
     const extractData = await extractRes.json()
@@ -230,7 +247,7 @@ Return ONLY valid JSON matching EXACTLY this structure:
 }
 </output_format>`;
 
-    const summaryRes = await fetch(summaryModelUrl, {
+    const summaryRes = await fetch(flashLiteModelUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -252,9 +269,12 @@ Return ONLY valid JSON matching EXACTLY this structure:
     }
 
     // --- STEP 4: DATABASE INSERTION ---
-    if (supabaseClient && resume_id) {
+    if (supabaseClient && resume_id && userId) {
        const { error: evalDbError } = await supabaseClient.from('resume_evaluations').insert({
+          user_id: userId,
           resume_id: resume_id,
+          job_title: job_title,
+          job_description: job_description,
           original_ats_score: finalScore,
           target_job_description: job_description,
           ai_score_reasoning: aiSummary.ai_score_reasoning,

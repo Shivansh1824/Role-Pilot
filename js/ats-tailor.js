@@ -381,6 +381,52 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Dynamic loading messages to keep user engaged
+        const loadingMessages = [
+            "Extracting credentials and parsing layout...",
+            "Securing document in cloud storage...",
+            "Connecting to Gemini AI engine...",
+            "Evaluating keyword density & skill gaps...",
+            "Running deterministic ATS scoring...",
+            "Generating actionable improvement tips...",
+            "Finalizing match percentage..."
+        ];
+        
+        const loadingText = document.getElementById('loading-text');
+        
+        // Clear any existing interval/timeout to prevent overlapping text
+        if (window.loadingMessageInterval) {
+            clearInterval(window.loadingMessageInterval);
+        }
+        if (window.loadingMessageTimeout) {
+            clearTimeout(window.loadingMessageTimeout);
+        }
+        window.loadingMessageInterval = null;
+        window.loadingMessageTimeout = null;
+        
+        if (loadingText) {
+            let msgIndex = 0;
+            loadingText.textContent = loadingMessages[0];
+            loadingText.style.opacity = '1';
+            loadingText.style.transition = 'opacity 0.2s ease-in-out';
+            
+            window.loadingMessageInterval = setInterval(() => {
+                msgIndex = (msgIndex + 1) % loadingMessages.length;
+                
+                loadingText.style.opacity = '0';
+                window.loadingMessageTimeout = setTimeout(() => {
+                    loadingText.textContent = loadingMessages[msgIndex];
+                    
+                    // FORCE REFLOW: Fixes Safari GPU texture caching bugs that cause text overlay
+                    loadingText.style.display = 'none';
+                    loadingText.offsetHeight; // Trigger reflow
+                    loadingText.style.display = 'block';
+                    
+                    loadingText.style.opacity = '1';
+                }, 200);
+            }, 2500); 
+        }
+
         // Start scanning UI
         switchState(atsLoadingView, [atsSetupView]);
         
@@ -437,6 +483,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (yellowWarning) yellowWarning.style.display = 'none'; // Hide yellow box
                 }
                 
+                if (window.loadingMessageInterval) clearInterval(window.loadingMessageInterval);
+                if (window.loadingMessageTimeout) clearTimeout(window.loadingMessageTimeout);
                 resetAnalysis(); // Stop scanning animation
                 return; // Stop the flow
             }
@@ -483,7 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error("Failed to register resume in database.");
             }
             
-            insertedResumeId = resumeRecord.id; // Track for potential cleanup
+            insertedResumeId = resumeRecord.id;
             
             if (scanProgressBar) scanProgressBar.style.width = '60%';
 
@@ -513,6 +561,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (progress === 100) {
                     clearInterval(scanInterval);
+                    if (window.loadingMessageInterval) clearInterval(window.loadingMessageInterval);
+                    if (window.loadingMessageTimeout) clearTimeout(window.loadingMessageTimeout);
                     // Use actual Edge Function data to animate score
                     const finalScore = data?.original_ats_score || 82;
                     
@@ -530,14 +580,27 @@ document.addEventListener('DOMContentLoaded', () => {
             // SECURITY / HYGIENE PROTOCOL: Cleanup orphaned records if analysis failed
             if (db) {
                 if (insertedResumeId) {
-                    await db.from('resumes').delete().eq('id', insertedResumeId).catch(e => console.error("Cleanup DB Error:", e));
+                    db.from('resumes').delete().eq('id', insertedResumeId).catch(e => console.error("Cleanup DB Error:", e));
                 }
                 if (uploadedFilePath) {
-                    await db.storage.from('resumes').remove([uploadedFilePath]).catch(e => console.error("Cleanup Storage Error:", e));
+                    db.storage.from('resumes').remove([uploadedFilePath]).catch(e => console.error("Cleanup Storage Error:", e));
                 }
             }
             
-            alert(err.message || "An error occurred during analysis.");
+            const redError = document.getElementById('ai-validation-error');
+            const redErrorText = document.getElementById('ai-validation-error-text');
+            const redErrorTitle = document.getElementById('ai-validation-error-title');
+            
+            if (redError && redErrorText) {
+                redErrorText.textContent = err.message || "An error occurred during analysis. Please try again.";
+                if (redErrorTitle) redErrorTitle.textContent = "Analysis Failed";
+                redError.style.display = 'flex';
+            } else {
+                alert(err.message || "An error occurred during analysis.");
+            }
+            
+            if (window.loadingMessageInterval) clearInterval(window.loadingMessageInterval);
+            if (window.loadingMessageTimeout) clearTimeout(window.loadingMessageTimeout);
             resetAnalysis();
         }
     });
