@@ -288,9 +288,13 @@ Return ONLY valid JSON matching EXACTLY this structure:
        }
        
        if (extracted.candidate_profile) {
-           const updatePayload: Record<string, unknown> = {
-               parsed_text: JSON.stringify(extracted.candidate_profile)
-           };
+            // Attach experience years to the profile object for persistence
+            if (extracted.candidate_total_experience_years !== undefined) {
+                extracted.candidate_profile.candidate_total_experience_years = extracted.candidate_total_experience_years;
+            }
+            const updatePayload: Record<string, unknown> = {
+                parsed_text: JSON.stringify(extracted.candidate_profile)
+            };
 
            // Dynamically generate the file name: name_target_role
            if (extracted.candidate_profile?.basics?.name && job_title) {

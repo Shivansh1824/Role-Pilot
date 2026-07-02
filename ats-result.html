@@ -96,8 +96,10 @@
                             <circle class="ring-progress" id="score-ring-progress" cx="60" cy="60" r="54" stroke-dasharray="339.29" stroke-dashoffset="339.29"></circle>
                         </svg>
                         <div class="score-text">
-                            <span class="score-value" id="score-value">0</span>
-                            <span class="score-percent">%</span>
+                            <div class="score-num-group">
+                                <span class="score-value" id="score-value">0</span>
+                                <span class="score-percent">%</span>
+                            </div>
                             <span class="score-label">Match</span>
                         </div>
                     </div>
@@ -122,6 +124,71 @@
                         <h4 style="font-size: var(--text-sm); margin-bottom: var(--space-2); color: var(--text-secondary); display: flex; align-items: center; justify-content: space-between;">Missing Keywords <span id="missing-count" class="badge-danger">0 Missing</span></h4>
                         <div class="pill-container" id="missing-keywords-container">
                             <!-- Dynamically populated missing skills -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Extracted Profile -->
+                <div class="glass-panel extracted-profile-panel" style="margin-bottom: var(--space-6); display: none;">
+                    <h3 class="panel-title" style="margin-bottom: var(--space-4);"><i class="fa-solid fa-id-card"></i> AI Extracted Profile</h3>
+                    
+                    <!-- Candidate Basics -->
+                    <div class="extracted-basics" style="display: flex; gap: var(--space-4); margin-bottom: var(--space-4); flex-wrap: wrap;">
+                        <div style="flex: 1 1 200px;">
+                            <span class="label" style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Name</span>
+                            <span id="extracted-name" style="font-weight: 600; color: var(--text-primary);">-</span>
+                        </div>
+                        <div style="flex: 1 1 200px;">
+                            <span class="label" style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Email</span>
+                            <span id="extracted-email" style="font-weight: 600; color: var(--text-primary);">-</span>
+                        </div>
+                        <div style="flex: 1 1 150px;">
+                            <span class="label" style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Phone</span>
+                            <span id="extracted-phone" style="font-weight: 600; color: var(--text-primary);">-</span>
+                        </div>
+                        <div style="flex: 1 1 150px;">
+                            <span class="label" style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">LinkedIn</span>
+                            <span id="extracted-linkedin" style="font-weight: 600; color: var(--text-primary);">-</span>
+                        </div>
+                        <div style="flex: 1 1 150px;">
+                            <span class="label" style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Total Experience</span>
+                            <span id="extracted-experience" style="font-weight: 600; color: var(--text-primary);">-</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Candidate Summary -->
+                    <div class="extracted-summary-group" style="margin-bottom: var(--space-4); border-top: 1px solid var(--glass-border); padding-top: var(--space-3);">
+                        <span class="label" style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Candidate Summary</span>
+                        <p id="extracted-summary" style="font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.5; margin: 0;">-</p>
+                    </div>
+
+                    <!-- Work History -->
+                    <div class="extracted-section" style="margin-bottom: var(--space-4); border-top: 1px solid var(--glass-border); padding-top: var(--space-3);">
+                        <h4 style="font-size: var(--text-sm); margin-bottom: var(--space-3); color: var(--text-primary); font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-briefcase" style="color: var(--primary);"></i> Work History
+                        </h4>
+                        <div id="extracted-work-container" style="display: flex; flex-direction: column; gap: var(--space-3);">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Education History -->
+                    <div class="extracted-section" style="margin-bottom: var(--space-4); border-top: 1px solid var(--glass-border); padding-top: var(--space-3);">
+                        <h4 style="font-size: var(--text-sm); margin-bottom: var(--space-3); color: var(--text-primary); font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-graduation-cap" style="color: var(--accent);"></i> Education
+                        </h4>
+                        <div id="extracted-education-container" style="display: flex; flex-direction: column; gap: var(--space-2);">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Certifications & Extras -->
+                    <div class="extracted-section" style="border-top: 1px solid var(--glass-border); padding-top: var(--space-3);">
+                        <h4 style="font-size: var(--text-sm); margin-bottom: var(--space-3); color: var(--text-primary); font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-award" style="color: #eab308;"></i> Certifications
+                        </h4>
+                        <div class="pill-container" id="extracted-certs-container">
+                            <!-- Populated dynamically -->
                         </div>
                     </div>
                 </div>
