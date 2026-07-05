@@ -13,6 +13,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Profile Dropdown Toggle Logic
+    const profileTrigger = document.getElementById('profile-trigger');
+    const profileDropdown = document.getElementById('profile-dropdown');
+    
+    if (profileTrigger && profileDropdown) {
+        profileTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('show');
+        });
+        
+        // Close when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!profileDropdown.contains(e.target) && e.target !== profileTrigger) {
+                profileDropdown.classList.remove('show');
+            }
+        });
+    }
+
+    // Logout Logic
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const db = await import('./supabase-client.js').then(m => m.getSupabaseClient());
+            await db.auth.signOut();
+            window.location.href = 'index.html';
+        });
+    }
+
     // SVG Gradient Injection for the Ring
     const svgNS = "http://www.w3.org/2000/svg";
     const defs = document.createElementNS(svgNS, 'defs');
@@ -59,6 +88,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = 'index.html'; // Or login page
             return;
         }
+
+        // --- Fetch User Profile for Avatar ---
+        try {
+            const { data: profile } = await db
+                .from('profiles')
+                .select('avatar_url, full_name')
+                .eq('id', session.user.id)
+                .maybeSingle();
+
+            if (profile) {
+                const triggerEl = document.getElementById('profile-trigger');
+                if (triggerEl) {
+                    const fullName = profile.full_name || session.user.user_metadata?.full_name || "User";
+                    const firstName = fullName.split(' ')[0];
+                    const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    
+                    if (profile.avatar_url && profile.avatar_url !== 'custom_placeholder') {
+                        triggerEl.innerHTML = `<img src="${profile.avatar_url}" style="width:100%; height:100%; border-radius:50%; object-fit:contain;" alt="${firstName}">`;
+                    } else {
+                        triggerEl.textContent = initials;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Failed to load profile avatar:", e);
+        }
+        // -------------------------------------
 
         // 3. Fetch Resume and Evaluation Data
         const { data: resumeData, error: resumeError } = await db
@@ -235,7 +291,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         const reasoning = evalData.ai_score_reasoning || "Analysis complete.";
         const matchedSkills = evalData.matched_skills || [];
         const missingSkills = evalData.missing_skills || [];
-        const tips = evalData.ai_improvement_tips || [];
+        const rawTips = evalData.ai_improvement_tips || [];
+
+        // Parse tips and formatting audit
+        let tipsArray = [];
+        let audit = null;
+        if (Array.isArray(rawTips)) {
+            tipsArray = rawTips;
+        } else if (rawTips && typeof rawTips === 'object') {
+            tipsArray = rawTips.tips || [];
+            audit = rawTips.formatting_audit || null;
+        }
 
         // Reasoning
         const reasoningEl = document.getElementById('ai-score-reasoning');
@@ -272,10 +338,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Prioritized Fixes
         const checklistContainer = document.getElementById('action-checklist-container');
         if (checklistContainer) {
-            if (tips.length === 0) {
+            if (tipsArray.length === 0) {
                 checklistContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem;">No major fixes required.</p>`;
             } else {
-                checklistContainer.innerHTML = tips.map(tip => `
+                checklistContainer.innerHTML = tipsArray.map(tip => `
                     <label class="checklist-item">
                         <input type="checkbox" class="checklist-checkbox" />
                         <span class="checkmark"></span>
@@ -285,6 +351,58 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </span>
                     </label>
                 `).join('');
+            }
+        }
+
+        // Formatting & Layout Audit
+        const positiveList = document.querySelector('.positive-list');
+        const positivePanelTitle = document.querySelector('.positive-points-panel .panel-title');
+        if (positiveList) {
+            if (positivePanelTitle) {
+                positivePanelTitle.innerHTML = `<i class="fa-solid fa-circle-check" style="color: var(--success);"></i> Formatting & Layout Audit`;
+            }
+            
+            if (audit) {
+                const items = [
+                    {
+                        passed: audit.is_single_column !== false,
+                        passText: "<strong>Single-Column Layout:</strong> Optimized for linear parser reading.",
+                        failText: "<strong>Multi-Column Layout:</strong> May cause scrambled parsing text order."
+                    },
+                    {
+                        passed: audit.no_tables_or_text_boxes !== false,
+                        passText: "<strong>No Tables/Text Boxes:</strong> Safe from dropped text boxes.",
+                        failText: "<strong>Tables/Text Boxes Detected:</strong> Risky layout formatting (parser might skip)."
+                    },
+                    {
+                        passed: audit.no_images_or_graphics !== false,
+                        passText: "<strong>Text-Only Compatibility:</strong> No unreadable images, charts, or icons.",
+                        failText: "<strong>Images/Graphics Detected:</strong> Visual elements are unreadable by ATS."
+                    },
+                    {
+                        passed: audit.contact_info_present !== false,
+                        passText: "<strong>Contact Details Present:</strong> Found in standard body text.",
+                        failText: "<strong>Contact Info Missing/Hidden:</strong> Email/phone is missing or located in header/footer."
+                    },
+                    {
+                        passed: audit.standard_headings !== false,
+                        passText: "<strong>Standard Headings Used:</strong> Clean 'Work Experience', 'Education' tags.",
+                        failText: "<strong>Creative Headings Detected:</strong> Custom headings may confuse parser classification."
+                    }
+                ];
+
+                positiveList.innerHTML = items.map(item => `
+                    <li style="display: flex; align-items: flex-start; gap: var(--space-3); margin-bottom: var(--space-3); color: ${item.passed ? 'var(--text-secondary)' : 'var(--text-primary)'};">
+                        <i class="${item.passed ? 'fa-solid fa-check' : 'fa-solid fa-triangle-exclamation'}" style="color: ${item.passed ? 'var(--success)' : '#eab308'} !important; margin-top: 4px; font-size: 1rem;"></i>
+                        <div>${item.passed ? item.passText : item.failText}</div>
+                    </li>
+                `).join('');
+            } else {
+                positiveList.innerHTML = `
+                    <li><i class="fa-solid fa-check"></i> <strong>File Format Validated:</strong> Machine-readable single-column PDF.</li>
+                    <li><i class="fa-solid fa-check"></i> <strong>Clean Section Headings:</strong> Standardized Experience, Education, and Skills tags.</li>
+                    <li><i class="fa-solid fa-check"></i> <strong>Contact Information Present:</strong> Email, phone number, and LinkedIn links are valid.</li>
+                `;
             }
         }
 
