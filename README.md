@@ -15,10 +15,10 @@ In today's competitive job market, candidate preparation is disjointed, and recr
 
 ## 🛠️ Core Feature Suites
 
-### 1. 🎤 TruGen AI-Powered Mock Interviews
-* **Voice & Behavioral Diagnostics**: Practice live, voice-interactive mock sessions with hyper-realistic AI interview avatars (e.g., Elara, Senior Tech Recruiter).
-* **STAR Method Scoring**: The AI analyzes response structures based on the Situation, Task, Action, and Result (STAR) framework.
-* **Fluency & Sentiment Feedback**: Receive instant ratings on English fluency, communication clarity, tone modulation, and filler-word frequency.
+### 1. 🎙️ Agora Conversational AI Multi-Role Interview Panel
+* **Real-Time Voice & Multi-Persona Diagnostic**: Conduct low-latency, voice-interactive mock interviews with an adaptive AI panel representing multiple roles (Tech Lead, Product Manager, and Hiring Manager).
+* **Controlled Turn-Taking & Shared Context**: Panelists dynamically hand off questioning, challenge candidates on technical vs. business impact tradeoffs, and adapt difficulty based on real-time performance.
+* **Evidence-Based STAR Scoring**: Receives instant STAR method evaluations linked directly to transcript quotes, highlighting vague or contradictory answers.
 
 ### 2. 💻 The Technical Arena
 * **Level-Based Coding Challenges**: Progress through dynamically scaling coding problems across different difficulty tiers.
@@ -74,7 +74,7 @@ As we scale Role-Pilot from a functional MVP to an industry-leading hiring hub, 
 
 * **Frontend**: HTML5, Vanilla JavaScript, and Custom CSS (leveraging high-end glassmorphism, responsive grids, and micro-animations for a premium 2026 SaaS feel).
 * **Database & Auth**: Supabase (PostgreSQL for transaction storage, secure Row-Level Security, and automated email verification flows using 8-digit OTPs).
-* **AI Integration**: Custom Edge Functions interfacing with TruGen AI APIs for video/voice agent processing and OpenAI/Gemini models for technical complexity evaluation.
+* **AI Integration**: Custom Edge Functions & Agora Conversational AI SDK for real-time WebRTC voice agent streaming, multi-role turn-taking, and OpenAI/Gemini models for technical complexity & STAR evidence-based evaluation.
 
 ---
 
