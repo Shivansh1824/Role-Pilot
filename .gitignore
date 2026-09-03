@@ -7,6 +7,9 @@
 node_modules/
 jspm_packages/
 web_modules/
+.next/
+voice-engine/.next/
+voice-engine/node_modules/
 
 # Logs
 logs
