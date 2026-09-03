@@ -1,12 +1,20 @@
-# Local env files
+# Local env files (Root and all subdirectories)
 .env
+.env*
 .env.local
 .env.*.local
+*.env
+*.env.local
+voice-engine/.env*
+voice-engine/.env.local
 
 # Dependency directories
 node_modules/
 jspm_packages/
 web_modules/
+.next/
+voice-engine/.next/
+voice-engine/node_modules/
 
 # Logs
 logs
