@@ -69,7 +69,7 @@ You are a strict data extraction engine. You extract structured data from a cand
 </context>
 
 <task>
-Extract the candidate's comprehensive profile (contact info, work history, education, skills, certifications), the candidate's total years of experience, the job's required skills, and the job's required years of experience.
+Extract the candidate's comprehensive profile (contact info, work history, education, skills, certifications), the candidate's total years of experience, the job's required skills, the job's required years of experience, and perform a formatting audit of the candidate's resume (checking page count, single-column vs multi-column layout, use of tables/text boxes, presence of unreadable images/graphics, whether contact details are in standard body or hidden in headers/footers, and standard headings).
 </task>
 
 <constraints>
@@ -118,7 +118,15 @@ Return ONLY valid JSON matching EXACTLY this structure:
   },
   "candidate_total_experience_years": 4.5,
   "job_required_skills": ["skillA", "skillB"],
-  "job_required_experience_years": 3.0
+  "job_required_experience_years": 3.0,
+  "formatting_audit": {
+    "is_single_column": boolean,
+    "no_tables_or_text_boxes": boolean,
+    "no_images_or_graphics": boolean,
+    "contact_info_present": boolean,
+    "standard_headings": boolean,
+    "page_count": number
+  }
 }
 </output_format>
 
@@ -215,8 +223,26 @@ Job Description: ${job_description}
         expScore = (candExp / reqExp) * 100;
     }
 
-    // 60% Skills, 40% Experience (simplified for edge function)
-    const finalScore = Math.round((0.6 * finalSkillScore) + (0.4 * expScore));
+    // Formatting Score Calculation (starting at 100, deducting for failures)
+    const audit = extracted.formatting_audit || {
+      is_single_column: true,
+      no_tables_or_text_boxes: true,
+      no_images_or_graphics: true,
+      contact_info_present: true,
+      standard_headings: true,
+      page_count: 1
+    };
+    
+    let formattingScore = 100;
+    if (audit.is_single_column === false) formattingScore -= 25;
+    if (audit.no_tables_or_text_boxes === false) formattingScore -= 25;
+    if (audit.no_images_or_graphics === false) formattingScore -= 20;
+    if (audit.contact_info_present === false) formattingScore -= 15;
+    if (audit.standard_headings === false) formattingScore -= 15;
+    formattingScore = Math.max(0, formattingScore);
+
+    // 50% Skills, 30% Experience, 20% Formatting/Layout
+    const finalScore = Math.round((0.5 * finalSkillScore) + (0.3 * expScore) + (0.2 * formattingScore));
 
     // --- STEP 3: AI SUMMARY & ACTIONABLE TIPS ---
     const summaryPrompt = `<context>
@@ -231,12 +257,20 @@ Write a concise, 2-sentence summary explaining their ATS score and provide 3 act
 - Final ATS Score: ${finalScore}%
 - Matched Skills: ${matched_skills.join(", ") || "None"}
 - Missing Skills: ${missing_skills.join(", ") || "None"}
+- Formatting Failures: ${[
+    audit.is_single_column === false ? "Multi-column layout" : "",
+    audit.no_tables_or_text_boxes === false ? "Contains tables or text boxes" : "",
+    audit.no_images_or_graphics === false ? "Contains images/graphics/icons" : "",
+    audit.contact_info_present === false ? "Contact details missing or hidden in header/footer" : "",
+    audit.standard_headings === false ? "Non-standard resume headings" : "",
+    (audit.page_count > 1 && (experience_level === "entry" || experience_level === "mid")) ? "Resume is more than 1 page (should be 1 page for junior/mid level experience)" : ""
+  ].filter(Boolean).join(", ") || "None"}
 </source_data>
 
 <constraints>
 - Base your summary and tips ONLY on the source data provided above.
 - Be direct and professional. Do not use generic motivational fluff.
-- Keep the tips specific to the missing skills if there are any.
+- If there are formatting failures, prioritize tips advising how to fix the layout formatting to beat ATS parsers.
 </constraints>
 
 <output_format>
@@ -260,12 +294,18 @@ Return ONLY valid JSON matching EXACTLY this structure:
     const rawSummaryText = summaryData.candidates?.[0]?.content?.parts?.[0]?.text || "{}"
     const aiSummary = parseMarkdownJson(rawSummaryText)
 
+    // Build the tips payload containing formatting audit results
+    const finalTipsPayload = {
+      tips: aiSummary.ai_improvement_tips || [],
+      formatting_audit: audit
+    };
+
     const responsePayload = {
       original_ats_score: finalScore,
       matched_skills,
       missing_skills,
       ai_score_reasoning: aiSummary.ai_score_reasoning,
-      ai_improvement_tips: aiSummary.ai_improvement_tips
+      ai_improvement_tips: finalTipsPayload
     }
 
     // --- STEP 4: DATABASE INSERTION ---
@@ -278,7 +318,7 @@ Return ONLY valid JSON matching EXACTLY this structure:
           original_ats_score: finalScore,
           target_job_description: job_description,
           ai_score_reasoning: aiSummary.ai_score_reasoning,
-          ai_improvement_tips: aiSummary.ai_improvement_tips,
+          ai_improvement_tips: finalTipsPayload,
           matched_skills: matched_skills,
           missing_skills: missing_skills
        });

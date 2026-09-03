@@ -169,9 +169,10 @@ Example Output:
     )
 
   } catch (error) {
-    console.error('Edge Function Error:', error.message)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Edge Function Error:', errorMessage)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

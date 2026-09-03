@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/ats-tailor.css">
+    <script src="js/theme.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <title>ATS Tailor - Role-Pilot</title>
 </head>
@@ -66,6 +67,11 @@
             
             <div class="profile-dropdown-wrapper">
                 <div class="profile-trigger" id="profile-trigger">SR</div>
+                <div class="dropdown-menu" id="profile-dropdown">
+                    <a href="dashboard.html" class="dropdown-item"><i class="fa-solid fa-user-gear"></i> Profile Settings</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item text-danger" id="logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+                </div>
             </div>
             
             <button class="mobile-menu-toggle" id="mobile-menu-btn">

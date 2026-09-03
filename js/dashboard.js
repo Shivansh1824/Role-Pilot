@@ -1,22 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Theme Toggling (using the exact logic requested from login.html / theme.js)
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    const root = document.documentElement;
-    
-    // Set initial icon state based on theme
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-    if (themeToggleBtn) {
-        themeToggleBtn.textContent = currentTheme === 'light' ? '🌙' : '☀️';
-        
-        themeToggleBtn.addEventListener('click', () => {
-            const isLight = root.classList.toggle('light-theme');
-            const newTheme = isLight ? 'light' : 'dark';
-            localStorage.setItem('theme', newTheme);
-            themeToggleBtn.textContent = isLight ? '🌙' : '☀️';
-        });
-    }
-
-    // 2. Profile Dropdown Toggle
+    // 1. Profile Dropdown Toggle
     const profileTrigger = document.getElementById('profile-trigger');
     const profileDropdown = document.getElementById('profile-dropdown');
     

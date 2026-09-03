@@ -48,31 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            
-            
-            // --- ONE-TIME MIGRATION TO FIX OLD NAMES ---
-            try {
-                const { data: resumesToFix } = await db.from('resumes')
-                    .select('*')
-                    .eq('user_id', session.user.id)
-                    .eq('title', 'Resume.pdf')
-                    .not('parsed_text', 'is', null);
-                    
-                if (resumesToFix && resumesToFix.length > 0) {
-                    for (let row of resumesToFix) {
-                        try {
-                            const parsed = JSON.parse(row.parsed_text);
-                            if (parsed?.basics?.name) {
-                                const safeName = parsed.basics.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_');
-                                await db.from('resumes').update({ title: `${safeName}_ATS_Scan.pdf` }).eq('id', row.id);
-                            }
-                        } catch(e) { console.warn("Failed to fix name for row", row.id); }
-                    }
-                }
-            } catch (migErr) {
-                console.error("Migration error:", migErr);
-            }
-            // -------------------------------------------
 
             // Load Recent Resumes dynamically
             await loadRecentResumes(db, session.user.id);
@@ -80,6 +55,39 @@ document.addEventListener('DOMContentLoaded', () => {
             // Define global historical viewer function
             window.viewHistoricalAnalysis = (resumeId, fileUrl, fileName) => {
                 window.location.href = 'ats-result.html?id=' + resumeId;
+            };
+
+            // Define global delete function
+            window.deleteResume = async (resumeId, fileUrl, event) => {
+                if (event) event.stopPropagation();
+                
+                const confirmed = confirm("Are you sure you want to delete this resume and its analysis history? This action cannot be undone.");
+                if (!confirmed) return;
+
+                try {
+                    // 1. Delete from database (Cascading delete will remove evaluations)
+                    const { error: dbError } = await db
+                        .from('resumes')
+                        .delete()
+                        .eq('id', resumeId);
+
+                    if (dbError) throw dbError;
+
+                    // 2. Delete from Supabase Storage bucket
+                    if (fileUrl) {
+                        await db.storage
+                            .from('resumes')
+                            .remove([fileUrl])
+                            .catch(e => console.error("Storage cleanup failed during delete:", e));
+                    }
+
+                    // 3. Refresh list
+                    await loadRecentResumes(db, session.user.id);
+
+                } catch (err) {
+                    console.error("Error deleting resume:", err);
+                    alert("Failed to delete the resume. Please try again.");
+                }
             };
 
         } catch (err) {
@@ -129,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="file-actions">
                             <button class="btn btn-secondary-outline btn-sm" title="View" style="padding: 6px 10px;" onclick="window.viewHistoricalAnalysis('${resume.id}', '${resume.file_url}', '${resume.title.replace(/'/g, "\\'")}')"><i class="fa-regular fa-eye"></i></button>
+                            <button class="btn btn-secondary-outline btn-sm" title="Delete" style="padding: 6px 10px; color: var(--error); border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.02);" onclick="window.deleteResume('${resume.id}', '${resume.file_url}', event)"><i class="fa-regular fa-trash-can"></i></button>
                         </div>
                     </div>
                 `;
@@ -141,7 +150,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    initSupabaseSession();    // DOM Elements
+    initSupabaseSession();
+
+    // Profile Dropdown Toggle Logic
+    const profileTrigger = document.getElementById('profile-trigger');
+    const profileDropdown = document.getElementById('profile-dropdown');
+    
+    if (profileTrigger && profileDropdown) {
+        profileTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('show');
+        });
+        
+        // Close when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!profileDropdown.contains(e.target) && e.target !== profileTrigger) {
+                profileDropdown.classList.remove('show');
+            }
+        });
+    }
+
+    // Logout Logic
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const db = await import('./supabase-client.js').then(m => m.getSupabaseClient());
+            await db.auth.signOut();
+            window.location.href = 'index.html';
+        });
+    }
+
+    // DOM Elements
     const dropzone = document.getElementById('resume-dropzone');
     const fileInput = document.getElementById('file-input');
     const selectedFileState = document.getElementById('selected-file-state');
@@ -153,23 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const atsSetupView = document.getElementById('ats-setup-view');
     const atsLoadingView = document.getElementById('ats-loading-view');
     const scanProgressBar = document.getElementById('scan-progress-bar');
-
-    // Theme Toggle Logic (Shared with global header)
-    const themeBtn = document.getElementById('theme-toggle');
-    if (themeBtn) {
-        themeBtn.addEventListener('click', () => {
-            const html = document.documentElement;
-            const isLight = html.classList.toggle('light-theme');
-            localStorage.setItem('theme', isLight ? 'light' : 'dark');
-            themeBtn.textContent = isLight ? '🌙' : '☀️';
-        });
-        
-        // Initial icon state
-        if (document.documentElement.classList.contains('light-theme')) {
-            themeBtn.textContent = '🌙';
-        }
-    }
-
 
     // --- File Drag and Drop Logic ---
 
