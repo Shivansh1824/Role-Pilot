@@ -1,7 +1,12 @@
-# Local env files
+# Local env files (Root and all subdirectories)
 .env
+.env*
 .env.local
 .env.*.local
+*.env
+*.env.local
+voice-engine/.env*
+voice-engine/.env.local
 
 # Dependency directories
 node_modules/
