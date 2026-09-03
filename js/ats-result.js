@@ -1,18 +1,4 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // Theme Toggle Logic
-    const themeBtn = document.getElementById('theme-toggle');
-    if (themeBtn) {
-        themeBtn.addEventListener('click', () => {
-            const html = document.documentElement;
-            const isLight = html.classList.toggle('light-theme');
-            localStorage.setItem('theme', isLight ? 'light' : 'dark');
-            themeBtn.textContent = isLight ? '🌙' : '☀️';
-        });
-        if (document.documentElement.classList.contains('light-theme')) {
-            themeBtn.textContent = '🌙';
-        }
-    }
-
     // Profile Dropdown Toggle Logic
     const profileTrigger = document.getElementById('profile-trigger');
     const profileDropdown = document.getElementById('profile-dropdown');

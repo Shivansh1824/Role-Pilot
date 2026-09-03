@@ -48,31 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            
-            
-            // --- ONE-TIME MIGRATION TO FIX OLD NAMES ---
-            try {
-                const { data: resumesToFix } = await db.from('resumes')
-                    .select('*')
-                    .eq('user_id', session.user.id)
-                    .eq('title', 'Resume.pdf')
-                    .not('parsed_text', 'is', null);
-                    
-                if (resumesToFix && resumesToFix.length > 0) {
-                    for (let row of resumesToFix) {
-                        try {
-                            const parsed = JSON.parse(row.parsed_text);
-                            if (parsed?.basics?.name) {
-                                const safeName = parsed.basics.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_');
-                                await db.from('resumes').update({ title: `${safeName}_ATS_Scan.pdf` }).eq('id', row.id);
-                            }
-                        } catch(e) { console.warn("Failed to fix name for row", row.id); }
-                    }
-                }
-            } catch (migErr) {
-                console.error("Migration error:", migErr);
-            }
-            // -------------------------------------------
 
             // Load Recent Resumes dynamically
             await loadRecentResumes(db, session.user.id);
@@ -218,23 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const atsSetupView = document.getElementById('ats-setup-view');
     const atsLoadingView = document.getElementById('ats-loading-view');
     const scanProgressBar = document.getElementById('scan-progress-bar');
-
-    // Theme Toggle Logic (Shared with global header)
-    const themeBtn = document.getElementById('theme-toggle');
-    if (themeBtn) {
-        themeBtn.addEventListener('click', () => {
-            const html = document.documentElement;
-            const isLight = html.classList.toggle('light-theme');
-            localStorage.setItem('theme', isLight ? 'light' : 'dark');
-            themeBtn.textContent = isLight ? '🌙' : '☀️';
-        });
-        
-        // Initial icon state
-        if (document.documentElement.classList.contains('light-theme')) {
-            themeBtn.textContent = '🌙';
-        }
-    }
-
 
     // --- File Drag and Drop Logic ---
 
