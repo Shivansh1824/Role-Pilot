@@ -1,28 +1,37 @@
-# ai-context.md — Project Context for Role-Pilot
+# Role-Pilot: Hackathon Project Context (EchoSphere Agora Conversational AI)
 
-## 🚀 Project Overview
-**Role-Pilot** is an AI-powered career accelerator and dual-sided job readiness ecosystem. It provides candidates with adaptive coding challenges, ATS resume diagnostics, and real-time voice-interactive mock interviews. For recruiters, Role-Pilot acts as an intelligent candidate discovery and verification platform.
+## Target Problem Statement
+**EchoSphere: Agora Conversational AI Hackathon — PS11: Adaptive Voice Interview Platform with Multi-Role AI Panel**
 
----
+### Core Objective
+Build an adaptive voice interview platform where one or more AI interviewers represent different roles (Alex: Tech Lead, Maya: Product Manager, David: Hiring Manager / Behavioral). The panel adapts questions dynamically based on the candidate's answers, with real-time interruptible voice, shared context, turn-taking, vague/contradictory answer detection, dynamic difficulty adjustment, and evidence-based transcript feedback.
 
-## 🏆 Current Hackathon Focus
-* **Event**: EchoSphere — Agora Conversational AI Hackathon (Hybrid / Delhi Finale)
-* **Target Problem Statement**: **PS11 — Adaptive Voice Interview Platform with Multi-Role AI Panel**
-* **Core Challenge**: Build a voice-native, real-time, interruptible AI interview panel representing multiple roles (Technical Lead, Product Manager, Hiring Manager) with shared candidate context, controlled turn-taking, dynamic difficulty adjustments, vague response detection, and evidence-based feedback linked to transcript quotes.
+## Active Tech Stack & Keys
+* **Voice Layer**: Agora Conversational AI Engine (Cloud STT Nova-3 + LLM + TTS MiniMax / ElevenLabs)
+* **SDKs & Libraries**: `agora-agents`, `agora-rtc-react`, `agora-agent-client-toolkit`, `agora-agent-uikit`, `agora-token`
+* **Credentials**: Stored securely in `.env` (git-ignored)
+  * `NEXT_PUBLIC_AGORA_APP_ID`
+  * `NEXT_AGORA_APP_CERTIFICATE`
+  * `SUPABASE_URL`
+  * `SUPABASE_ANON_KEY`
+  * `GEMINI_API_KEY`
+* **Database & Auth**: Supabase (`@supabase/supabase-js`)
+  * Existing candidate authentication flow is preserved and untouched.
 
----
+## Architectural Priorities
+1. **Multi-Role Voice Interview Room**:
+   - Conference table UI with 3 interviewer avatars:
+     - Alex (Technical Lead)
+     - Maya (Product Manager)
+     - David (Hiring Manager / Behavioral)
+   - Real-time WebRTC audio with native barge-in / speech interruption (160ms VAD threshold).
+2. **Turn-Taking & Shared Context Orchestrator**:
+   - Single agent session using role tags (`[Alex]`, `[Maya]`, `[David]`) or dynamic multi-agent handoffs.
+   - Shared memory tracking candidate claims, missing business impact, contradictions, and difficulty tier.
+3. **Evidence-Based Scorecard**:
+   - Structured assessment linking specific critiques directly to transcript timestamps and quotes.
 
-## 🛠️ Technology Stack
-* **Frontend**: HTML5, Vanilla JavaScript (ES Modules), Custom Vanilla CSS (Glassmorphism design system, no Tailwind unless explicitly requested).
-* **Voice & Agent Layer**: **Agora Conversational AI** (WebRTC RTC Engine + Speech-to-Speech / STT-LLM-TTS Agent Pipeline + Tool Calling).
-* **Database & Auth**: Supabase (PostgreSQL, Row Level Security, Edge Functions, OTP authentication).
-* **AI & Evaluation Layer**: Supabase Edge Functions / Gemini / OpenAI APIs for ATS parsing, code complexity evaluation, and evidence-based STAR interview scoring.
-
----
-
-## 📌 Architecture & Design Rules
-1. **No Framework Overkill**: Keep code modular using native ES modules and vanilla JS (`/js` directory).
-2. **File Size Limit**: Keep new JavaScript and HTML modules modular and under 600 lines per file where applicable.
-3. **Design Excellence**: Preserve glassmorphic dark mode styling, modern typography (Inter/Outfit), fluid gradients, and micro-animations.
-4. **AI Disclosure**: Ensure explicit candidate-facing notice ("Powered by Agora Conversational AI") before starting voice interviews.
-5. **No AI Assistant Attribution in Commits**: Never include AI assistant names (e.g. Antigravity, Gemini, Claude) in git commit messages or contributor lists.
+## Deprioritized / Out-of-Scope (Hackathon Speed Optimization)
+* **Recruiter Portal & Login**: Dropped / bypassed (`dashboard-recruiter.html`, `login-recruiter.html`, `form-recruiter.html`).
+* **ATS Tailor & Coding Arena**: Maintained as static reference; zero active dev hours until voice panel is done.
+* **Auth**: Keep existing Supabase login flow untouched.
