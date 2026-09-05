@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock Interview Setup — Role-Pilot</title>
+  <meta name="description" content="Configure your AI-powered mock interview panel. Choose your role, experience level, resume, panel, and difficulty." />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script>
+    (function() {
+      const currentTheme = localStorage.getItem('theme') || 'dark';
+      if (currentTheme === 'light') {
+        document.documentElement.classList.add('light-theme');
+      } else {
+        document.documentElement.classList.remove('light-theme');
+      }
+    })();
+  </script>
+  <script src="js/theme.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ─── Page Shell ─────────────────────────────────────────────────────── */
+    .setup-page { min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* Header */
+    .setup-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 68px;
+      border-bottom: 1px solid var(--glass-border);
+      background: rgba(10, 16, 32, 0.6);
+      backdrop-filter: blur(20px) saturate(200%);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .setup-header .logo-link { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-text-header { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; color: var(--text-primary); }
+    .logo-text-header span { color: var(--primary); }
+    .back-btn {
+      display: flex; align-items: center; gap: 8px; font-size: 0.85rem;
+      font-weight: 600; color: var(--text-muted); text-decoration: none;
+      padding: 7px 14px; border-radius: 10px;
+      border: 1px solid var(--glass-border); background: var(--panel-bg);
+      transition: var(--transition); cursor: pointer;
+    }
+    .back-btn:hover { color: var(--text-primary); border-color: var(--glass-border-hover); }
+
+    /* ─── Wizard Wrapper ─────────────────────────────────────────────────── */
+    .wizard-wrap {
+      position: relative;
+      z-index: 2;
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: flex-start; padding: 48px 20px 80px;
+    }
+
+    /* Step Progress Bar */
+    .step-progress {
+      display: flex; align-items: center; gap: 0;
+      margin-bottom: 44px; width: 100%; max-width: 560px;
+    }
+    .step-node {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      position: relative; flex: 1;
+    }
+    .step-dot {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700; font-family: var(--font-display);
+      border: 2px solid var(--glass-border);
+      background: var(--panel-bg);
+      color: var(--text-muted);
+      transition: var(--transition); position: relative; z-index: 2;
+    }
+    .step-dot.active {
+      border-color: var(--primary); color: #fff;
+      background: rgba(140, 90, 255, 0.18);
+      box-shadow: 0 0 0 4px rgba(140, 90, 255, 0.12);
+    }
+    .step-dot.done {
+      border-color: var(--accent); color: var(--accent);
+      background: rgba(0, 210, 220, 0.1);
+    }
+    .step-dot.done::after {
+      content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: 0.75rem;
+    }
+    .step-dot.done .step-num { display: none; }
+    .step-label {
+      font-size: 0.7rem; font-weight: 600; color: var(--text-muted);
+      text-align: center; white-space: nowrap; letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .step-label.active { color: var(--primary); }
+    .step-connector {
+      flex: 1; height: 2px; background: var(--glass-border);
+      margin-bottom: 28px; position: relative;
+    }
+    .step-connector.done { background: var(--accent); }
+
+    /* ─── Step Card ──────────────────────────────────────────────────────── */
+    .step-card {
+      width: 100%; max-width: 680px;
+      background: rgba(13, 19, 36, 0.82);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 36px 40px;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
+      animation: stepIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .step-eyebrow {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--primary); margin-bottom: 6px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .step-card h2 {
+      font-family: var(--font-display); font-size: 1.6rem; font-weight: 800;
+      color: var(--text-primary); margin-bottom: 6px;
+      text-wrap: balance; letter-spacing: -0.02em;
+    }
+    .step-card .step-sub {
+      font-size: 0.9rem; color: var(--text-muted); margin-bottom: 28px; line-height: 1.5;
+    }
+
+    /* ─── Form Controls ──────────────────────────────────────────────────── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label.field-label {
+      font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    select.field-input, input.field-input {
+      width: 100%; padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-family: var(--font-body); font-size: 0.93rem;
+      outline: none;
+      transition: var(--transition);
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    select.field-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b92a5' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; }
+    select.field-input:focus, input.field-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(140, 90, 255, 0.14);
+    }
+    option { background: #0d1120; color: var(--text-primary); }
+
+    /* ─── Resume Selector ────────────────────────────────────────────────── */
+    .resume-options { display: flex; flex-direction: column; gap: 12px; }
+    .resume-option {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 20px; border-radius: 14px;
+      border: 2px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.03);
+      cursor: pointer; transition: var(--transition);
+      position: relative;
+    }
+    .resume-option:hover { border-color: var(--glass-border-hover); background: rgba(255,255,255,0.05); }
+    .resume-option.selected {
+      border-color: var(--primary);
+      background: rgba(140, 90, 255, 0.1);
+      box-shadow: 0 0 0 3px rgba(140, 90, 255, 0.1);
+    }
+    .resume-option input[type="radio"] { display: none; }
+    .resume-icon {
+      width: 42px; height: 42px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .resume-icon.purple { background: rgba(140, 90, 255, 0.15); color: var(--primary); }
+    .resume-icon.cyan { background: rgba(0, 210, 220, 0.12); color: var(--accent); }
+    .resume-icon.gray { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); }
+    .resume-option-text strong { display: block; font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+    .resume-option-text span { font-size: 0.78rem; color: var(--text-muted); }
+    .selected-indicator {
+      margin-left: auto; width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: center;
+      transition: var(--transition);
+    }
+    .resume-option.selected .selected-indicator {
+      background: var(--primary); border-color: var(--primary);
+    }
+    .selected-indicator::after {
+      content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+      font-size: 9px; color: #fff; opacity: 0;
+    }
+    .resume-option.selected .selected-indicator::after { opacity: 1; }
+
+    /* File Upload Target */
+    .upload-drop-zone {
+      display: none; margin-top: 12px; padding: 18px;
+      border: 2px dashed var(--glass-border);
+      border-radius: 14px; text-align: center;
+      font-size: 0.82rem; color: var(--text-muted);
+      cursor: pointer; transition: var(--transition);
+    }
+    .upload-drop-zone:hover, .upload-drop-zone.drag-over {
+      border-color: var(--primary); color: var(--text-secondary);
+    }
+    .upload-drop-zone i { display: block; font-size: 1.5rem; margin-bottom: 8px; color: var(--primary); }
+    .upload-drop-zone.visible { display: block; }
+    #resume-file-input { display: none; }
+
+    /* ─── Panel Selection ────────────────────────────────────────────────── */
+    .panel-track-tabs {
+      display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .track-tab {
+      padding: 7px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
+      border: 1px solid var(--glass-border); background: var(--panel-bg);
+      color: var(--text-muted); cursor: pointer; transition: var(--transition);
+    }
+    .track-tab:hover { color: var(--text-primary); border-color: var(--glass-border-hover); }
+    .track-tab.active {
+      background: rgba(140, 90, 255, 0.18); border-color: var(--primary);
+      color: var(--text-primary);
+    }
+    .panel-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .panel-card {
+      border: 2px solid var(--glass-border); border-radius: 16px;
+      padding: 20px; cursor: pointer; transition: var(--transition);
+      background: rgba(255,255,255,0.02);
+    }
+    .panel-card:hover { border-color: var(--glass-border-hover); background: rgba(255,255,255,0.04); }
+    .panel-card.selected {
+      border-color: var(--primary); background: rgba(140,90,255,0.08);
+      box-shadow: 0 0 0 3px rgba(140,90,255,0.1);
+    }
+    .panel-card-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+    }
+    .panel-card-label .ai-badge {
+      padding: 2px 8px; border-radius: 4px;
+      background: rgba(0,210,220,0.12); color: var(--accent); font-size: 0.65rem;
+    }
+    .panel-card-label .custom-badge {
+      padding: 2px 8px; border-radius: 4px;
+      background: rgba(255,180,0,0.12); color: #f59e0b; font-size: 0.65rem;
+    }
+    .panelist-list { display: flex; flex-direction: column; gap: 10px; }
+    .panelist-row {
+      display: flex; align-items: center; gap: 12px; padding: 9px 12px;
+      border-radius: 10px; background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .panelist-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 800; flex-shrink: 0;
+    }
+    .avatar-alex { background: rgba(56,189,248,0.18); color: #38bdf8; }
+    .avatar-maya { background: rgba(192,132,252,0.18); color: #c084fc; }
+    .avatar-david { background: rgba(52,211,153,0.18); color: #34d399; }
+    .avatar-sarah { background: rgba(251,191,36,0.18); color: #fbbf24; }
+    .avatar-marcus { background: rgba(249,115,22,0.18); color: #f97316; }
+    .avatar-elena { background: rgba(244,63,94,0.18); color: #f43f5e; }
+    .avatar-sam { background: rgba(99,102,241,0.18); color: #818cf8; }
+    .panelist-info strong { display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-primary); }
+    .panelist-info span { font-size: 0.73rem; color: var(--text-muted); }
+
+    /* Custom panel role picker */
+    .custom-picker { display: none; flex-direction: column; gap: 8px; }
+    .custom-picker.visible { display: flex; }
+    .custom-picker-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-top: 4px; }
+    .panelist-option {
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+      border-radius: 10px; border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.02); cursor: pointer; transition: var(--transition);
+    }
+    .panelist-option:hover { border-color: var(--glass-border-hover); }
+    .panelist-option.selected { border-color: var(--primary); background: rgba(140,90,255,0.08); }
+    .panelist-option input { display: none; }
+    .panelist-option-check {
+      margin-left: auto; width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid var(--glass-border); flex-shrink: 0; transition: var(--transition);
+    }
+    .panelist-option.selected .panelist-option-check { background: var(--primary); border-color: var(--primary); }
+
+    /* ─── Difficulty Mode ────────────────────────────────────────────────── */
+    .difficulty-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .diff-card {
+      padding: 20px 18px; border-radius: 16px;
+      border: 2px solid var(--glass-border);
+      background: rgba(255,255,255,0.02);
+      cursor: pointer; transition: var(--transition); position: relative;
+    }
+    .diff-card:hover { border-color: var(--glass-border-hover); background: rgba(255,255,255,0.04); }
+    .diff-card.selected {
+      border-color: var(--primary); background: rgba(140,90,255,0.09);
+      box-shadow: 0 0 0 3px rgba(140,90,255,0.1);
+    }
+    .diff-card input { display: none; }
+    .diff-card-icon { font-size: 1.4rem; margin-bottom: 10px; }
+    .diff-card-title { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+    .diff-card-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
+    .diff-card.recommended::after {
+      content: 'RECOMMENDED'; position: absolute; top: -10px; left: 16px;
+      font-size: 0.6rem; font-weight: 800; letter-spacing: 0.08em;
+      padding: 2px 8px; border-radius: 4px;
+      background: var(--accent); color: #000;
+    }
+    .fixed-tiers { display: none; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+    .fixed-tiers.visible { display: grid; }
+    .tier-btn {
+      padding: 10px 8px; border-radius: 10px; border: 2px solid var(--glass-border);
+      background: rgba(255,255,255,0.02); cursor: pointer; transition: var(--transition);
+      font-size: 0.8rem; font-weight: 700; color: var(--text-muted);
+      text-align: center;
+    }
+    .tier-btn:hover { border-color: var(--glass-border-hover); color: var(--text-primary); }
+    .tier-btn.selected { border-color: var(--primary); color: var(--primary); background: rgba(140,90,255,0.1); }
+
+    /* ─── Mission Briefing (Final Screen) ───────────────────────────────── */
+    .briefing-card {
+      width: 100%; max-width: 680px;
+      animation: stepIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .briefing-header {
+      text-align: center; margin-bottom: 32px;
+    }
+    .briefing-eyebrow {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent);
+      display: flex; align-items: center; justify-content: center; gap: 7px; margin-bottom: 10px;
+    }
+    .briefing-header h2 {
+      font-family: var(--font-display); font-size: 2rem; font-weight: 800;
+      color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.02em;
+      text-wrap: balance;
+    }
+    .briefing-header p { font-size: 0.9rem; color: var(--text-muted); }
+
+    .briefing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .briefing-tile {
+      background: var(--panel-bg); border: 1px solid var(--glass-border);
+      border-radius: 16px; padding: 18px 20px;
+      backdrop-filter: var(--glass-blur);
+    }
+    .briefing-tile-label {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .briefing-tile-label i { color: var(--primary); }
+    .briefing-tile-value { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+    .briefing-tile-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+
+    .briefing-panel-row {
+      grid-column: 1 / -1; display: flex; gap: 10px;
+    }
+    .briefing-panelist {
+      flex: 1; display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; border-radius: 12px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    }
+    .briefing-panelist .panelist-avatar { width: 36px; height: 36px; }
+
+    .ai-disclosure-box {
+      margin-bottom: 24px; padding: 14px 18px; border-radius: 12px;
+      background: rgba(245, 158, 11, 0.07); border: 1px solid rgba(245, 158, 11, 0.2);
+      font-size: 0.8rem; color: rgba(245, 200, 100, 0.9); line-height: 1.5;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .ai-disclosure-box i { color: #f59e0b; margin-top: 1px; flex-shrink: 0; }
+
+    /* ─── Navigation Buttons ─────────────────────────────────────────────── */
+    .wizard-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 32px; gap: 12px;
+    }
+    .btn-ghost {
+      display: flex; align-items: center; gap: 8px;
+      padding: 11px 22px; border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      background: transparent; color: var(--text-muted);
+      font-family: var(--font-body); font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: var(--transition);
+    }
+    .btn-ghost:hover { color: var(--text-primary); border-color: var(--glass-border-hover); }
+    .btn-primary {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 28px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border: none; color: #fff;
+      font-family: var(--font-body); font-size: 0.9rem; font-weight: 700;
+      cursor: pointer; transition: var(--transition);
+      box-shadow: 0 4px 20px rgba(140, 90, 255, 0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(140, 90, 255, 0.45);
+    }
+    .btn-primary:active { transform: translateY(0) scale(0.98); }
+    .btn-primary:disabled {
+      opacity: 0.5; cursor: not-allowed;
+      transform: none; box-shadow: none;
+    }
+    .btn-enter {
+      width: 100%; justify-content: center; padding: 16px 28px;
+      font-size: 1rem; border-radius: 16px;
+      box-shadow: 0 6px 30px rgba(140, 90, 255, 0.4);
+    }
+    .btn-enter:hover { box-shadow: 0 10px 40px rgba(140, 90, 255, 0.55); }
+
+    .loading-dots::after {
+      content: ''; animation: dots 1.2s steps(3, end) infinite;
+    }
+    @keyframes dots {
+      0%   { content: '.'; }
+      33%  { content: '..'; }
+      66%  { content: '...'; }
+      100% { content: ''; }
+    }
+
+    /* Light theme overrides */
+    :root.light-theme .setup-header {
+      background: rgba(255, 255, 255, 0.82);
+      border-bottom-color: rgba(0, 0, 0, 0.08);
+    }
+    :root.light-theme .step-card,
+    :root.light-theme .briefing-tile {
+      background: rgba(255, 255, 255, 0.92);
+      border-color: rgba(0, 0, 0, 0.08);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.06);
+    }
+    :root.light-theme .step-dot {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(0, 0, 0, 0.12);
+      color: var(--text-secondary);
+    }
+    :root.light-theme .resume-option,
+    :root.light-theme .panel-card,
+    :root.light-theme .diff-card,
+    :root.light-theme .tier-btn,
+    :root.light-theme .panelist-option {
+      background: rgba(0, 0, 0, 0.02);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+    :root.light-theme .resume-option:hover,
+    :root.light-theme .panel-card:hover,
+    :root.light-theme .diff-card:hover,
+    :root.light-theme .tier-btn:hover,
+    :root.light-theme .panelist-option:hover {
+      background: rgba(0, 0, 0, 0.04);
+      border-color: rgba(0, 0, 0, 0.18);
+    }
+    :root.light-theme .resume-option.selected,
+    :root.light-theme .panel-card.selected,
+    :root.light-theme .diff-card.selected,
+    :root.light-theme .panelist-option.selected,
+    :root.light-theme .tier-btn.selected {
+      background: rgba(140, 90, 255, 0.08);
+      border-color: var(--primary);
+    }
+    :root.light-theme .panelist-row,
+    :root.light-theme .briefing-panelist {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(0, 0, 0, 0.06);
+    }
+    :root.light-theme select.field-input,
+    :root.light-theme input.field-input {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(0, 0, 0, 0.12);
+      color: var(--text-primary);
+    }
+    :root.light-theme option { background: #ffffff; color: #0f172a; }
+    :root.light-theme .upload-drop-zone {
+      background: rgba(0, 0, 0, 0.02);
+      border-color: rgba(0, 0, 0, 0.14);
+    }
+    :root.light-theme .upload-drop-zone:hover,
+    :root.light-theme .upload-drop-zone.drag-over {
+      background: rgba(0, 210, 220, 0.06);
+    }
+    :root.light-theme .track-tab {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(0, 0, 0, 0.08);
+      color: var(--text-muted);
+    }
+    :root.light-theme .track-tab.active {
+      background: rgba(140, 90, 255, 0.12);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    :root.light-theme .back-btn,
+    :root.light-theme .btn-ghost {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(0, 0, 0, 0.1);
+      color: var(--text-secondary);
+    }
+    :root.light-theme .back-btn:hover,
+    :root.light-theme .btn-ghost:hover {
+      background: rgba(0, 0, 0, 0.06);
+      color: var(--text-primary);
+      border-color: rgba(0, 0, 0, 0.2);
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .step-card { padding: 24px 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .panel-columns { grid-template-columns: 1fr; }
+      .difficulty-grid { grid-template-columns: 1fr 1fr; }
+      .briefing-grid { grid-template-columns: 1fr; }
+      .fixed-tiers { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body class="setup-page">
+  <div class="bg-layers">
+    <div class="bg-layer dark-bg"></div>
+    <div class="bg-layer light-bg"></div>
+  </div>
+  <div class="landing-overlay"></div>
+
+  <!-- Header -->
+  <header class="setup-header">
+    <a href="dashboard.html" class="logo-link">
+      <svg width="32" height="32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="var(--primary)" />
+            <stop offset="100%" stop-color="var(--accent)" />
+          </linearGradient>
+        </defs>
+        <rect x="12" y="66" width="13" height="18" rx="3" fill="url(#lg)" opacity="0.35"/>
+        <rect x="30" y="48" width="13" height="36" rx="3" fill="url(#lg)" opacity="0.6"/>
+        <rect x="48" y="30" width="13" height="54" rx="3" fill="url(#lg)" opacity="0.8"/>
+        <path d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#lg)"/>
+        <path d="M44,46 L92,12 L52,58 Z" fill="url(#lg)" opacity="0.85"/>
+        <path d="M52,58 L92,12 L72,36 Z" fill="url(#lg)" opacity="0.7"/>
+      </svg>
+      <span class="logo-text-header">Role<span>Pilot</span></span>
+    </a>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+      <a href="dashboard.html" class="back-btn">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- Wizard -->
+  <main class="wizard-wrap">
+
+    <!-- Step Progress -->
+    <div class="step-progress" id="step-progress">
+      <div class="step-node">
+        <div class="step-dot active" id="dot-1"><span class="step-num">1</span></div>
+        <span class="step-label active" id="label-1">Your Profile</span>
+      </div>
+      <div class="step-connector" id="conn-1"></div>
+      <div class="step-node">
+        <div class="step-dot" id="dot-2"><span class="step-num">2</span></div>
+        <span class="step-label" id="label-2">Resume</span>
+      </div>
+      <div class="step-connector" id="conn-2"></div>
+      <div class="step-node">
+        <div class="step-dot" id="dot-3"><span class="step-num">3</span></div>
+        <span class="step-label" id="label-3">Panel</span>
+      </div>
+      <div class="step-connector" id="conn-3"></div>
+      <div class="step-node">
+        <div class="step-dot" id="dot-4"><span class="step-num">4</span></div>
+        <span class="step-label" id="label-4">Difficulty</span>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 1: Role + Experience ════════════════════════════════════ -->
+    <div class="step-card" id="step-1">
+      <div class="step-eyebrow"><i class="fa-solid fa-user-tie"></i> Step 1 of 4</div>
+      <h2>Who are you interviewing for?</h2>
+      <p class="step-sub">We'll tailor the panel and questions to match your exact target role and experience.</p>
+
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="field-label" for="target-role">Target Role</label>
+          <select class="field-input" id="target-role">
+            <optgroup label="Engineering">
+              <option value="Senior Full-Stack Engineer">Senior Full-Stack Engineer</option>
+              <option value="Backend Engineer">Backend Engineer</option>
+              <option value="Frontend Engineer">Frontend Engineer</option>
+              <option value="DevOps / Platform Engineer">DevOps / Platform Engineer</option>
+              <option value="Machine Learning Engineer">Machine Learning Engineer</option>
+              <option value="Data Engineer">Data Engineer</option>
+              <option value="Staff Engineer">Staff Engineer</option>
+              <option value="Engineering Manager">Engineering Manager</option>
+            </optgroup>
+            <optgroup label="Product">
+              <option value="Product Manager">Product Manager</option>
+              <option value="Senior Product Manager">Senior Product Manager</option>
+              <option value="VP of Product">VP of Product</option>
+            </optgroup>
+            <optgroup label="Sales & Business">
+              <option value="Account Executive">Account Executive</option>
+              <option value="Enterprise Sales Manager">Enterprise Sales Manager</option>
+              <option value="Business Development Manager">Business Development Manager</option>
+              <option value="Customer Success Manager">Customer Success Manager</option>
+            </optgroup>
+            <optgroup label="HR & People">
+              <option value="HR Business Partner">HR Business Partner</option>
+              <option value="Recruiter / Talent Acquisition">Recruiter / Talent Acquisition</option>
+              <option value="Head of People & Culture">Head of People & Culture</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="UX Designer">UX Designer</option>
+              <option value="Marketing Manager">Marketing Manager</option>
+              <option value="Operations Manager">Operations Manager</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <label class="field-label" for="experience-level">Experience Level</label>
+          <select class="field-input" id="experience-level">
+            <option value="Junior (0-2 years)">Junior (0–2 years)</option>
+            <option value="Mid-Level (3-5 years)" selected>Mid-Level (3–5 years)</option>
+            <option value="Senior (5-8 years)">Senior (5–8 years)</option>
+            <option value="Staff / Lead (8+ years)">Staff / Lead (8+ years)</option>
+            <option value="Principal / Director">Principal / Director</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="wizard-nav">
+        <span></span>
+        <button class="btn-primary" onclick="goToStep(2)">
+          Continue <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 2: Resume ═══════════════════════════════════════════════ -->
+    <div class="step-card" id="step-2" style="display:none;">
+      <div class="step-eyebrow"><i class="fa-solid fa-file-lines"></i> Step 2 of 4</div>
+      <h2>Load your resume</h2>
+      <p class="step-sub">The AI panel will ground every question in your real experience. No hallucinations, no generic questions.</p>
+
+      <div class="resume-options">
+        <!-- Option A: Use profile resume -->
+        <label class="resume-option selected" id="opt-profile" onclick="selectResume('profile')">
+          <input type="radio" name="resume-source" value="profile" checked />
+          <div class="resume-icon purple"><i class="fa-solid fa-id-card"></i></div>
+          <div class="resume-option-text">
+            <strong>Use Profile Resume</strong>
+            <span id="profile-resume-hint">Loading your saved resume…</span>
+          </div>
+          <div class="selected-indicator"></div>
+        </label>
+
+        <!-- Option B: Upload new -->
+        <label class="resume-option" id="opt-upload" onclick="selectResume('upload')">
+          <input type="radio" name="resume-source" value="upload" />
+          <div class="resume-icon cyan"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+          <div class="resume-option-text">
+            <strong>Upload New Resume</strong>
+            <span>Upload a PDF or paste resume text for this session</span>
+          </div>
+          <div class="selected-indicator"></div>
+        </label>
+
+        <!-- File drop zone -->
+        <div class="upload-drop-zone" id="drop-zone" onclick="document.getElementById('resume-file-input').click()">
+          <i class="fa-solid fa-file-arrow-up"></i>
+          <strong>Click to browse or drag & drop</strong>
+          <span>PDF, DOCX, or TXT — max 2MB</span>
+        </div>
+        <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt" />
+
+        <!-- Option C: Quick Start -->
+        <label class="resume-option" id="opt-quick" onclick="selectResume('quick')">
+          <input type="radio" name="resume-source" value="quick" />
+          <div class="resume-icon gray"><i class="fa-solid fa-bolt"></i></div>
+          <div class="resume-option-text">
+            <strong>Quick Start</strong>
+            <span>Use a standard profile for your selected role — no resume needed</span>
+          </div>
+          <div class="selected-indicator"></div>
+        </label>
+      </div>
+
+      <div class="wizard-nav">
+        <button class="btn-ghost" onclick="goToStep(1)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        <button class="btn-primary" onclick="goToStep(3)">
+          Continue <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 3: Panel Selection ══════════════════════════════════════ -->
+    <div class="step-card" id="step-3" style="display:none;">
+      <div class="step-eyebrow"><i class="fa-solid fa-users"></i> Step 3 of 4</div>
+      <h2>Choose your interview panel</h2>
+      <p class="step-sub">The AI system recommends the best panel for your role. You can swap to a fully custom lineup.</p>
+
+      <!-- Track tabs (used to update recommended panel) -->
+      <div class="panel-track-tabs" id="track-tabs">
+        <button class="track-tab active" data-track="tech" onclick="setTrack('tech', this)"><i class="fa-solid fa-code"></i> Tech</button>
+        <button class="track-tab" data-track="sales" onclick="setTrack('sales', this)"><i class="fa-solid fa-handshake"></i> Sales</button>
+        <button class="track-tab" data-track="hr" onclick="setTrack('hr', this)"><i class="fa-solid fa-people-roof"></i> HR</button>
+        <button class="track-tab" data-track="product" onclick="setTrack('product', this)"><i class="fa-solid fa-lightbulb"></i> Product</button>
+      </div>
+
+      <div class="panel-columns">
+        <!-- AI Recommended Panel -->
+        <div class="panel-card selected" id="panel-recommended" onclick="selectPanel('recommended')">
+          <div class="panel-card-label">
+            <i class="fa-solid fa-robot" style="color:var(--accent)"></i>
+            AI Recommended <span class="ai-badge">BEST MATCH</span>
+          </div>
+          <div class="panelist-list" id="recommended-list">
+            <!-- Populated by JS based on track -->
+          </div>
+        </div>
+
+        <!-- Custom Panel -->
+        <div class="panel-card" id="panel-custom" onclick="selectPanel('custom')">
+          <div class="panel-card-label">
+            <i class="fa-solid fa-sliders" style="color:#f59e0b"></i>
+            Custom Panel <span class="custom-badge">CHOOSE YOUR OWN</span>
+          </div>
+          <div class="custom-picker" id="custom-picker">
+            <div class="custom-picker-label">Pick exactly 3 panelists:</div>
+            <!-- Panelist options populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="wizard-nav">
+        <button class="btn-ghost" onclick="goToStep(2)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        <button class="btn-primary" onclick="goToStep(4)">
+          Continue <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ STEP 4: Difficulty ════════════════════════════════════════════ -->
+    <div class="step-card" id="step-4" style="display:none;">
+      <div class="step-eyebrow"><i class="fa-solid fa-gauge-high"></i> Step 4 of 4</div>
+      <h2>Set interview difficulty</h2>
+      <p class="step-sub">Auto-Adaptive mirrors real interviews. Fixed tier keeps the challenge consistent throughout.</p>
+
+      <div class="difficulty-grid">
+        <div class="diff-card recommended selected" id="diff-auto" onclick="selectDiff('auto', this)">
+          <input type="radio" name="difficulty" value="auto" checked />
+          <div class="diff-card-icon">⚡</div>
+          <div class="diff-card-title">Auto-Adaptive</div>
+          <div class="diff-card-desc">AI scales difficulty in real time based on how well you answer. Questions get harder as you impress.</div>
+        </div>
+        <div class="diff-card" id="diff-fixed" onclick="selectDiff('fixed', this)">
+          <input type="radio" name="difficulty" value="fixed" />
+          <div class="diff-card-icon">🎯</div>
+          <div class="diff-card-title">Fixed Tier</div>
+          <div class="diff-card-desc">Consistent challenge throughout. Pick your preferred level and the panel stays there.</div>
+        </div>
+      </div>
+
+      <!-- Fixed tier selection (only shown when Fixed is selected) -->
+      <div class="fixed-tiers" id="fixed-tiers">
+        <div class="tier-btn selected" data-tier="easy" onclick="selectTier('easy', this)">🌱 Easy</div>
+        <div class="tier-btn" data-tier="medium" onclick="selectTier('medium', this)">🔥 Medium</div>
+        <div class="tier-btn" data-tier="hard" onclick="selectTier('hard', this)">⚔️ Hard</div>
+        <div class="tier-btn" data-tier="expert" onclick="selectTier('expert', this)">💀 Expert</div>
+      </div>
+
+      <div class="wizard-nav">
+        <button class="btn-ghost" onclick="goToStep(3)"><i class="fa-solid fa-arrow-left"></i> Back</button>
+        <button class="btn-primary" onclick="goToBriefing()">
+          Mission Briefing <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ MISSION BRIEFING (Final) ═════════════════════════════════════ -->
+    <div class="briefing-card" id="step-briefing" style="display:none;">
+
+      <div class="briefing-header">
+        <div class="briefing-eyebrow"><i class="fa-solid fa-satellite-dish"></i> Mission Briefing</div>
+        <h2>You're all set, <span id="briefing-name">Candidate</span>.</h2>
+        <p>Review your interview configuration below. The panel is assembled and ready.</p>
+      </div>
+
+      <!-- Summary tiles -->
+      <div class="briefing-grid">
+        <div class="briefing-tile">
+          <div class="briefing-tile-label"><i class="fa-solid fa-bullseye"></i> Target Role</div>
+          <div class="briefing-tile-value" id="b-role">—</div>
+          <div class="briefing-tile-sub" id="b-level">—</div>
+        </div>
+        <div class="briefing-tile">
+          <div class="briefing-tile-label"><i class="fa-solid fa-gauge-high"></i> Difficulty</div>
+          <div class="briefing-tile-value" id="b-difficulty">—</div>
+          <div class="briefing-tile-sub" id="b-difficulty-sub">—</div>
+        </div>
+        <div class="briefing-tile">
+          <div class="briefing-tile-label"><i class="fa-solid fa-file-lines"></i> Resume</div>
+          <div class="briefing-tile-value" id="b-resume">—</div>
+          <div class="briefing-tile-sub">Anti-hallucination mode: ON</div>
+        </div>
+        <div class="briefing-tile">
+          <div class="briefing-tile-label"><i class="fa-solid fa-microphone"></i> Voice Interruption</div>
+          <div class="briefing-tile-value" style="color:var(--accent);">160ms Active</div>
+          <div class="briefing-tile-sub">Barge-in anytime — the AI will stop and listen</div>
+        </div>
+
+        <!-- Panel row -->
+        <div class="briefing-tile" style="grid-column: 1 / -1;">
+          <div class="briefing-tile-label"><i class="fa-solid fa-users"></i> Your Interview Panel</div>
+          <div class="briefing-panel-row" id="b-panel-row">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Disclosure -->
+      <div class="ai-disclosure-box">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span><strong>AI Disclosure:</strong> You are about to participate in a voice interview conducted entirely by AI interviewers powered by Agora Conversational AI. This session is for practice only. Responses may be recorded for your personal scorecard.</span>
+      </div>
+
+      <!-- Actions -->
+      <div style="display: flex; gap: 14px; align-items: center;">
+        <button class="btn-ghost" onclick="backFromBriefing()" style="padding: 15px 22px; font-size: 0.95rem; white-space: nowrap;">
+          <i class="fa-solid fa-arrow-left"></i> Edit Setup
+        </button>
+        <button class="btn-primary btn-enter" id="enter-btn" onclick="startInterview()">
+          <i class="fa-solid fa-microphone-lines"></i>
+          Enter Interview Room
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/supabase-client.js" type="module"></script>
+  <script type="module">
+    // ─── CONFIG ───────────────────────────────────────────────────────────
+    // Switch this to your Vercel deployment URL for the hackathon demo.
+    // For local dev keep: 'http://localhost:3000'
+    const VOICE_ENGINE_URL = 'http://localhost:3000';
+
+    // ─── PANELIST CATALOGUE ───────────────────────────────────────────────
+    const PANELISTS = {
+      alex:   { name: 'Alex',   role: 'Tech Lead',        avatar: 'AX', cls: 'avatar-alex',   desc: 'System design, algorithms, scaling' },
+      maya:   { name: 'Maya',   role: 'Product Manager',  avatar: 'MY', cls: 'avatar-maya',   desc: 'UX, business trade-offs, metrics' },
+      david:  { name: 'David',  role: 'Hiring Manager',   avatar: 'DV', cls: 'avatar-david',  desc: 'STAR behavioral, culture, leadership' },
+      sarah:  { name: 'Sarah',  role: 'VP Sales / Buyer', avatar: 'SR', cls: 'avatar-sarah',  desc: 'Deal closing, objection handling' },
+      marcus: { name: 'Marcus', role: 'Sales Director',   avatar: 'MR', cls: 'avatar-marcus', desc: 'Pipeline, MEDDIC, revenue strategy' },
+      elena:  { name: 'Elena',  role: 'HR Director',      avatar: 'EL', cls: 'avatar-elena',  desc: 'Compliance, retention, mediation' },
+      sam:    { name: 'Sam',    role: 'Culture Lead',      avatar: 'SM', cls: 'avatar-sam',    desc: 'DEI, organizational health' },
+    };
+
+    const TRACK_PANELS = {
+      tech:    ['alex',   'maya',   'david'],
+      sales:   ['marcus', 'sarah',  'david'],
+      hr:      ['elena',  'sam',    'david'],
+      product: ['maya',   'alex',   'david'],
+    };
+
+    // ─── STATE ────────────────────────────────────────────────────────────
+    const state = {
+      step: 1,
+      role: 'Senior Full-Stack Engineer',
+      level: 'Mid-Level (3-5 years)',
+      resumeSource: 'profile',
+      resumeFileName: null,
+      track: 'tech',
+      panelChoice: 'recommended',
+      customPanelists: [],
+      diffMode: 'auto',
+      fixedTier: 'easy',
+      candidateName: 'Candidate',
+      resumeSummary: '',
+    };
+    window._interviewState = state; // expose for debugging
+
+    // ─── SUPABASE PRE-FILL ────────────────────────────────────────────────
+    async function prefillFromProfile() {
+      try {
+        const { getSupabaseClient } = await import('./js/supabase-client.js');
+        const db = await getSupabaseClient();
+        const { data: { session } } = await db.auth.getSession();
+        if (!session) return;
+
+        const { data: profile } = await db
+          .from('profiles')
+          .select('full_name, target_role, experience_level, resume_url')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (!profile) return;
+
+        if (profile.full_name) {
+          state.candidateName = profile.full_name.split(' ')[0];
+        }
+        if (profile.target_role) {
+          const sel = document.getElementById('target-role');
+          // Try to match an existing option, otherwise add it
+          const existing = Array.from(sel.options).find(o => o.value === profile.target_role);
+          if (existing) { sel.value = profile.target_role; }
+          else {
+            const opt = new Option(profile.target_role, profile.target_role, true, true);
+            sel.add(opt, 0);
+          }
+          state.role = profile.target_role;
+          autoSelectTrack(profile.target_role);
+        }
+        if (profile.experience_level) {
+          const sel = document.getElementById('experience-level');
+          const map = {
+            'junior': 'Junior (0-2 years)',
+            'mid': 'Mid-Level (3-5 years)',
+            'senior': 'Senior (5-8 years)',
+            'staff': 'Staff / Lead (8+ years)',
+            'principal': 'Principal / Director',
+          };
+          const mapped = map[profile.experience_level.toLowerCase()] || profile.experience_level;
+          const existing = Array.from(sel.options).find(o => o.value === mapped);
+          if (existing) { sel.value = mapped; }
+          state.level = mapped;
+        }
+        if (profile.resume_url) {
+          document.getElementById('profile-resume-hint').textContent = 'Your saved resume from profile';
+        } else {
+          document.getElementById('profile-resume-hint').textContent = 'No resume on file — upload one below';
+          selectResume('quick');
+        }
+      } catch (e) {
+        console.warn('Profile prefill skipped:', e.message);
+        document.getElementById('profile-resume-hint').textContent = 'Log in to use your saved resume';
+      }
+    }
+    prefillFromProfile();
+
+    // Auto-select track based on role string
+    function autoSelectTrack(role) {
+      const r = role.toLowerCase();
+      if (r.includes('sales') || r.includes('account') || r.includes('business dev') || r.includes('customer success')) {
+        setTrack('sales', document.querySelector('[data-track="sales"]'));
+      } else if (r.includes('hr') || r.includes('people') || r.includes('recruit') || r.includes('talent')) {
+        setTrack('hr', document.querySelector('[data-track="hr"]'));
+      } else if (r.includes('product') || r.includes('pm ') || r.includes('product manager')) {
+        setTrack('product', document.querySelector('[data-track="product"]'));
+      } else {
+        setTrack('tech', document.querySelector('[data-track="tech"]'));
+      }
+    }
+
+    // ─── STEP NAVIGATION ─────────────────────────────────────────────────
+    window.goToStep = function(n) {
+      // Collect current values
+      if (state.step === 1) {
+        state.role = document.getElementById('target-role').value;
+        state.level = document.getElementById('experience-level').value;
+      }
+
+      document.getElementById(`step-${state.step}`).style.display = 'none';
+      state.step = n;
+      document.getElementById(`step-${n}`).style.display = 'block';
+
+      // Update progress dots
+      for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        const lbl = document.getElementById(`label-${i}`);
+        dot.className = 'step-dot';
+        lbl.className = 'step-label';
+        if (i < n) { dot.classList.add('done'); }
+        else if (i === n) { dot.classList.add('active'); lbl.classList.add('active'); }
+      }
+      for (let i = 1; i <= 3; i++) {
+        const conn = document.getElementById(`conn-${i}`);
+        conn.className = 'step-connector' + (i < n ? ' done' : '');
+      }
+
+      // Step 3 initialise panel
+      if (n === 3) renderRecommendedPanel();
+    };
+
+    window.goToBriefing = function() {
+      document.getElementById(`step-4`).style.display = 'none';
+      populateBriefing();
+      document.getElementById('step-briefing').style.display = 'block';
+      // Mark all dots done
+      for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        const lbl = document.getElementById(`label-${i}`);
+        dot.className = 'step-dot done';
+        lbl.className = 'step-label';
+      }
+      for (let i = 1; i <= 3; i++) {
+        document.getElementById(`conn-${i}`).className = 'step-connector done';
+      }
+    };
+
+    window.backFromBriefing = function() {
+      document.getElementById('step-briefing').style.display = 'none';
+      goToStep(4);
+    };
+
+    // ─── RESUME ───────────────────────────────────────────────────────────
+    window.selectResume = function(source) {
+      state.resumeSource = source;
+      ['profile','upload','quick'].forEach(s => {
+        document.getElementById(`opt-${s}`)?.classList.remove('selected');
+      });
+      document.getElementById(`opt-${source}`)?.classList.add('selected');
+      const dz = document.getElementById('drop-zone');
+      if (source === 'upload') { dz.classList.add('visible'); }
+      else { dz.classList.remove('visible'); }
+    };
+
+    document.getElementById('drop-zone').addEventListener('dragover', e => {
+      e.preventDefault(); e.currentTarget.classList.add('drag-over');
+    });
+    document.getElementById('drop-zone').addEventListener('dragleave', e => {
+      e.currentTarget.classList.remove('drag-over');
+    });
+    document.getElementById('drop-zone').addEventListener('drop', e => {
+      e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) handleResumeFile(file);
+    });
+    document.getElementById('resume-file-input').addEventListener('change', e => {
+      if (e.target.files[0]) handleResumeFile(e.target.files[0]);
+    });
+    function handleResumeFile(file) {
+      state.resumeFileName = file.name;
+      document.getElementById('drop-zone').innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--accent)"></i><strong>${file.name}</strong><span>Ready to use</span>`;
+      // NOTE: Actual PDF parsing / text extraction happens in Phase 4 backend work.
+      // For now we store the file name so the briefing screen reflects the choice.
+    }
+
+    // ─── PANEL ────────────────────────────────────────────────────────────
+    window.setTrack = function(track, el) {
+      state.track = track;
+      document.querySelectorAll('.track-tab').forEach(t => t.classList.remove('active'));
+      if (el) el.classList.add('active');
+      renderRecommendedPanel();
+    };
+
+    function panelistRowHTML(key) {
+      const p = PANELISTS[key];
+      return `<div class="panelist-row">
+        <div class="panelist-avatar ${p.cls}">${p.avatar}</div>
+        <div class="panelist-info">
+          <strong>${p.name}</strong>
+          <span>${p.role}</span>
+        </div>
+      </div>`;
+    }
+
+    function renderRecommendedPanel() {
+      const keys = TRACK_PANELS[state.track] || TRACK_PANELS['tech'];
+      document.getElementById('recommended-list').innerHTML = keys.map(panelistRowHTML).join('');
+
+      // Also populate custom picker
+      const picker = document.getElementById('custom-picker');
+      picker.innerHTML = '<div class="custom-picker-label">Pick exactly 3 panelists:</div>';
+      Object.keys(PANELISTS).forEach(key => {
+        const p = PANELISTS[key];
+        const isSelected = state.customPanelists.includes(key);
+        picker.innerHTML += `<div class="panelist-option ${isSelected ? 'selected' : ''}" onclick="toggleCustomPanelist('${key}', this)">
+          <div class="panelist-avatar ${p.cls}">${p.avatar}</div>
+          <div class="panelist-info">
+            <strong>${p.name}</strong>
+            <span>${p.role} — ${p.desc}</span>
+          </div>
+          <div class="panelist-option-check"></div>
+        </div>`;
+      });
+    }
+
+    window.selectPanel = function(choice) {
+      state.panelChoice = choice;
+      document.getElementById('panel-recommended').classList.toggle('selected', choice === 'recommended');
+      document.getElementById('panel-custom').classList.toggle('selected', choice === 'custom');
+      const picker = document.getElementById('custom-picker');
+      if (choice === 'custom') { picker.classList.add('visible'); }
+      else { picker.classList.remove('visible'); }
+    };
+
+    window.toggleCustomPanelist = function(key, el) {
+      const idx = state.customPanelists.indexOf(key);
+      if (idx === -1) {
+        if (state.customPanelists.length >= 3) {
+          // Remove first selected
+          const first = state.customPanelists.shift();
+          document.querySelector(`[onclick="toggleCustomPanelist('${first}', this)"]`)?.classList.remove('selected');
+        }
+        state.customPanelists.push(key);
+        el.classList.add('selected');
+      } else {
+        state.customPanelists.splice(idx, 1);
+        el.classList.remove('selected');
+      }
+    };
+
+    // ─── DIFFICULTY ───────────────────────────────────────────────────────
+    window.selectDiff = function(mode, el) {
+      state.diffMode = mode;
+      document.getElementById('diff-auto').classList.toggle('selected', mode === 'auto');
+      document.getElementById('diff-fixed').classList.toggle('selected', mode === 'fixed');
+      const ft = document.getElementById('fixed-tiers');
+      if (mode === 'fixed') { ft.classList.add('visible'); }
+      else { ft.classList.remove('visible'); }
+    };
+
+    window.selectTier = function(tier, el) {
+      state.fixedTier = tier;
+      document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+    };
+
+    // ─── MISSION BRIEFING ─────────────────────────────────────────────────
+    function getActivePanelists() {
+      if (state.panelChoice === 'custom' && state.customPanelists.length === 3) {
+        return state.customPanelists;
+      }
+      return TRACK_PANELS[state.track] || TRACK_PANELS['tech'];
+    }
+
+    function populateBriefing() {
+      document.getElementById('briefing-name').textContent = state.candidateName;
+      document.getElementById('b-role').textContent = state.role;
+      document.getElementById('b-level').textContent = state.level;
+
+      const diffText = state.diffMode === 'auto'
+        ? '⚡ Auto-Adaptive'
+        : `🎯 Fixed — ${state.fixedTier.charAt(0).toUpperCase() + state.fixedTier.slice(1)}`;
+      const diffSub = state.diffMode === 'auto'
+        ? 'Difficulty scales with your performance'
+        : 'Consistent challenge throughout';
+      document.getElementById('b-difficulty').textContent = diffText;
+      document.getElementById('b-difficulty-sub').textContent = diffSub;
+
+      const resumeText = {
+        profile: 'Profile Resume',
+        upload: state.resumeFileName || 'Uploaded Resume',
+        quick: 'Quick Start (Standard Profile)',
+      };
+      document.getElementById('b-resume').textContent = resumeText[state.resumeSource];
+
+      const panelRow = document.getElementById('b-panel-row');
+      panelRow.innerHTML = getActivePanelists().map(key => {
+        const p = PANELISTS[key];
+        return `<div class="briefing-panelist">
+          <div class="panelist-avatar ${p.cls}">${p.avatar}</div>
+          <div class="panelist-info">
+            <strong>${p.name}</strong>
+            <span>${p.role}</span>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ─── START INTERVIEW ──────────────────────────────────────────────────
+    window.startInterview = function() {
+      const btn = document.getElementById('enter-btn');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Connecting to panel<span class="loading-dots"></span>`;
+
+      // Build query params to pass setup config to the voice-engine
+      const params = new URLSearchParams({
+        track: state.track,
+        role: encodeURIComponent(state.role),
+        level: encodeURIComponent(state.level),
+        difficulty: state.diffMode === 'auto' ? 'auto' : state.fixedTier,
+        candidate: encodeURIComponent(state.candidateName),
+        panel: state.panelChoice === 'custom' ? state.customPanelists.join(',') : 'recommended',
+        // resume_summary is passed after backend extraction — for now empty
+        resume: state.resumeSource,
+      });
+
+      // Short transition delay for UX polish before navigating
+      setTimeout(() => {
+        window.location.href = `${VOICE_ENGINE_URL}?${params.toString()}`;
+      }, 900);
+    };
+
+    // ─── INIT ─────────────────────────────────────────────────────────────
+    // Sync selects to state on change
+    document.getElementById('target-role').addEventListener('change', e => {
+      state.role = e.target.value;
+      autoSelectTrack(e.target.value);
+    });
+    document.getElementById('experience-level').addEventListener('change', e => {
+      state.level = e.target.value;
+    });
+  </script>
+</body>
+</html>

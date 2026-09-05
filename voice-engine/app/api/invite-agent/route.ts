@@ -11,38 +11,61 @@ import {
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 import { DEFAULT_AGENT_UID } from '@/lib/agora';
 
-// Multi-Role Interview Panel Orchestrator Prompt (Problem Statement 11)
-const MULTI_ROLE_PANEL_PROMPT = `You are the AI Interview Committee for Role-Pilot, conducting an adaptive, multi-role voice interview. You dynamically represent THREE distinct panelists who take turns evaluating the candidate:
+const TRACK_PROMPTS: Record<string, { prompt: string; greeting: string }> = {
+  tech: {
+    prompt: `You are the AI Interview Committee for Role-Pilot (Technical Track). Conduct an adaptive, multi-role interview with THREE distinct panelists:
+1. Alex (Tech Lead): Analytical, focused on system design, algorithms, and concurrency.
+2. Maya (Product Manager): Strategic, focused on user requirements and trade-offs.
+3. David (Hiring Manager): Behavioral, focused on ownership and problem solving.
 
-# The Interview Panelists
-1. **Alex (Technical Lead)**: Sharp, analytical, and systems-minded. Focuses on code architecture, data structures, Big-O complexity, database trade-offs, caching, concurrency, and failure recovery.
-2. **Maya (Product Manager)**: Strategic, customer-obsessed, and metrics-driven. Challenges the candidate on user experience (UX), customer impact, business implications, conversion drop-offs, and product trade-offs.
-3. **David (Hiring Manager / Behavioral Lead)**: Observant, empathetic, and culture-focused. Evaluates communication clarity, STAR methodology (Situation, Task, Action, Result), team conflict resolution, and ownership.
+Protocol:
+- Every turn must start with [Panelist Name].
+- Keep responses to 1-3 sentences.
+- No bullet points or lists.
+- Dynamically adapt technical difficulty based on candidate performance.`,
+    greeting: `[David (Hiring Manager)] Welcome to your Technical interview! I'm David, joined by Alex and Maya. Alex, could you open with a system design scenario? [Alex (Tech Lead)] Certainly. How would you design a high-traffic rate-limiting service that scales across multiple regions?`
+  },
+  sales: {
+    prompt: `You are the AI Interview Committee for Role-Pilot (Sales Track). Conduct an adaptive, multi-role interview with THREE distinct panelists:
+1. Sarah (VP Sales): Results-oriented, focused on closing techniques and pipeline management.
+2. Mark (Customer Success): Focused on retention, empathy, and long-term relationships.
+3. David (Hiring Manager): Behavioral, focused on resilience and negotiation style.
 
-# Speaker Tagging Protocol (CRITICAL)
-- At the very beginning of EVERY message or speech turn, you MUST declare who is speaking using the exact bracket format:
-  \`[Alex (Tech Lead)]\` OR \`[Maya (Product Manager)]\` OR \`[David (Hiring Manager)]\`
-- If handing off within the same turn, use the corresponding tag:
-  Example: \`[Alex (Tech Lead)] The Redis caching layer handles the read load nicely. Maya, how does this affect customer checkout consistency? [Maya (Product Manager)] Exactly Alex. Candidate, if a user sees a stale inventory count during checkout, how will that affect our customer trust and conversion rate?\`
+Protocol:
+- Every turn must start with [Panelist Name].
+- Keep responses to 1-3 sentences.
+- No bullet points or lists.
+- Test for objection handling and discovery skills.`,
+    greeting: `[David (Hiring Manager)] Welcome to your Sales interview! I'm David, joined by Sarah and Mark. Sarah, why don't you start with a discovery challenge? [Sarah (VP Sales)] Thanks. You're pitching a high-value product to a skeptical prospect who just mentioned they have a 20% budget cut. How do you pivot the conversation?`
+  },
+  hr: {
+    prompt: `You are the AI Interview Committee for Role-Pilot (HR/People Ops Track). Conduct an adaptive, multi-role interview with THREE distinct panelists:
+1. Elena (HR Director): Focused on policy, compliance, and employee relations.
+2. Sam (Culture Lead): Focused on DEI, retention, and organizational health.
+3. David (Hiring Manager): Behavioral, focused on mediation and communication.
 
-# Adaptive Turn-Taking & Dynamic Cross-Examination
-- **Shared Context**: All panelists share the candidate's entire history and previous statements.
-- **Scenario Focus**: Begin with an engineering scenario (e.g., scaling an e-commerce checkout or real-time event pipeline).
-- **The "Business Impact" Trigger**: If the candidate provides a technically correct answer but fails to explain its impact on customers or business metrics, Alex should accept the technical merit and hand off to Maya to challenge the business implications.
-- **Vague Answer Detection**: If the candidate gives vague buzzwords (e.g., "we just scale with cloud/microservices"), immediately probe for specific mechanisms, numbers, or protocols.
-- **Contradiction Detection**: If the candidate contradicts an earlier statement (e.g., single-node ACID vs distributed eventual consistency), politely challenge them to resolve the contradiction.
-- **Adaptive Difficulty**: Start at Mid-Level. If the candidate demonstrates deep mastery, escalate to edge cases (split-brain, thundering herd, cascading failure). If they struggle, provide targeted scaffolding.
+Protocol:
+- Every turn must start with [Panelist Name].
+- Keep responses to 1-3 sentences.
+- No bullet points or lists.
+- Focus on delicate handling of personnel issues.`,
+    greeting: `[David (Hiring Manager)] Welcome to your HR interview! I'm David, joined by Elena and Sam. Elena, would you start with a conflict resolution scenario? [Elena (HR Director)] Sure. We have a manager who is high-performing but has been reported for toxic communication. How do you approach this initial investigation?`
+  },
+  product: {
+    prompt: `You are the AI Interview Committee for Role-Pilot (Product Track). Conduct an adaptive, multi-role interview with THREE distinct panelists:
+1. Maya (Product Lead): Focused on strategy, roadmap, and prioritization.
+2. Alex (Tech Lead): Focused on engineering feasibility and technical debt.
+3. David (Hiring Manager): Behavioral, focused on stakeholder alignment.
 
-# Voice Conversation Rules
-- **Keep it brief**: 1 to 3 spoken sentences per turn. This is a live voice conversation over WebRTC.
-- **Never list or enumerate**: No markdown bullet points or numbered lists. Speak naturally.
-- **Ask ONE focused question per turn**: Never stack multiple questions.`;
+Protocol:
+- Every turn must start with [Panelist Name].
+- Keep responses to 1-3 sentences.
+- No bullet points or lists.
+- Focus on product trade-offs and user discovery.`,
+    greeting: `[David (Hiring Manager)] Welcome to your Product interview! I'm David, joined by Maya and Alex. Maya, please start us off with a prioritization scenario. [Maya (Product Lead)] Gladly. Your team has two critical features: a revenue-generating upgrade and a crucial stability fix. How do you decide which comes first?`
+  }
+};
 
-// Initial greeting to start the interview session
-const GREETING = `[David (Hiring Manager)] Welcome to your Role-Pilot panel interview! I'm David, and I'm joined by Alex from Engineering and Maya from Product. Alex, would you like to kick off with our first scenario? [Alex (Tech Lead)] Thanks David. Let's dive in. Imagine we need to scale a high-traffic checkout service that experiences 10x traffic spikes during flash sales. How would you design the data layer to handle high read and write throughput?`;
-
-
-// agentUid identifies the AI in the RTC channel and shares its default with the client.
 const agentUid = String(DEFAULT_AGENT_UID);
 
 function requireEnv(name: string): string {
@@ -54,12 +77,19 @@ function requireEnv(name: string): string {
 export async function POST(request: NextRequest) {
   try {
     // --- 1. Parse request ---
+    const body = await request.json();
+    const {
+      requester_id,
+      channel_name,
+      // Interview setup fields (from interview-setup.html wizard)
+      track = 'tech',          // 'tech' | 'sales' | 'hr' | 'product'
+      candidate_name = 'Candidate',
+      role = 'Software Engineer',
+      experience_level = 'Mid-Level',
+      difficulty_mode = 'auto', // 'auto' | 'easy' | 'medium' | 'hard' | 'expert'
+      resume_summary = '',      // Compact 300-word resume fact-sheet (injected for grounding)
+    } = body;
 
-    const body: ClientStartRequest = await request.json();
-    const { requester_id, channel_name } = body;
-
-    // Validate required env vars on first request so misconfiguration surfaces
-    // with a clear error message rather than a silent failure.
     const appId = requireEnv('NEXT_PUBLIC_AGORA_APP_ID');
     const appCertificate = requireEnv('NEXT_AGORA_APP_CERTIFICATE');
 
@@ -70,52 +100,75 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // --- 2. Build and start the agent ---
+    // --- 2. Resolve panel track and build personalised system prompt ---
+    const trackKey = (track as string).toLowerCase();
+    const trackConfig = TRACK_PROMPTS[trackKey] ?? TRACK_PROMPTS['tech'];
 
-    // AgoraClient authenticates API calls to the Agora Conversational AI service.
-    // area: change to Area.EU or Area.AP for European or Asia-Pacific deployments.
+    const difficultyInstruction =
+      difficulty_mode === 'auto'
+        ? 'Dynamically scale difficulty based on candidate performance (Tier 1 → Tier 2 → Tier 3 edge cases).'
+        : `Fix the difficulty strictly at the "${difficulty_mode}" level throughout the entire interview. Do not escalate or reduce difficulty.`;
+
+    const systemPrompt = [
+      trackConfig.prompt,
+      '',
+      '# Candidate Profile (GROUND TRUTH — Do NOT invent details beyond this)',
+      `Name: ${candidate_name}`,
+      `Target Role: ${role}`,
+      `Experience Level: ${experience_level}`,
+      resume_summary ? `Resume Summary: ${resume_summary}` : '',
+      '',
+      `# Difficulty Mode: ${difficultyInstruction}`,
+      '',
+      '# Anti-Hallucination Rule',
+      'Only ask about skills, projects, and technologies explicitly listed in the Resume Summary above.',
+      'Never invent past employers, fictional projects, or tools the candidate did not mention.',
+      '',
+      '# Anti-Bluffing Rule',
+      'If the candidate gives vague buzzwords ("cloud", "microservices", "AI"), immediately probe:',
+      'Ask for the specific protocol, configuration, metric, or data structure they actually used.',
+      '',
+      '# Contradiction Detection',
+      'Track all candidate claims. If a later answer contradicts an earlier one, politely surface the contradiction.',
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    const greeting = trackConfig.greeting.replace('Candidate', candidate_name);
+
+    // --- 3. Build and start the Agora agent ---
     const client = new AgoraClient({
       area: Area.US,
       appId,
       appCertificate,
     });
 
-    // Pipeline: Deepgram (reseller) STT → OpenAI (reseller) LLM → MiniMax (reseller) TTS.
-    // Omit vendor API keys for supported models — AgentKit infers reseller presets on start (see Agora Console / billing).
     const agent = new Agent({
       client,
-      instructions: MULTI_ROLE_PANEL_PROMPT,
-      greeting: GREETING,
+      instructions: systemPrompt,
+      greeting,
       failureMessage: 'Please wait a moment.',
       maxHistory: 50,
-      // VAD controls how the agent detects the start and end of a user's turn.
       turnDetection: {
         config: {
           speech_threshold: 0.5,
           start_of_speech: {
             mode: 'vad',
             vad_config: {
-              interrupt_duration_ms: 160, // ms of speech before interruption triggers
-              prefix_padding_ms: 300, // audio captured before speech is detected
+              interrupt_duration_ms: 160,
+              prefix_padding_ms: 300,
             },
           },
           end_of_speech: {
             mode: 'vad',
             vad_config: {
-              silence_duration_ms: 480, // ms of silence before turn ends
+              silence_duration_ms: 480,
             },
           },
         },
       },
-      // RTM is required for transcript events in the browser client.
-      // enable_tools is required for MCP tool invocation.
       advancedFeatures: { enable_rtm: true, enable_tools: true },
-      // Required for browser RTM events:
-      // - data_channel: 'rtm' enables RTM delivery path for state/metrics/errors
-      // - enable_error_message emits AGENT_ERROR payloads
-      // - enable_metrics emits AGENT_METRICS latency payloads
       parameters: {
-        // web client → ultra-low-latency chorus profile
         audio_scenario: 'chorus',
         data_channel: 'rtm',
         enable_error_message: true,
@@ -127,17 +180,11 @@ export async function POST(request: NextRequest) {
           model: 'nova-3',
           language: 'en',
         }),
-        // BYOK: uncomment the following block and set NEXT_DEEPGRAM_API_KEY
-        // new DeepgramSTT({
-        //   apiKey: requireEnv('NEXT_DEEPGRAM_API_KEY'),
-        //   model: 'nova-3',
-        //   language: 'en',
-        // }),
       )
       .withLlm(
         new OpenAI({
           model: 'gpt-4o-mini',
-          greetingMessage: GREETING,
+          greetingMessage: greeting,
           failureMessage: 'Please wait a moment.',
           maxHistory: 15,
           params: {
@@ -146,41 +193,21 @@ export async function POST(request: NextRequest) {
             top_p: 0.95,
           },
         }),
-        // BYOK: uncomment the following block and set NEXT_LLM_API_KEY and NEXT_LLM_URL
-        // new OpenAI({
-        //   apiKey: requireEnv('NEXT_LLM_API_KEY'),
-        //   url: requireEnv('NEXT_LLM_URL'),
-        //   model: 'gpt-4o-mini',
-        //   greetingMessage: GREETING,
-        //   failureMessage: 'Please wait a moment.',
-        //   maxHistory: 15,
-        //   maxTokens: 1024,
-        //   temperature: 0.7,
-        //   topP: 0.95,
-        // }),
       )
       .withTts(
         new MiniMaxTTS({
           model: 'speech_2_6_turbo',
           voiceId: 'English_captivating_female1',
         }),
-        // BYOK — ElevenLabs (set NEXT_ELEVENLABS_API_KEY; optional NEXT_ELEVENLABS_VOICE_ID)
-        // new (await import('agora-agents')).ElevenLabsTTS({
-        //   key: requireEnv('NEXT_ELEVENLABS_API_KEY'),
-        //   modelId: 'eleven_flash_v2_5',
-        //   voiceId: process.env.NEXT_ELEVENLABS_VOICE_ID ?? 'pNInz6obpgDQGcFmaJgB',
-        //   sampleRate: 24000,
-        // }),
       );
 
-    // remoteUids restricts the agent to only process audio from this user
     const session = agent.createSession({
       channel: channel_name,
       agentUid,
       remoteUids: [requester_id],
       idleTimeout: 30,
       expiresIn: ExpiresIn.hours(1),
-      debug: false, // enable debug to show restful API calls in the console
+      debug: false,
     });
 
     const agentId = await session.start();
