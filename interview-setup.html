@@ -585,6 +585,22 @@
 
       <div class="form-grid">
         <div class="form-group full">
+          <label class="field-label" for="candidate-name-input">
+            <i class="fa-solid fa-user-tag" style="color:var(--accent); margin-right:4px;"></i> Candidate / Your Name
+          </label>
+          <input 
+            type="text" 
+            class="field-input" 
+            id="candidate-name-input" 
+            placeholder="e.g. Shivansh Rana" 
+            autocomplete="name"
+          />
+          <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">
+            Prefilled from your Google profile. You can edit this anytime if you're running a mock interview for a friend!
+          </span>
+        </div>
+
+        <div class="form-group full">
           <label class="field-label" for="target-role">Target Role</label>
           <select class="field-input" id="target-role">
             <optgroup label="Engineering">
@@ -863,7 +879,7 @@
 
     const TRACK_PANELS = {
       tech:    ['alex',   'maya',   'david'],
-      sales:   ['marcus', 'sarah',  'david'],
+      sales:   ['sarah',  'marcus', 'david'],
       hr:      ['elena',  'sam',    'david'],
       product: ['maya',   'alex',   'david'],
     };
@@ -880,7 +896,7 @@
       customPanelists: [],
       diffMode: 'auto',
       fixedTier: 'easy',
-      candidateName: 'Candidate',
+      candidateName: '',
       resumeSummary: '',
     };
     window._interviewState = state; // expose for debugging
@@ -899,11 +915,17 @@
           .eq('id', session.user.id)
           .maybeSingle();
 
-        if (!profile) return;
-
-        if (profile.full_name) {
-          state.candidateName = profile.full_name.split(' ')[0];
+        const authName = session.user?.user_metadata?.full_name || session.user?.user_metadata?.name || '';
+        const resolvedName = (profile?.full_name || authName || '').trim();
+        if (resolvedName) {
+          state.candidateName = resolvedName;
+          const nameInput = document.getElementById('candidate-name-input');
+          if (nameInput) nameInput.value = resolvedName;
+          const briefName = document.getElementById('briefing-name');
+          if (briefName) briefName.textContent = resolvedName;
         }
+
+        if (!profile) return;
         if (profile.target_role) {
           const sel = document.getElementById('target-role');
           // Try to match an existing option, otherwise add it
@@ -1131,7 +1153,9 @@
     }
 
     function populateBriefing() {
-      document.getElementById('briefing-name').textContent = state.candidateName;
+      const nameInput = document.getElementById('candidate-name-input');
+      const enteredName = (nameInput && nameInput.value.trim()) || state.candidateName || 'Alex';
+      document.getElementById('briefing-name').textContent = enteredName;
       document.getElementById('b-role').textContent = state.role;
       document.getElementById('b-level').textContent = state.level;
 
@@ -1170,6 +1194,10 @@
       btn.disabled = true;
       btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Connecting to panel<span class="loading-dots"></span>`;
 
+      const nameInput = document.getElementById('candidate-name-input');
+      const enteredName = (nameInput && nameInput.value.trim()) || state.candidateName || 'Alex';
+      state.candidateName = enteredName;
+
       // Build query params to pass setup config to the voice-engine
       const params = new URLSearchParams({
         track: state.track,
@@ -1189,6 +1217,14 @@
     };
 
     // ─── INIT ─────────────────────────────────────────────────────────────
+    // Candidate name input handler
+    document.getElementById('candidate-name-input')?.addEventListener('input', e => {
+      const val = e.target.value.trim();
+      state.candidateName = val;
+      const briefName = document.getElementById('briefing-name');
+      if (briefName) briefName.textContent = val || 'Alex';
+    });
+
     // Sync selects to state on change
     document.getElementById('target-role').addEventListener('change', e => {
       state.role = e.target.value;

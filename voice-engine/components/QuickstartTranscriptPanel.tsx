@@ -13,6 +13,7 @@ type QuickstartTranscriptPanelProps = {
   messageList: TranscriptMessage[];
   currentInProgressMessage: TranscriptMessage | null;
   agentUID: string;
+  candidateName?: string;
 };
 
 function formatMessageTime(createdAt?: number) {
@@ -27,6 +28,7 @@ export function QuickstartTranscriptPanel({
   messageList,
   currentInProgressMessage,
   agentUID,
+  candidateName,
 }: QuickstartTranscriptPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const messages = useMemo(
@@ -45,33 +47,39 @@ export function QuickstartTranscriptPanel({
 
   const parseSpeakerInfo = (text?: string, isAgent?: boolean) => {
     if (!isAgent) {
+      const displayName = candidateName && candidateName.toLowerCase() !== 'candidate' 
+        ? candidateName.split(' ')[0] 
+        : '';
       return {
-        speaker: 'You (Candidate)',
+        speaker: displayName ? `You (${displayName})` : 'You',
         badgeClass: 'text-blue-300 bg-blue-950/40 border-blue-800/40',
         bubbleClass: 'border-blue-800/40 bg-blue-950/30 text-blue-50',
       };
     }
 
-    if (text?.includes('[Alex') || text?.toLowerCase().includes('alex:')) {
-      return {
-        speaker: 'Alex (Tech Lead)',
-        badgeClass: 'text-blue-400 bg-blue-950/60 border-blue-500/30',
-        bubbleClass: 'border-blue-900/30 bg-[#121624] text-[#e3e8f8]',
-      };
-    }
-    if (text?.includes('[Maya') || text?.toLowerCase().includes('maya:')) {
-      return {
-        speaker: 'Maya (Product Manager)',
-        badgeClass: 'text-purple-400 bg-purple-950/60 border-purple-500/30',
-        bubbleClass: 'border-purple-900/30 bg-[#181324] text-[#ede3f8]',
-      };
-    }
-    if (text?.includes('[David') || text?.toLowerCase().includes('david:')) {
-      return {
-        speaker: 'David (Hiring Manager)',
-        badgeClass: 'text-emerald-400 bg-emerald-950/60 border-emerald-500/30',
-        bubbleClass: 'border-emerald-900/30 bg-[#12221c] text-[#e3f8ef]',
-      };
+    if (text) {
+      // Matches [Alex (Tech Lead)], [Sarah (VP Sales)], [Elena (HR Director)], etc.
+      const match = text.match(/^\[([A-Za-z]+)(?:\s*\(([^)]+)\))?\]/);
+      if (match) {
+        const name = match[1];
+        const role = match[2] || 'Panelist';
+        const isBlue = /Alex|Sarah|Elena|Marcus/i.test(name);
+        const isPurple = /Maya|Mark|Sam/i.test(name);
+
+        return {
+          speaker: `${name} (${role})`,
+          badgeClass: isBlue
+            ? 'text-blue-400 bg-blue-950/60 border-blue-500/30'
+            : isPurple
+            ? 'text-purple-400 bg-purple-950/60 border-purple-500/30'
+            : 'text-emerald-400 bg-emerald-950/60 border-emerald-500/30',
+          bubbleClass: isBlue
+            ? 'border-blue-900/30 bg-[#121624] text-[#e3e8f8]'
+            : isPurple
+            ? 'border-purple-900/30 bg-[#181324] text-[#ede3f8]'
+            : 'border-emerald-900/30 bg-[#12221c] text-[#e3f8ef]',
+        };
+      }
     }
 
     return {
@@ -108,9 +116,13 @@ export function QuickstartTranscriptPanel({
         ) : (
           messages.map((message, index) => {
             const isAgent = String(message.uid) === agentUID;
-            const text = message.text?.trim();
+            const rawText = message.text?.trim();
             const time = formatMessageTime(message.createdAt);
-            const { speaker, badgeClass, bubbleClass } = parseSpeakerInfo(text, isAgent);
+            const { speaker, badgeClass, bubbleClass } = parseSpeakerInfo(rawText, isAgent);
+            // Clean up leading bracket tags (e.g. "[Alex (Tech Lead)]") since the badge already shows the speaker
+            const cleanText = isAgent && rawText
+              ? rawText.replace(/^\[[^\]]+\]\s*:?\s*/, '').trim() || rawText
+              : rawText;
 
             return (
               <article
@@ -126,7 +138,7 @@ export function QuickstartTranscriptPanel({
                 <div
                   className={`max-w-[92%] whitespace-pre-wrap rounded-xl border px-3.5 py-2.5 text-xs leading-5 shadow-sm ${bubbleClass}`}
                 >
-                  {text || '...'}
+                  {cleanText || '...'}
                 </div>
               </article>
             );

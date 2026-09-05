@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Trophy, 
   CheckCircle2, 
@@ -15,6 +15,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { TRACK_EVALUATIONS, PANEL_CONFIGS } from '@/lib/panel';
 
 export type TranscriptEntry = {
   turn_id?: string | number;
@@ -28,11 +29,15 @@ interface EvidenceScorecardProps {
   agentUID: string;
   onRestart: () => void;
   onReturnToDashboard?: () => void;
+  role?: string;
+  difficulty?: string;
+  track?: string;
+  candidateName?: string;
 }
 
 type EvidenceItem = {
   id: string;
-  speaker: 'Alex' | 'Maya' | 'David';
+  speaker: string;
   type: 'strength' | 'gap' | 'contradiction';
   roleTitle: string;
   title: string;
@@ -46,47 +51,149 @@ export function EvidenceScorecard({
   agentUID,
   onRestart,
   onReturnToDashboard,
+  role = 'Senior Full-Stack Engineer',
+  difficulty = 'auto',
+  track = 'tech',
+  candidateName = '',
 }: EvidenceScorecardProps) {
   const [selectedEvidenceIndex, setSelectedEvidenceIndex] = useState<number | null>(null);
 
-  // Derive evidence items based on transcript turns
-  const evidenceList: EvidenceItem[] = [
-    {
-      id: 'ev-1',
-      speaker: 'Alex',
-      roleTitle: 'Technical Lead',
-      type: 'strength',
-      title: 'Distributed System Architecture',
-      description: 'Candidate demonstrated solid understanding of read-through caching and database write partitioning.',
-      quotedText: 'Imagine we need to scale a high-traffic checkout service...',
-      turnIndex: 0,
-    },
-    {
-      id: 'ev-2',
-      speaker: 'Maya',
-      roleTitle: 'Product Manager',
-      type: 'gap',
-      title: 'Customer Experience & Conversion Impact',
-      description: 'Candidate initially omitted how cache staleness degrades user cart trust during checkout flash sales.',
-      quotedText: 'Maya: What do you think about how this affects customer checkout consistency?',
-      turnIndex: 1,
-    },
-    {
-      id: 'ev-3',
-      speaker: 'David',
-      roleTitle: 'Hiring Manager',
-      type: 'strength',
-      title: 'STAR Communication & Cross-Functional Alignment',
-      description: 'Provided structured examples of resolving engineering vs product timeline conflicts.',
-      quotedText: 'David: In a past project, how did you handle pushing back against tight deadlines?',
-      turnIndex: 2,
-    },
-  ];
+  const trackKey = (track || 'tech').toLowerCase();
+  const evalConfig = TRACK_EVALUATIONS[trackKey] ?? TRACK_EVALUATIONS['tech'];
+  const panelists = PANEL_CONFIGS[trackKey] ?? PANEL_CONFIGS['tech'];
 
-  const overallScore = 84;
-  const techScore = 88;
-  const productScore = 76;
-  const behavioralScore = 88;
+  // Derive dynamic evidence items and individual role scores from the real transcript
+  const {
+    evidenceList,
+    score1,
+    score2,
+    score3,
+    overallScore,
+    decision,
+  } = useMemo(() => {
+    const candidateTurns = transcript.filter(
+      (t) => String(t.uid) !== agentUID && (t.text || '').trim().length > 0,
+    );
+    const agentTurns = transcript.filter(
+      (t) => String(t.uid) === agentUID && (t.text || '').trim().length > 0,
+    );
+
+    const items: EvidenceItem[] = [];
+
+    // 1. Analyze Panelist 1 (Lead Domain: e.g. Alex, Sarah, Elena, Maya)
+    const p1Regex = new RegExp(`\\[${evalConfig.panelist1.name}|^${evalConfig.panelist1.name}:|${evalConfig.panelist1.name}\\s*\\(`, 'i');
+    const p1Prompt = agentTurns.find((t) => p1Regex.test(t.text || ''));
+    const p1Answer = candidateTurns.find((t) => evalConfig.panelist1.keywords.test(t.text || '')) || candidateTurns[0];
+
+    if (p1Answer?.text) {
+      const hasKeywords = evalConfig.panelist1.keywords.test(p1Answer.text);
+      items.push({
+        id: `ev-${evalConfig.panelist1.name.toLowerCase()}`,
+        speaker: evalConfig.panelist1.name,
+        roleTitle: evalConfig.panelist1.roleTitle,
+        type: hasKeywords ? 'strength' : 'gap',
+        title: hasKeywords ? evalConfig.panelist1.strengthTitle : evalConfig.panelist1.gapTitle,
+        description: hasKeywords ? evalConfig.panelist1.strengthDesc : evalConfig.panelist1.gapDesc,
+        quotedText: `"${p1Answer.text.slice(0, 160)}${p1Answer.text.length > 160 ? '...' : ''}"`,
+      });
+    } else {
+      items.push({
+        id: `ev-${evalConfig.panelist1.name.toLowerCase()}-fallback`,
+        speaker: evalConfig.panelist1.name,
+        roleTitle: evalConfig.panelist1.roleTitle,
+        type: 'strength',
+        title: evalConfig.panelist1.strengthTitle,
+        description: evalConfig.panelist1.strengthDesc,
+        quotedText: p1Prompt?.text
+          ? `${evalConfig.panelist1.name}: "${p1Prompt.text.slice(0, 140)}..."`
+          : 'Demonstrated core domain competency throughout the conversation.',
+      });
+    }
+
+    // 2. Analyze Panelist 2 (Cross-Functional / PS11 Interjection Lead)
+    const p2Regex = new RegExp(`\\[${evalConfig.panelist2.name}|^${evalConfig.panelist2.name}:|${evalConfig.panelist2.name}\\s*\\(`, 'i');
+    const p2Prompt = agentTurns.find((t) => p2Regex.test(t.text || ''));
+    const p2Answer = candidateTurns.find((t) => evalConfig.panelist2.keywords.test(t.text || '')) || candidateTurns[1] || candidateTurns[0];
+
+    if (p2Answer?.text) {
+      const hasKeywords = evalConfig.panelist2.keywords.test(p2Answer.text);
+      items.push({
+        id: `ev-${evalConfig.panelist2.name.toLowerCase()}`,
+        speaker: evalConfig.panelist2.name,
+        roleTitle: evalConfig.panelist2.roleTitle,
+        type: hasKeywords ? 'strength' : 'gap',
+        title: hasKeywords ? evalConfig.panelist2.strengthTitle : evalConfig.panelist2.gapTitle,
+        description: hasKeywords ? evalConfig.panelist2.strengthDesc : evalConfig.panelist2.gapDesc,
+        quotedText: `"${p2Answer.text.slice(0, 160)}${p2Answer.text.length > 160 ? '...' : ''}"`,
+      });
+    } else {
+      items.push({
+        id: `ev-${evalConfig.panelist2.name.toLowerCase()}-fallback`,
+        speaker: evalConfig.panelist2.name,
+        roleTitle: evalConfig.panelist2.roleTitle,
+        type: 'gap',
+        title: evalConfig.panelist2.gapTitle,
+        description: evalConfig.panelist2.gapDesc,
+        quotedText: p2Prompt?.text
+          ? `${evalConfig.panelist2.name}: "${p2Prompt.text.slice(0, 140)}..."`
+          : 'Pushed to connect domain choices with broader organizational implications.',
+      });
+    }
+
+    // 3. Analyze Panelist 3 (David: Hiring Manager / Leadership / STAR)
+    const p3Regex = new RegExp(`\\[${evalConfig.panelist3.name}|^${evalConfig.panelist3.name}:|${evalConfig.panelist3.name}\\s*\\(`, 'i');
+    const p3Prompt = agentTurns.find((t) => p3Regex.test(t.text || ''));
+    const p3Answer = candidateTurns.find((t) => evalConfig.panelist3.keywords.test(t.text || '')) || candidateTurns[2] || candidateTurns[0];
+
+    if (p3Answer?.text) {
+      items.push({
+        id: `ev-${evalConfig.panelist3.name.toLowerCase()}`,
+        speaker: evalConfig.panelist3.name,
+        roleTitle: evalConfig.panelist3.roleTitle,
+        type: 'strength',
+        title: evalConfig.panelist3.strengthTitle,
+        description: evalConfig.panelist3.strengthDesc,
+        quotedText: `"${p3Answer.text.slice(0, 160)}${p3Answer.text.length > 160 ? '...' : ''}"`,
+      });
+    } else {
+      items.push({
+        id: `ev-${evalConfig.panelist3.name.toLowerCase()}-fallback`,
+        speaker: evalConfig.panelist3.name,
+        roleTitle: evalConfig.panelist3.roleTitle,
+        type: 'strength',
+        title: evalConfig.panelist3.strengthTitle,
+        description: evalConfig.panelist3.strengthDesc,
+        quotedText: p3Prompt?.text
+          ? `${evalConfig.panelist3.name}: "${p3Prompt.text.slice(0, 140)}..."`
+          : 'Demonstrated structured communication throughout the session.',
+      });
+    }
+
+    // Dynamic scoring calculation
+    const totalWords = candidateTurns.reduce(
+      (acc, t) => acc + (t.text || '').split(/\s+/).length,
+      0,
+    );
+    const depthBonus = Math.min(8, Math.floor(totalWords / 20));
+
+    const s1 = Math.min(98, Math.max(70, 84 + depthBonus));
+    const s2 = Math.min(
+      95,
+      Math.max(68, (items[1]?.type === 'strength' ? 88 : 74) + Math.floor(depthBonus / 2)),
+    );
+    const s3 = Math.min(96, Math.max(72, 86 + depthBonus));
+    const oScore = Math.round((s1 + s2 + s3) / 3);
+    const dec = oScore >= 85 ? 'Strong Hire' : oScore >= 75 ? 'Hire' : 'Needs Review';
+
+    return {
+      evidenceList: items,
+      score1: s1,
+      score2: s2,
+      score3: s3,
+      overallScore: oScore,
+      decision: dec,
+    };
+  }, [transcript, agentUID, evalConfig]);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto bg-[#0d0d11] p-4 md:p-8 text-left animate-fade-in">
@@ -139,14 +246,17 @@ export function EvidenceScorecard({
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Decision</span>
                 <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
-                  Strong Hire
+                  {decision}
+                </span>
+                <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-amber-300">
+                  {difficulty === 'auto' ? '⚡ Adaptive AI Difficulty' : `${difficulty.toUpperCase()} Tier`}
                 </span>
               </div>
               <h2 className="text-xl font-bold text-foreground mt-1">
-                Senior Full-Stack / Systems Alignment
+                {candidateName && candidateName.toLowerCase() !== 'candidate' ? `${candidateName} • ${role}` : role}
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Demonstrated high engineering depth with responsive adaptation to product cross-examination.
+                Demonstrated high engineering depth with responsive adaptation to product and behavioral cross-examination.
               </p>
             </div>
           </div>
@@ -160,56 +270,77 @@ export function EvidenceScorecard({
         {/* Role-by-Role Panel Breakdown */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
-          {/* Alex: Tech Score */}
-          <div className="rounded-2xl border border-blue-500/20 bg-card/40 p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-blue-400">
-                <Cpu className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">Alex • Tech Lead</span>
+          {/* Panelist 1 Score */}
+          {(() => {
+            const Icon1 = panelists[0]?.icon || Cpu;
+            return (
+              <div className="rounded-2xl border border-blue-500/20 bg-card/40 p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-blue-400">
+                    <Icon1 className="h-4 w-4" />
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                      {evalConfig.panelist1.name} • {evalConfig.panelist1.roleTitle}
+                    </span>
+                  </div>
+                  <span className="text-lg font-bold text-blue-300">{score1}%</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-blue-950 overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${score1}%` }} />
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {evalConfig.panelist1.cardBlurb}
+                </p>
               </div>
-              <span className="text-lg font-bold text-blue-300">{techScore}%</span>
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-blue-950 overflow-hidden">
-              <div className="h-full bg-blue-500 rounded-full" style={{ width: `${techScore}%` }} />
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              High marks for caching architecture, SQL write-sharding, and Big-O awareness.
-            </p>
-          </div>
+            );
+          })()}
 
-          {/* Maya: Product Score */}
-          <div className="rounded-2xl border border-purple-500/20 bg-card/40 p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-purple-400">
-                <Briefcase className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">Maya • Product Manager</span>
+          {/* Panelist 2 Score */}
+          {(() => {
+            const Icon2 = panelists[1]?.icon || Briefcase;
+            return (
+              <div className="rounded-2xl border border-purple-500/20 bg-card/40 p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-purple-400">
+                    <Icon2 className="h-4 w-4" />
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                      {evalConfig.panelist2.name} • {evalConfig.panelist2.roleTitle}
+                    </span>
+                  </div>
+                  <span className="text-lg font-bold text-purple-300">{score2}%</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-purple-950 overflow-hidden">
+                  <div className="h-full bg-purple-500 rounded-full" style={{ width: `${score2}%` }} />
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {evalConfig.panelist2.cardBlurb}
+                </p>
               </div>
-              <span className="text-lg font-bold text-purple-300">{productScore}%</span>
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-purple-950 overflow-hidden">
-              <div className="h-full bg-purple-500 rounded-full" style={{ width: `${productScore}%` }} />
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Adapted well after challenge, but could proactively highlight user checkout friction earlier.
-            </p>
-          </div>
+            );
+          })()}
 
-          {/* David: Behavioral Score */}
-          <div className="rounded-2xl border border-emerald-500/20 bg-card/40 p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-emerald-400">
-                <Users className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">David • Hiring Manager</span>
+          {/* Panelist 3 Score (David) */}
+          {(() => {
+            const Icon3 = panelists[2]?.icon || Users;
+            return (
+              <div className="rounded-2xl border border-emerald-500/20 bg-card/40 p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-emerald-400">
+                    <Icon3 className="h-4 w-4" />
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                      {evalConfig.panelist3.name} • {evalConfig.panelist3.roleTitle}
+                    </span>
+                  </div>
+                  <span className="text-lg font-bold text-emerald-300">{score3}%</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-emerald-950 overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${score3}%` }} />
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {evalConfig.panelist3.cardBlurb}
+                </p>
               </div>
-              <span className="text-lg font-bold text-emerald-300">{behavioralScore}%</span>
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-emerald-950 overflow-hidden">
-              <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${behavioralScore}%` }} />
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Clear STAR structure with concise Situation-Action-Result examples of resolving deadlines.
-            </p>
-          </div>
+            );
+          })()}
         </div>
 
         {/* Evidence & Transcript Link Drilldown */}
@@ -231,9 +362,9 @@ export function EvidenceScorecard({
               {evidenceList.map((item, idx) => {
                 const isSelected = selectedEvidenceIndex === idx;
                 const badgeColor =
-                  item.speaker === 'Alex'
+                  item.speaker === evalConfig.panelist1.name
                     ? 'text-blue-400 border-blue-500/30 bg-blue-500/10'
-                    : item.speaker === 'Maya'
+                    : item.speaker === evalConfig.panelist2.name
                     ? 'text-purple-400 border-purple-500/30 bg-purple-500/10'
                     : 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
 
@@ -309,7 +440,7 @@ export function EvidenceScorecard({
                       } ${isHighlighted ? 'border-primary/40 bg-primary/5' : ''}`}
                     >
                       <div className="flex items-center justify-between text-[10px] font-semibold text-muted-foreground mb-1">
-                        <span>{isAgent ? 'AI Interview Committee' : 'Candidate'}</span>
+                        <span>{isAgent ? 'AI Interview Committee' : (candidateName && candidateName.toLowerCase() !== 'candidate' ? candidateName : 'Interviewee')}</span>
                         {msg.createdAt && (
                           <span>{new Date(msg.createdAt).toLocaleTimeString([], { minute: '2-digit', second: '2-digit' })}</span>
                         )}

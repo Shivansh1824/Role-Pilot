@@ -63,6 +63,32 @@ export default function LandingPage() {
   const [showScorecard, setShowScorecard] = useState(false);
   const [finalTranscript, setFinalTranscript] = useState<TranscriptEntry[]>([]);
 
+  // Setup configuration passed from interview-setup.html
+  const [setupConfig, setSetupConfig] = useState({
+    track: 'tech',
+    role: 'Senior Full-Stack Engineer',
+    level: 'Mid-Level',
+    difficulty: 'auto',
+    candidate: 'Alex',
+    resume: 'none',
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const rawCandidate = params.get('candidate') ? decodeURIComponent(params.get('candidate')!).trim() : '';
+      const cleanCandidate = rawCandidate && rawCandidate.toLowerCase() !== 'candidate' ? rawCandidate : 'Alex';
+      setSetupConfig({
+        track: params.get('track') || 'tech',
+        role: params.get('role') ? decodeURIComponent(params.get('role')!) : 'Senior Full-Stack Engineer',
+        level: params.get('level') ? decodeURIComponent(params.get('level')!) : 'Mid-Level',
+        difficulty: params.get('difficulty') || 'auto',
+        candidate: cleanCandidate,
+        resume: params.get('resume') || 'none',
+      });
+    }
+  }, []);
+
   // Preload heavy modules on mount so they're already cached when the user
   // clicks "Try it Now" — eliminates the ~1.8s dynamic-import delay.
   useEffect(() => {
@@ -94,14 +120,19 @@ export default function LandingPage() {
 
       // 2. Run agent invite and RTM setup in parallel
       const [agentData, rtm] = await Promise.all([
-        // 2a. Start the AI agent
+        // 2a. Start the AI agent with personalized configuration
         fetch('/api/invite-agent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             requester_id: responseData.uid,
             channel_name: responseData.channel,
-          } as ClientStartRequest),
+            track: setupConfig.track,
+            role: setupConfig.role,
+            experience_level: setupConfig.level,
+            difficulty_mode: setupConfig.difficulty,
+            candidate_name: setupConfig.candidate,
+          }),
         })
           .then(async (res) => {
             if (!res.ok) {
@@ -233,12 +264,21 @@ export default function LandingPage() {
               transcript={finalTranscript}
               agentUID={agoraData?.agentId || '123456'}
               onRestart={() => setShowScorecard(false)}
+              onReturnToDashboard={() => (window.location.href = 'http://localhost:8000/dashboard.html')}
+              role={setupConfig.role}
+              difficulty={setupConfig.difficulty}
+              track={setupConfig.track}
+              candidateName={setupConfig.candidate}
             />
           ) : !showConversation ? (
             <QuickstartPreCallCard
               isLoading={isLoading}
               error={error}
               onStartConversation={() => setShowDisclosureModal(true)}
+              role={setupConfig.role}
+              track={setupConfig.track}
+              difficulty={setupConfig.difficulty}
+              candidateName={setupConfig.candidate}
             />
           ) : agoraData && rtmClient ? (
             <>
@@ -253,6 +293,8 @@ export default function LandingPage() {
                     <ConversationComponent
                       agoraData={agoraData}
                       rtmClient={rtmClient}
+                      track={setupConfig.track}
+                      candidateName={setupConfig.candidate}
                       onTokenWillExpire={handleTokenWillExpire}
                       onEndConversation={handleEndConversation}
                     />

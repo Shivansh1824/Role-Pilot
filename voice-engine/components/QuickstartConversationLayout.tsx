@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Cpu, Briefcase, Users, Bot, Zap } from 'lucide-react';
+import { PANEL_CONFIGS } from '@/lib/panel';
 
 type QuickstartConversationLayoutProps = {
   statusPanel: ReactNode;
@@ -11,6 +12,10 @@ type QuickstartConversationLayoutProps = {
   transcriptPanel: ReactNode;
   visualizer: ReactNode;
   controls: ReactNode;
+  track?: string;
+  candidateName?: string;
+  activeSpeaker?: string | null;
+  isSpeaking?: boolean;
   onEndConversation: () => void;
 };
 
@@ -20,8 +25,15 @@ export function QuickstartConversationLayout({
   transcriptPanel,
   visualizer,
   controls,
+  track = 'tech',
+  candidateName,
+  activeSpeaker,
+  isSpeaking = false,
   onEndConversation,
 }: QuickstartConversationLayoutProps) {
+  const trackKey = (track || 'tech').toLowerCase();
+  const panelists = PANEL_CONFIGS[trackKey] ?? PANEL_CONFIGS['tech'];
+
   return (
     <div className="flex min-h-0 flex-1 flex-col text-left bg-[#0c0c10]">
       {/* Header */}
@@ -31,13 +43,18 @@ export function QuickstartConversationLayout({
             <Bot className="h-5 w-5" />
           </div>
           <div className="flex min-w-0 flex-col justify-center gap-0.5">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="truncate text-base font-bold tracking-tight text-foreground">
                 Role-Pilot AI Interview Committee
               </span>
-              <span className="rounded-full bg-blue-500/10 border border-blue-500/30 px-2 py-0.2 text-[10px] font-semibold text-blue-400">
-                Live Panel
+              <span className="rounded-full bg-blue-500/10 border border-blue-500/30 px-2 py-0.2 text-[10px] font-semibold text-blue-400 capitalize">
+                {trackKey} Panel
               </span>
+              {candidateName && candidateName.toLowerCase() !== 'candidate' && (
+                <span className="hidden sm:inline-flex items-center text-xs text-muted-foreground border-l border-border/50 pl-2">
+                  Interviewee: <strong className="text-foreground ml-1">{candidateName}</strong>
+                </span>
+              )}
             </div>
             {pipelineMetrics}
           </div>
@@ -69,46 +86,67 @@ export function QuickstartConversationLayout({
         {/* Right: The 3 Interviewers Stage & Voice Visualizer */}
         <main className="order-1 flex min-h-0 flex-1 flex-col rounded-2xl border border-border/70 bg-card/10 p-4 lg:order-2">
           
-          {/* The 3 Panelist Cards */}
+          {/* The 3 Panelist Cards with Dynamic Speaking Glow */}
           <div className="grid grid-cols-3 gap-2.5 pb-3 border-b border-border/40">
-            {/* Alex */}
-            <div className="rounded-xl border border-blue-500/30 bg-blue-950/20 p-3 flex flex-col justify-between transition-all">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
-                  <span className="text-xs font-bold text-blue-300">Alex</span>
-                </div>
-                <Cpu className="h-3.5 w-3.5 text-blue-400/80" />
-              </div>
-              <div className="text-[10px] font-semibold text-blue-400/90 mt-1">Technical Lead</div>
-              <div className="text-[9px] text-muted-foreground mt-0.5 line-clamp-1">Architecture & Scaling</div>
-            </div>
+            {panelists.map((p) => {
+              const Icon = p.icon;
+              const isCurrentActive = activeSpeaker?.toLowerCase() === p.name.toLowerCase();
+              const isCurrentSpeaking = isCurrentActive && isSpeaking;
 
-            {/* Maya */}
-            <div className="rounded-xl border border-purple-500/30 bg-purple-950/20 p-3 flex flex-col justify-between transition-all">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full bg-purple-400 animate-pulse" />
-                  <span className="text-xs font-bold text-purple-300">Maya</span>
-                </div>
-                <Briefcase className="h-3.5 w-3.5 text-purple-400/80" />
-              </div>
-              <div className="text-[10px] font-semibold text-purple-400/90 mt-1">Product Manager</div>
-              <div className="text-[9px] text-muted-foreground mt-0.5 line-clamp-1">UX & Customer Impact</div>
-            </div>
+              const activeColorClasses =
+                p.color === 'blue'
+                  ? 'border-2 border-blue-400 bg-blue-950/50 shadow-[0_0_24px_rgba(59,130,246,0.4)] text-blue-300'
+                  : p.color === 'purple'
+                  ? 'border-2 border-purple-400 bg-purple-950/50 shadow-[0_0_24px_rgba(168,85,247,0.4)] text-purple-300'
+                  : 'border-2 border-emerald-400 bg-emerald-950/50 shadow-[0_0_24px_rgba(16,185,129,0.4)] text-emerald-300';
 
-            {/* David */}
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3 flex flex-col justify-between transition-all">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-xs font-bold text-emerald-300">David</span>
+              const activeDotColor =
+                p.color === 'blue'
+                  ? 'bg-blue-400'
+                  : p.color === 'purple'
+                  ? 'bg-purple-400'
+                  : 'bg-emerald-400';
+
+              return (
+                <div
+                  key={p.name}
+                  className={`rounded-xl p-3 flex flex-col justify-between transition-all duration-300 ${
+                    isCurrentSpeaking
+                      ? `${activeColorClasses} scale-[1.02]`
+                      : isCurrentActive
+                      ? 'border border-primary/50 bg-card/40'
+                      : 'border border-border/40 bg-card/10 opacity-70'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <div
+                        className={`h-2 w-2 rounded-full ${
+                          isCurrentSpeaking
+                            ? `${activeDotColor} animate-ping`
+                            : isCurrentActive
+                            ? activeDotColor
+                            : 'bg-zinc-600'
+                        }`}
+                      />
+                      <span className="text-xs font-bold">{p.name}</span>
+                    </div>
+                    <Icon className="h-3.5 w-3.5 opacity-80" />
+                  </div>
+                  <div className="text-[10px] font-semibold opacity-90 mt-1">{p.role}</div>
+                  <div className="flex items-center justify-between mt-1 pt-1 border-t border-border/20 text-[10px]">
+                    <span className="text-muted-foreground text-[9px] truncate max-w-[65px]">{p.focus}</span>
+                    {isCurrentSpeaking ? (
+                      <span className="font-bold flex items-center gap-1 text-[9px] text-amber-300">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" /> Speaking
+                      </span>
+                    ) : (
+                      <span className="text-zinc-400 text-[9px]">Listening</span>
+                    )}
+                  </div>
                 </div>
-                <Users className="h-3.5 w-3.5 text-emerald-400/80" />
-              </div>
-              <div className="text-[10px] font-semibold text-emerald-400/90 mt-1">Hiring Manager</div>
-              <div className="text-[9px] text-muted-foreground mt-0.5 line-clamp-1">STAR & Communication</div>
-            </div>
+              );
+            })}
           </div>
 
           {/* Center Stage: Voice Waveform / Visualizer */}

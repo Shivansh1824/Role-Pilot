@@ -93,6 +93,8 @@ function isRtmSalStatusPayload(value: unknown): value is RtmSalStatusPayload {
 export default function ConversationComponent({
   agoraData,
   rtmClient,
+  track = 'tech',
+  candidateName,
   onTokenWillExpire,
   onEndConversation,
 }: ConversationComponentProps) {
@@ -464,12 +466,38 @@ export default function ConversationComponent({
 
   useClientEvent(client, 'token-privilege-will-expire', handleTokenWillExpire);
 
+  const activeSpeaker = useMemo<string | null>(() => {
+    // Check in-progress agent turn first
+    const activeText = currentInProgressMessage?.text || '';
+    if (activeText) {
+      const match = activeText.match(/\[([A-Za-z]+)/);
+      if (match) return match[1];
+    }
+    // Scan backwards through completed messages for the last agent utterance
+    for (let i = messageList.length - 1; i >= 0; i--) {
+      const msg = messageList[i];
+      if (String(msg.uid) === agentUID || String(msg.uid) !== String(client.uid)) {
+        const t = msg.text || '';
+        const match = t.match(/\[([A-Za-z]+)/);
+        if (match) return match[1];
+      }
+    }
+    return null;
+  }, [currentInProgressMessage, messageList, agentUID, client.uid]);
+
+  const isAgentSpeaking =
+    agentState === AgentState.SPEAKING || visualizerState === 'talking';
+
   const handleEndConversation = useCallback(async () => {
     onEndConversation(messageList);
   }, [onEndConversation, messageList]);
 
   return (
     <QuickstartConversationLayout
+      track={track}
+      candidateName={candidateName}
+      activeSpeaker={activeSpeaker}
+      isSpeaking={isAgentSpeaking}
       statusPanel={
         <ConnectionStatusPanel
           connectionState={connectionState}
@@ -485,6 +513,7 @@ export default function ConversationComponent({
           messageList={messageList}
           currentInProgressMessage={currentInProgressMessage}
           agentUID={agentUID}
+          candidateName={candidateName}
         />
       }
       visualizer={
