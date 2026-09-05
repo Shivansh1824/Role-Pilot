@@ -1,9 +1,9 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Cpu, Briefcase, Users, Bot, Zap } from 'lucide-react';
+import { Cpu, Briefcase, Users, Bot, Zap, Clock } from 'lucide-react';
 import { PANEL_CONFIGS } from '@/lib/panel';
 
 type QuickstartConversationLayoutProps = {
@@ -16,6 +16,7 @@ type QuickstartConversationLayoutProps = {
   candidateName?: string;
   activeSpeaker?: string | null;
   isSpeaking?: boolean;
+  hitCount?: number;
   onEndConversation: () => void;
 };
 
@@ -29,10 +30,27 @@ export function QuickstartConversationLayout({
   candidateName,
   activeSpeaker,
   isSpeaking = false,
+  hitCount = 0,
   onEndConversation,
 }: QuickstartConversationLayoutProps) {
   const trackKey = (track || 'tech').toLowerCase();
   const panelists = PANEL_CONFIGS[trackKey] ?? PANEL_CONFIGS['tech'];
+
+  // Helper to render the 3 lives
+  const renderHearts = () => {
+    const livesLeft = Math.max(0, 3 - hitCount);
+    return Array.from({ length: 3 }).map((_, i) => (
+      <span
+        key={i}
+        className={`text-base transition-all duration-300 ${
+          i < livesLeft ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale blur-[1px] scale-75'
+        }`}
+        title={i < livesLeft ? 'Life remaining' : 'Strike!'}
+      >
+        ❤️
+      </span>
+    ));
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col text-left bg-[#0c0c10]">
@@ -61,6 +79,23 @@ export function QuickstartConversationLayout({
         </div>
 
         <div className="flex items-center gap-2 md:pr-1">
+          {/* Live Hit Counter Badge */}
+          <div
+            className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold tabular-nums transition-colors ${
+              hitCount >= 2
+                ? 'border-destructive/40 bg-destructive/10 text-destructive animate-pulse'
+                : hitCount === 1
+                ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                : 'border-border/60 bg-card/40 text-muted-foreground'
+            }`}
+            title={`Hits: ${hitCount} / 3`}
+          >
+            <span className="text-[10px] uppercase tracking-wider opacity-80 mr-1 hidden sm:inline-block">Status</span>
+            <div className="flex gap-1">
+              {renderHearts()}
+            </div>
+          </div>
+
           {statusPanel}
           <Button
             variant="destructive"

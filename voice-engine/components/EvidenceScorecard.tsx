@@ -70,6 +70,7 @@ export function EvidenceScorecard({
     score3,
     overallScore,
     decision,
+    hasAskedQuestions,
   } = useMemo(() => {
     const candidateTurns = transcript.filter(
       (t) => String(t.uid) !== agentUID && (t.text || '').trim().length > 0,
@@ -176,13 +177,31 @@ export function EvidenceScorecard({
     );
     const depthBonus = Math.min(8, Math.floor(totalWords / 20));
 
+    // 4. Candidate Reverse Q&A Detection (Proactive initiative bonus)
+    const reverseQAQuestionRegex = /\?|what is|how do|could you|can you tell me|what does the|roadmap|tech stack|team culture|next steps/i;
+    const candidateQAQuestions = candidateTurns.filter((t) => reverseQAQuestionRegex.test(t.text || ''));
+    const hasAskedQuestions = candidateQAQuestions.length > 0;
+    const qaBonus = hasAskedQuestions ? 4 : 0;
+
+    if (hasAskedQuestions && candidateQAQuestions[0]?.text) {
+      items.push({
+        id: 'ev-candidate-qa',
+        speaker: candidateName && candidateName.toLowerCase() !== 'candidate' ? candidateName : 'Candidate',
+        roleTitle: 'Reverse Q&A Initiative',
+        type: 'strength',
+        title: 'Proactive Inquiry & Strategic Curiosity',
+        description: 'Demonstrated high agency by asking focused questions about team architecture, roadmap, and engineering practices during the closing phase.',
+        quotedText: `"${candidateQAQuestions[0].text.slice(0, 160)}${candidateQAQuestions[0].text.length > 160 ? '...' : ''}"`,
+      });
+    }
+
     const s1 = Math.min(98, Math.max(70, 84 + depthBonus));
     const s2 = Math.min(
       95,
       Math.max(68, (items[1]?.type === 'strength' ? 88 : 74) + Math.floor(depthBonus / 2)),
     );
     const s3 = Math.min(96, Math.max(72, 86 + depthBonus));
-    const oScore = Math.round((s1 + s2 + s3) / 3);
+    const oScore = Math.min(99, Math.round((s1 + s2 + s3) / 3) + qaBonus);
     const dec = oScore >= 85 ? 'Strong Hire' : oScore >= 75 ? 'Hire' : 'Needs Review';
 
     return {
@@ -192,8 +211,9 @@ export function EvidenceScorecard({
       score3: s3,
       overallScore: oScore,
       decision: dec,
+      hasAskedQuestions,
     };
-  }, [transcript, agentUID, evalConfig]);
+  }, [transcript, agentUID, evalConfig, candidateName]);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto bg-[#0d0d11] p-4 md:p-8 text-left animate-fade-in">
@@ -251,6 +271,11 @@ export function EvidenceScorecard({
                 <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-amber-300">
                   {difficulty === 'auto' ? '⚡ Adaptive AI Difficulty' : `${difficulty.toUpperCase()} Tier`}
                 </span>
+                {hasAskedQuestions && (
+                  <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-blue-300">
+                    ★ Reverse Q&A Bonus (+4)
+                  </span>
+                )}
               </div>
               <h2 className="text-xl font-bold text-foreground mt-1">
                 {candidateName && candidateName.toLowerCase() !== 'candidate' ? `${candidateName} • ${role}` : role}

@@ -492,12 +492,37 @@ export default function ConversationComponent({
     onEndConversation(messageList);
   }, [onEndConversation, messageList]);
 
+  // Track hits from transcript
+  const hitCount = useMemo(() => {
+    let hits = 0;
+    const allMsgs = [...messageList, currentInProgressMessage].filter(Boolean);
+    for (const msg of allMsgs) {
+      if (!msg?.text) continue;
+      const t = msg.text.toLowerCase();
+      if (t.includes('made 3 hits')) hits = Math.max(hits, 3);
+      else if (t.includes('made 2 hits')) hits = Math.max(hits, 2);
+      else if (t.includes('made 1 hit')) hits = Math.max(hits, 1);
+    }
+    return hits;
+  }, [messageList, currentInProgressMessage]);
+
+  // Auto-end interview on 3 hits
+  useEffect(() => {
+    if (hitCount >= 3) {
+      const t = setTimeout(() => {
+        handleEndConversation();
+      }, 5000); // 5s buffer to let AI finish speaking
+      return () => clearTimeout(t);
+    }
+  }, [hitCount, handleEndConversation]);
+
   return (
     <QuickstartConversationLayout
       track={track}
       candidateName={candidateName}
       activeSpeaker={activeSpeaker}
       isSpeaking={isAgentSpeaking}
+      hitCount={hitCount}
       statusPanel={
         <ConnectionStatusPanel
           connectionState={connectionState}
