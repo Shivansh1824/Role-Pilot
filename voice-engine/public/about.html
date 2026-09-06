@@ -56,13 +56,14 @@
         
         <div class="header-center">
             <nav class="header-nav">
-                <a href="index.html#how-it-guides" class="nav-link">Features</a>
-                <a href="index.html#live-dashboard" class="nav-link">Live Demo</a>
-                <a href="index.html#global-leaderboard" class="nav-link">Leaderboard</a>
+                <a href="index.html#panels-section" class="nav-link">Domain Panels</a>
+                <a href="index.html#nova-section" class="nav-link">Nova Voice Prep</a>
+                <a href="index.html#demo-section" class="nav-link">Interactive Demo</a>
+                <a href="careers.html" class="nav-link">Careers</a>
                 <a href="index.html#faq" class="nav-link">FAQ</a>
                 <div class="mobile-only-actions">
                     <a href="login.html" class="btn-secondary-outline mobile-nav-btn">Sign In</a>
-                    <a href="login.html" class="btn btn-header mobile-nav-btn">Get Started</a>
+                    <a href="gear-up.html" class="btn btn-header mobile-nav-btn">Launch Panel</a>
                 </div>
             </nav>
         </div>
@@ -70,7 +71,7 @@
         <div class="header-actions">
             <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
             <a href="login.html" id="header-signin-btn" class="btn-secondary-outline">Sign In</a>
-            <a href="login.html" class="btn btn-header header-signup-desktop">Get Started</a>
+            <a href="gear-up.html" class="btn btn-header header-signup-desktop">Launch Panel</a>
             <button class="mobile-menu-toggle" aria-label="Toggle Mobile Menu">
                 <i class="fa-solid fa-bars"></i>
             </button>
@@ -80,29 +81,45 @@
     <main class="page-main subpage-main">
         <section class="subpage-content-section">
             <div class="section-header">
-                <h2>About Role-Pilot</h2>
-                <p>Bridging the gap between engineering talent and modern hiring teams.</p>
+                <h2>About <span class="gradient-text">Role-Pilot</span></h2>
+                <p>The enterprise multi-role AI voice interview platform simulating authentic committee loops.</p>
             </div>
             <div class="image-glass-wrapper content-glass-panel">
                 <div class="premium-content-body">
                     <h3>Our Mission</h3>
-                    <p>At Role-Pilot, our mission is to close the gap between exceptional tech candidates and recruiters by providing a deterministic, verifiable, and AI-powered preparation environment. We believe that securing a top-tier engineering role shouldn't rely on luck or expensive coaching, but on structured practice and transparent skill validation.</p>
+                    <p>At Role-Pilot, our mission is to eliminate the anxiety and unpredictability of high-stakes corporate interviews by giving candidates access to an ultra-realistic, multi-role AI voice committee. Real-world hiring loops are never conducted by a single person—they involve hiring managers, domain specialists, and cross-functional leaders. We replicate this exact panel dynamic with sub-160ms voice latency, natural turn-taking, and zero artificial delays.</p>
 
-                    <h3>Core Platform Features</h3>
-                    <p>We've built a comprehensive suite of tools designed to simulate the exact conditions of modern technical interviews:</p>
+                    <h3>Why Multi-Role Voice Committees?</h3>
+                    <p>Traditional mock interviews fall short because they use single-agent chatbots with robotic pauses and disconnected questions. Role-Pilot changes the paradigm through a collective 3-agent committee architecture:</p>
                     <ul>
-                        <li><strong>TruGen Voice Agent:</strong> Practice behavioral and technical screening rounds with our hyper-realistic voice AI. Get real-time feedback on your STAR method structure, delivery confidence, and communication clarity.</li>
-                        <li><strong>Technical Coding Arena:</strong> Solve real-world algorithmic and system design challenges in an IDE environment. Our AI instantly evaluates not just correctness, but your Big-O time and space complexity efficiency.</li>
-                        <li><strong>Global Tech Leaderboard:</strong> Move beyond static resumes. Earn XP for your successful coding submissions and mock interviews. Showcase your ranked performance directly to partnered recruiters looking for verified talent.</li>
+                        <li><strong>Universal Chairperson (David):</strong> Anchors every panel, manages stage transitions, sets the agenda, evaluates leadership and cultural alignment, and moderates discussion.</li>
+                        <li><strong>Domain Specialists Across 4 Tracks:</strong> Specialized leaders for <em>Tech & Systems Engineering</em> (Alex & Mark), <em>Product Leadership</em> (Mark & Alex), <em>Enterprise Sales & GTM</em> (Marcus & Sean), and <em>HR & People Operations</em> (Sam & Ethan).</li>
+                        <li><strong>Conversational Turn Handoffs:</strong> Panelists explicitly converse with each other (e.g., <em>"[David] Alex, let's explore their distributed systems architecture"</em>) and build upon the candidate's previous responses without repetition.</li>
                     </ul>
 
-                    <h3>The 2026 Roadmap</h3>
-                    <p>We are continuously evolving Role-Pilot to remain the industry standard for career acceleration. Upcoming releases include:</p>
+                    <h3>Voice Onboarding & Warm-Up with Nova</h3>
+                    <p>Entering a 3-agent committee can feel intense. That's why every candidate begins with <strong>Nova</strong>, our dedicated conversational AI voice prep copilot. In a low-pressure audio session, Nova:</p>
                     <ul>
-                        <li><strong>AI Proctoring:</strong> Implementing non-intrusive, privacy-first session verification to ensure the integrity of the leaderboard rankings.</li>
-                        <li><strong>Verifiable Credentials:</strong> Generating cryptographically secure, on-chain proof of your coding proficiency and mock interview scores to share across professional networks.</li>
-                        <li><strong>Company Sandboxes:</strong> Exclusive integration environments where candidates can practice against the specific proprietary codebase structures of our hiring partners.</li>
+                        <li>Calibrates your microphone and ambient audio environment for crystal-clear WebRTC transmission.</li>
+                        <li>Parses your resume and extracts a verified 300-word candidate fact-sheet to ground AI inquiries in your genuine experience.</li>
+                        <li>Guides you through a friendly warm-up rehearsal to settle pre-interview nerves before the panel convenes.</li>
                     </ul>
+
+                    <h3>Real-Time Voice Architecture</h3>
+                    <p>Role-Pilot is engineered from the ground up for high-fidelity, real-time auditory interaction:</p>
+                    <ul>
+                        <li><strong>Sub-160ms Latency:</strong> Powered by Agora Real-Time Communication (RTC) streaming audio.</li>
+                        <li><strong>Natural Speech Barge-In:</strong> Speak naturally and interrupt an AI interviewer mid-sentence. The system detects your voice via Deepgram STT and instantly yields the floor.</li>
+                        <li><strong>Evidence-Based Scorecards:</strong> Post-interview analysis maps spoken answers against the STAR methodology, citing verbatim timestamps, highlighting domain strengths, and diagnosing growth gaps.</li>
+                    </ul>
+
+                    <div style="margin-top: 2.5rem; padding: 1.5rem; border-radius: 16px; background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.2);">
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--accent); font-size: 1.15rem;"><i class="fa-solid fa-briefcase" style="margin-right: 8px;"></i> Careers at Role-Pilot</h4>
+                        <p style="margin: 0 0 1rem 0; font-size: 0.95rem; color: var(--text-secondary);">We are building the future of real-time conversational voice intelligence. If you are passionate about ultra-low latency WebRTC streaming, multi-agent LLM turn orchestration, and high-impact AI products, we would love to meet you.</p>
+                        <a href="careers.html" class="btn btn-primary-gradient" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                            <span>Explore Open Roles</span> <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -124,7 +141,7 @@
                         </svg>
                         <span class="logo-text">Role<span>Pilot</span></span>
                     </a>
-                    <p class="footer-pitch">Master technical interviews, optimize your ATS compatibility, and climb the recruiter-facing global leaderboard using voice-adaptive AI agents.</p>
+                    <p class="footer-pitch">The enterprise multi-role AI voice interview platform. Master technical, product, and leadership rounds with specialized AI committees.</p>
                     <div class="footer-socials">
                         <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
                         <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
@@ -137,21 +154,21 @@
                 <div class="footer-links-col">
                     <h3>Product</h3>
                     <ul>
-                        <li><a href="login.html">AI Mock Interviews</a></li>
-                        <li><a href="login.html">ATS Compatibility</a></li>
-                        <li><a href="login.html">Resume Tailoring</a></li>
-                        <li><a href="login.html">Coding Arena</a></li>
+                        <li><a href="gear-up.html">Voice Warm-Up (Nova)</a></li>
+                        <li><a href="interview-setup.html">Multi-Role Panels</a></li>
+                        <li><a href="interview-setup.html">Adaptive Difficulty</a></li>
+                        <li><a href="interview-setup.html">Evidence Scorecard</a></li>
                     </ul>
                 </div>
                 
-                <!-- Column 3: Resources -->
+                <!-- Column 3: Domain Panels -->
                 <div class="footer-links-col">
-                    <h3>Resources</h3>
+                    <h3>Domain Panels</h3>
                     <ul>
-                        <li><a href="#">System Design Guide</a></li>
-                        <li><a href="login.html">Global Leaderboard</a></li>
-                        <li><a href="#">Developer Documentation</a></li>
-                        <li><a href="#">API Status</a></li>
+                        <li><a href="interview-setup.html?track=tech">Tech Engineering</a></li>
+                        <li><a href="interview-setup.html?track=product">Product Leadership</a></li>
+                        <li><a href="interview-setup.html?track=sales">Enterprise Sales & GTM</a></li>
+                        <li><a href="interview-setup.html?track=hr">HR & People Ops</a></li>
                     </ul>
                 </div>
                 
@@ -160,15 +177,16 @@
                     <h3>Company</h3>
                     <ul>
                         <li><a href="about.html">About Us</a></li>
-                        <li><a href="#">Careers</a></li>
+                        <li><a href="careers.html">Careers</a></li>
                         <li><a href="privacy.html">Privacy Policy</a></li>
                         <li><a href="terms.html">Terms of Service</a></li>
+                        <li><a href="cookies.html">Cookies</a></li>
                     </ul>
                 </div>
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2026 Role-Pilot. All rights reserved. Built for modern engineers.</p>
+                <p>&copy; 2026 Role-Pilot. All rights reserved. Enterprise AI Voice Interview Platform.</p>
                 <div class="footer-bottom-links">
                     <a href="privacy.html">Privacy</a>
                     <a href="terms.html">Terms</a>
