@@ -68,7 +68,7 @@ RULES:
         })
       : new Gemini({
           apiKey: geminiKey || 'dummy',
-          model: 'gemini-1.5-flash',
+          model: 'gemini-3.5-flash',
           greetingMessage: 'Hi! I am Nova, your setup assistant. What is your name?',
           failureMessage: 'Please wait a moment.',
           maxHistory: 50,

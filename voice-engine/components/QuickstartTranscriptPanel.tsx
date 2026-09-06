@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
+import { isAgentUid } from '@/lib/agora';
 
 type TranscriptMessage = {
   turn_id?: string | number;
@@ -14,6 +15,7 @@ type QuickstartTranscriptPanelProps = {
   currentInProgressMessage: TranscriptMessage | null;
   agentUID: string;
   candidateName?: string;
+  candidateUid?: string | number;
 };
 
 function formatMessageTime(createdAt?: number) {
@@ -29,6 +31,7 @@ export function QuickstartTranscriptPanel({
   currentInProgressMessage,
   agentUID,
   candidateName,
+  candidateUid,
 }: QuickstartTranscriptPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const messages = useMemo(
@@ -115,7 +118,7 @@ export function QuickstartTranscriptPanel({
           </div>
         ) : (
           messages.map((message, index) => {
-            const isAgent = String(message.uid) === agentUID;
+            const isAgent = isAgentUid(message.uid, candidateUid) || String(message.uid) === agentUID;
             const rawText = message.text?.trim();
             const time = formatMessageTime(message.createdAt);
             const { speaker, badgeClass, bubbleClass } = parseSpeakerInfo(rawText, isAgent);

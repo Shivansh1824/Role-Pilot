@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TRACK_EVALUATIONS, PANEL_CONFIGS } from '@/lib/panel';
+import { isAgentUid } from '@/lib/agora';
 
 export type TranscriptEntry = {
   turn_id?: string | number;
@@ -72,11 +73,16 @@ export function EvidenceScorecard({
     decision,
     hasAskedQuestions,
   } = useMemo(() => {
+    const isTurnFromAgent = (t: TranscriptEntry) => {
+      const text = (t.text || '').trim();
+      return isAgentUid(t.uid) || String(t.uid) === agentUID || /^\[.+\]/.test(text);
+    };
+
     const candidateTurns = transcript.filter(
-      (t) => String(t.uid) !== agentUID && (t.text || '').trim().length > 0,
+      (t) => !isTurnFromAgent(t) && (t.text || '').trim().length > 0,
     );
     const agentTurns = transcript.filter(
-      (t) => String(t.uid) === agentUID && (t.text || '').trim().length > 0,
+      (t) => isTurnFromAgent(t) && (t.text || '').trim().length > 0,
     );
 
     const items: EvidenceItem[] = [];

@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
           })
         : new Gemini({
             apiKey: geminiKey || 'dummy',
-            model: 'gemini-1.5-flash',
+            model: 'gemini-3.5-flash',
             greetingMessage: i === 0 ? greeting : undefined,
             failureMessage: 'Please wait a moment.',
             maxHistory: 50,

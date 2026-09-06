@@ -23,7 +23,7 @@ import {
 } from 'agora-agent-client-toolkit';
 import { AgentVisualizer } from 'agora-agent-uikit';
 import { MicButtonWithVisualizer } from 'agora-agent-uikit/rtc';
-import { DEFAULT_AGENT_UID } from '@/lib/agora';
+import { DEFAULT_AGENT_UID, isAgentUid } from '@/lib/agora';
 import {
   getCurrentInProgressMessage,
   getMessageList,
@@ -381,20 +381,23 @@ export default function ConversationComponent({
   usePublish([localMicrophoneTrack]);
 
   useClientEvent(client, 'user-joined', (user) => {
-    if (user.uid.toString() === agentUID) setIsAgentConnected(true);
+    if (isAgentUid(user.uid, client?.uid) || user.uid.toString() === agentUID) setIsAgentConnected(true);
   });
 
   useClientEvent(client, 'user-left', (user) => {
-    if (user.uid.toString() === agentUID) setIsAgentConnected(false);
+    const hasRemainingAgents = remoteUsers.some(
+      (u) => u.uid !== user.uid && (isAgentUid(u.uid, client?.uid) || u.uid.toString() === agentUID),
+    );
+    setIsAgentConnected(hasRemainingAgents);
   });
 
   // Sync isAgentConnected with remoteUsers (covers cases where user-joined/left are missed)
   useEffect(() => {
     const isAgentInRemoteUsers = remoteUsers.some(
-      (user) => user.uid.toString() === agentUID,
+      (user) => isAgentUid(user.uid, client?.uid) || user.uid.toString() === agentUID,
     );
     setIsAgentConnected(isAgentInRemoteUsers);
-  }, [remoteUsers, agentUID]);
+  }, [remoteUsers, client?.uid, agentUID]);
 
   useClientEvent(client, 'connection-state-change', (curState) => {
     setConnectionState(curState);
@@ -539,6 +542,7 @@ export default function ConversationComponent({
           currentInProgressMessage={currentInProgressMessage}
           agentUID={agentUID}
           candidateName={candidateName}
+          candidateUid={agoraData.uid || client?.uid}
         />
       }
       visualizer={
