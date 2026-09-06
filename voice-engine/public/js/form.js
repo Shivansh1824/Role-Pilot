@@ -13,14 +13,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         db = await getSupabaseClient();
-        const { data: userData, error: authError } = await db.auth.getUser();
+        const { data: { session }, error: sessionError } = await db.auth.getSession();
         
-        if (authError || !userData || !userData.user) {
+        if (sessionError || !session) {
             window.location.href = 'index.html';
             return;
         }
+
+        if (window.location.hash && window.location.hash.includes('access_token')) {
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
         
-        user = userData.user;
+        user = session.user;
     } catch (e) {
         console.error("Database connection failed:", e);
         window.location.href = 'index.html';

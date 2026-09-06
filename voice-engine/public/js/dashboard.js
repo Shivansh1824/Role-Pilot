@@ -94,6 +94,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = 'login.html';
                 return;
             }
+
+            // Clean OAuth access_token hash from address bar if present
+            if (window.location.hash && window.location.hash.includes('access_token')) {
+                history.replaceState(null, '', window.location.pathname + window.location.search);
+            }
             
             // Fetch profile data
             const { data: profile } = await db

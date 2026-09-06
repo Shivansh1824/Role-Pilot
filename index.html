@@ -24,6 +24,37 @@
     <link rel="stylesheet" href="css/style.css">
     <!-- Supabase JS Client Library CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Immediate OAuth Hash & Session Detection -->
+    <script type="module">
+      import { getSupabaseClient } from './js/supabase-client.js';
+
+      (async function checkOAuthCallback() {
+        if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
+          document.documentElement.style.visibility = 'hidden';
+          try {
+            const db = await getSupabaseClient();
+            const { data: { session }, error } = await db.auth.getSession();
+            if (session && !error) {
+              const { data: profile } = await db
+                .from('profiles')
+                .select('username, avatar_url, target_role, experience_level')
+                .eq('id', session.user.id)
+                .maybeSingle();
+
+              if (profile && profile.username && profile.avatar_url && profile.target_role && profile.experience_level) {
+                window.location.replace('dashboard.html');
+              } else {
+                window.location.replace('form.html');
+              }
+              return;
+            }
+          } catch (e) {
+            console.error('OAuth token processing error:', e);
+          }
+          document.documentElement.style.visibility = '';
+        }
+      })();
+    </script>
     <title>Role-Pilot | Enterprise Multi-Role AI Voice Interview Platform</title>
 </head>
 <body class="landing-body">
