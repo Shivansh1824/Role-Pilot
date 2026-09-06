@@ -87,7 +87,7 @@ export function EvidenceScorecard({
 
     const items: EvidenceItem[] = [];
 
-    // 1. Analyze Panelist 1 (Lead Domain: e.g. Alex, Sarah, Elena, Maya)
+    // 1. Analyze Panelist 1 (Lead Domain: e.g. Alex, Sean, Ethan, Mark)
     const p1Regex = new RegExp(`\\[${evalConfig.panelist1.name}|^${evalConfig.panelist1.name}:|${evalConfig.panelist1.name}\\s*\\(`, 'i');
     const p1Prompt = agentTurns.find((t) => p1Regex.test(t.text || ''));
     const p1Answer = candidateTurns.find((t) => evalConfig.panelist1.keywords.test(t.text || '')) || candidateTurns[0];
@@ -222,7 +222,7 @@ export function EvidenceScorecard({
   }, [transcript, agentUID, evalConfig, candidateName]);
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto bg-[#0d0d11] p-4 md:p-8 text-left animate-fade-in">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto bg-transparent p-4 md:p-8 text-left animate-fade-in">
       <div className="mx-auto w-full max-w-5xl space-y-6">
         
         {/* Header Navigation */}
@@ -466,9 +466,9 @@ export function EvidenceScorecard({
                       key={i}
                       className={`rounded-xl border p-3 text-xs leading-relaxed transition-colors ${
                         isAgent
-                          ? 'border-[#2f2f38] bg-[#16161d] text-foreground'
-                          : 'border-blue-900/30 bg-blue-950/20 text-blue-100'
-                      } ${isHighlighted ? 'border-primary/40 bg-primary/5' : ''}`}
+                          ? 'border-border/70 bg-card/60 text-foreground'
+                          : 'border-primary/30 bg-primary/10 text-foreground'
+                      } ${isHighlighted ? 'border-primary/60 bg-primary/15 ring-1 ring-primary/30' : ''}`}
                     >
                       <div className="flex items-center justify-between text-[10px] font-semibold text-muted-foreground mb-1">
                         <span>{isAgent ? 'AI Interview Committee' : (candidateName && candidateName.toLowerCase() !== 'candidate' ? candidateName : 'Interviewee')}</span>

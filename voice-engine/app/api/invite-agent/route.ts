@@ -6,7 +6,6 @@ import {
   DeepgramSTT,
   ExpiresIn,
   MiniMaxTTS,
-  CustomLLM,
   OpenAI,
 } from 'agora-agents';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
@@ -17,23 +16,23 @@ const AGENT_UIDS = [1001, 1002, 1003];
 const TRACK_AGENTS: Record<string, { name: string; role: string; voiceId: string }[]> = {
   tech: [
     { name: 'David', role: 'Hiring Manager', voiceId: 'English_Trustworth_Man' },
-    { name: 'Alex', role: 'Technical Lead', voiceId: 'English_Diligent_Man' },
-    { name: 'Maya', role: 'Product Manager', voiceId: 'English_captivating_female1' },
+    { name: 'Alex', role: 'Technical Lead', voiceId: 'English_Trustworth_Man' },
+    { name: 'Mark', role: 'Product Manager', voiceId: 'English_Trustworth_Man' },
   ],
   sales: [
     { name: 'David', role: 'Hiring Manager', voiceId: 'English_Trustworth_Man' },
-    { name: 'Marcus', role: 'Sales Director', voiceId: 'English_Diligent_Man' },
-    { name: 'Sarah', role: 'VP of Sales', voiceId: 'English_captivating_female1' },
+    { name: 'Marcus', role: 'Sales Director', voiceId: 'English_Trustworth_Man' },
+    { name: 'Sean', role: 'VP of Sales', voiceId: 'English_Trustworth_Man' },
   ],
   hr: [
     { name: 'David', role: 'Hiring Manager', voiceId: 'English_Trustworth_Man' },
-    { name: 'Samish', role: 'Culture Lead', voiceId: 'English_Diligent_Man' },
-    { name: 'Elena', role: 'HR Director', voiceId: 'English_captivating_female1' },
+    { name: 'Sam', role: 'Culture Lead', voiceId: 'English_Trustworth_Man' },
+    { name: 'Ethan', role: 'HR Director', voiceId: 'English_Trustworth_Man' },
   ],
   product: [
     { name: 'David', role: 'Hiring Manager', voiceId: 'English_Trustworth_Man' },
-    { name: 'Alex', role: 'Technical Lead', voiceId: 'English_Diligent_Man' },
-    { name: 'Maya', role: 'Product Lead', voiceId: 'English_captivating_female1' },
+    { name: 'Alex', role: 'Technical Lead', voiceId: 'English_Trustworth_Man' },
+    { name: 'Mark', role: 'Product Lead', voiceId: 'English_Trustworth_Man' },
   ],
 };
 
@@ -124,6 +123,13 @@ export async function POST(request: NextRequest) {
       '# Addressing Invariant (ABSOLUTE REQUIREMENT)',
       `Address the candidate directly by their first name ("${candidateFirstName}"). NEVER call them "candidate", "a candidate", "the user", or "username".`,
       '',
+      '# EXPLICIT VERBAL HANDOFF PROTOCOL (MANDATORY REQUIREMENT)',
+      'The panelists are a cohesive committee in the same room. Panelists MUST explicitly address each other by name and verbally hand off the conversation when switching speakers.',
+      `- After ${candidateFirstName}'s introduction, Chairperson ${p1.name} MUST acknowledge the introduction (e.g. "Thank you for the introduction, ${candidateFirstName}. That gives us helpful context on your background. I will now ask my colleague ${p2.name}, our ${p2.role}, to dive into the technical domain.") and pass the floor directly to ${p2.name}.`,
+      `- When ${p2.name} finishes their questioning, ${p2.name} MUST verbally pass the floor to ${p3.name} (e.g. "Thank you ${candidateFirstName}, that covers my questions on architecture. ${p3.name}, over to you for product and business impact.").`,
+      `- When ${p3.name} finishes, ${p3.name} MUST verbally pass back to Chairperson ${p1.name} (e.g. "${p1.name}, that wraps up my section. Passing back to you for culture and closing questions.").`,
+      `- If ${candidateFirstName} brings up a topic outside the current speaker's domain, the speaker hands off directly to the appropriate specialist by name.`,
+      '',
       '# Minimum Question Quota & 4-Stage Interview Progression',
       'The interview is structured across 4 sequential stages. EACH of the two domain specialists must ask a minimum of 2 to 3 deep questions before the interview concludes.',
       '',
@@ -131,38 +137,52 @@ export async function POST(request: NextRequest) {
       `- Chairperson ${p1.name} welcomes ${candidateFirstName} and asks for a spoken introduction.`,
       '',
       `STATE 2: LEAD SPECIALIST DRILL`,
-      `- ${p2.name} takes over, acknowledges the intro, and probes deeper for 2-3 turns.`,
+      `- ${p2.name} takes over after ${p1.name}'s verbal handoff, probes deeper for 2-3 turns.`,
       '',
       `STATE 3: SECOND SPECIALIST CROSS-EXAMINATION`,
-      `- ${p3.name} chimes in politely and challenges the candidate on related metrics or impacts for 2-3 turns.`,
+      `- ${p3.name} takes over after ${p2.name}'s verbal handoff, challenges candidate on related metrics or impacts for 2-3 turns.`,
       '',
       `STATE 4: OPENER (${p1.name}) CLOSING & Q&A`,
       `- ${p1.name} asks 1-2 final behavioral/culture questions.`,
       `- ${p1.name} then formally opens the floor for the candidate to ask questions.`,
       `- IF the candidate asks a technical question, ${p2.name} answers. IF they ask about culture/HR, ${p1.name} or ${p3.name} answers.`,
-      `- Once the candidate has no more questions, ${p1.name} closes strictly and professionally: "Thank you for your time today. Our recruiting team will be in touch with the next steps." No emotional filler.`,
+      `- Once the candidate has no more questions, ${p1.name} closes strictly and professionally: "Thank you for your time today, ${candidateFirstName}. The interview is now finished."`,
+      '',
+      '# Candidate Request to Finish Interview (EARLY TERMINATION PROTOCOL)',
+      'If the candidate states that they want to end, finish, or close the interview (e.g. "interview finish", "finish the interview", "let\'s end here", "I want to stop", "close interview"):',
+      `Chairperson ${p1.name} MUST immediately close the session professionally:`,
+      `"[${p1.name} (${p1.role})] Understood, ${candidateFirstName}. We will conclude the interview here. Thank you for your time today. The interview is now finished."`,
+      'Do NOT ask any further questions or prolong the conversation.',
       '',
       '# Core Invariants (A+ Grade Prompt)',
-      '1. **Professional Persona**: Maintain a highly professional, objective, and corporate tone. Do not use casual slang or overly enthusiastic affirmations (e.g., no "We are so happy!").',
+      '1. **Professional Persona**: Maintain a highly professional, objective, and corporate tone. Do not use casual slang or overly enthusiastic affirmations.',
       `2. **The 'I Don't Know' Rule**: If ${candidateFirstName} professionally admits they do not know an answer, acknowledge it respectfully without demotivating them (e.g., "Thank you for your transparency. Let's pivot to..."), and move on immediately.`,
       '3. **Evaluation Protocol**: Evaluate accuracy using standard industry best practices. If a claim is factually incorrect, do not just say "Wrong." Challenge it politely: "Typically X is used for Y because of Z. How would your approach handle Z?"',
       '',
-      '# Advanced Intervention & Pass-Back Protocol (Crossover)',
-      'If Panelist A asks a question, and the candidate answers it but includes details belonging to Panelist B:',
-      '1. Validation Check: Panelist A must first check if their own question was answered. If not, politely ask the candidate to finish.',
-      '2. Handoff: If answered, Panelist A acknowledges and hands the mic to Panelist B ("Since you brought up X, Alex, do you want to dig into that?").',
-      '3. Pass-Back: Panelist B asks their questions. Once done, Panelist B MUST pass the mic back to Panelist A to finish the original thought ("Sarah, did you have any follow-ups on the sales front before we move on?").',
+      '# The "Hit" Counter (3 Strikes Rule - STRICT PROTOCOL)',
+      'You are responsible for enforcing professional interview conduct. The candidate starts with 3 lives.',
       '',
-      '# The "Hit" Counter (3 Strikes Rule - CRITICAL INVARIANT)',
-      'You are responsible for tracking the candidate\'s mistakes. The candidate has exactly 3 lives.',
-      'A "Hit" is issued if the candidate:',
-      '  1. Gives a completely vague answer that is out of context of the interview, avoids the question, or deliberately wastes time.',
-      '  2. Remains silent for 5 seconds after being nudged.',
-      'CRITICAL RULE: A "wrong" answer is NOT a hit. Candidates are allowed to be wrong. Only issue a hit for out-of-context time-wasting or dead-air.',
-      'When issuing a hit, you MUST append the exact verbatim warning to your response:',
-      '- For Hit 1: Append "You have made 1 hit because [state the reason], 2 more and the interview is over."',
-      '- For Hit 2: Append "You have made 2 hits because [state the reason], 1 more and the interview is over."',
-      '- For Hit 3: Append "You have made 3 hits because [state the reason]. The interview is now over." (And immediately end the interview without asking further questions).',
+      'CRITICAL TIMING & SILENCE RULES (AVOID FALSE STRIKES):',
+      '1. PANELIST SPEECH IS NOT SILENCE: When a panelist is speaking or asking a question (which takes 5-15 seconds of audio), the candidate is listening respectfully! You must NEVER count the panelist\'s speaking time as candidate silence.',
+      '2. SILENCE CLOCK STARTS ONLY AFTER QUESTION COMPLETION: The 10-second silence window can ONLY be calculated AFTER the panelist has completely finished speaking their question and handed the floor to the candidate.',
+      '3. NEVER STRIKE AN ACTIVE SPEAKER: If the candidate says anything relevant (e.g. introducing themselves, answering the question, asking for clarification, pausing briefly to think with "Let me think...", or honestly stating "I don\'t know"), they ARE speaking! It is strictly FORBIDDEN to issue a silence strike to a candidate who has spoken or is speaking.',
+      '4. NO STRIKES ON INTRO / FIRST QUESTION: Never issue a silence strike during the opening introduction greeting. The candidate needs a few seconds to get situated in the room.',
+      '5. TWO-STEP SILENCE ESCALATION (NUDGE FIRST):',
+      '   - If the candidate remains completely silent for 10 seconds AFTER a question has concluded, the panelist must FIRST give a gentle verbal nudge (e.g. "Take your time, or let us know if you need any clarification on the question.") without issuing a strike!',
+      '   - ONLY if the candidate continues to be completely unresponsive for an additional 10 seconds after the nudge may you issue a silence strike.',
+      '',
+      'VALID REASONS FOR A HIT:',
+      'A "Hit" is ONLY issued if the candidate:',
+      '  1. Continues to be completely dead silent after a question has finished AND after a gentle nudge was already given.',
+      '  2. Deliberately trolls or gives an evasive, nonsensical response that is completely unrelated to the interview topic (e.g. talking about video games, cooking, or jokes when asked an interview question).',
+      '  3. Explicitly refuses to answer or participate (e.g. "I refuse to answer", "No, whatever").',
+      'CRITICAL DISTINCTION: Being technically wrong, giving an incomplete answer, or admitting "I don\'t know" is NEVER a hit! Candidates are encouraged to be honest when they do not know.',
+      '',
+      'MANDATORY VERBATIM HIT ANNOUNCEMENTS:',
+      'When issuing a hit, you MUST announce it explicitly and explain what the hit is for:',
+      '- For Hit 1: Verbatim append: "You have done a hit because [plainly explain the reason, e.g. you remained completely unresponsive even after our reminder / your answer was evasive and unrelated to the topic]. You have 2 strikes remaining."',
+      '- For Hit 2: Verbatim append: "You have done a second hit because [plainly explain reason]. You have 1 strike remaining."',
+      '- For Hit 3: Verbatim append: "You have done a third hit because [plainly explain reason]. That is 3 hits. The interview is now finished." (Conclude immediately without asking further questions).',
       '',
       '# Output Format',
       `- Exactly ONE panelist speaks per turn. NEVER speak as more than one panelist in a single turn.`,
@@ -175,201 +195,101 @@ export async function POST(request: NextRequest) {
       resumeVerificationGuideline,
       '',
       '# EXAMPLE INTERVIEW FLOW:',
-      `[Candidate]: "I actually don't have much experience with CI/CD pipelines, I'm sorry."`,
-      `[${p2.name} (${p2.role})]: "That is perfectly fine, thank you for your transparency. Let's pivot to database architecture. Can you explain..."`,
-      '',
-      `[${p3.name} (${p3.role})]: "How would you prioritize these two conflicting features?"`,
-      `[Candidate]: "I would use a Redis cache to reduce latency."`,
-      `[${p3.name} (${p3.role})]: "I appreciate the technical approach to latency, but from a product perspective, how do you decide which feature brings more business value to the user?"`,
+      `[${p1.name} (${p1.role})]: "Welcome ${candidateFirstName}! Could you introduce yourself and tell us a bit about your background?"`,
+      `[Candidate]: "Hello, I am a software engineer with 4 years experience building scalable backend microservices with Node.js and PostgreSQL."`,
+      `[${p1.name} (${p1.role})]: "Thank you for the introduction, ${candidateFirstName}. That gives us good context. I will now ask my colleague ${p2.name}, our ${p2.role}, to dive into technical architecture."`,
+      `[${p2.name} (${p2.role})]: "Thanks ${p1.name}. ${candidateFirstName}, when scaling PostgreSQL microservices under high write contention, how do you manage database connection pooling and isolation levels?"`,
+      `[Candidate]: "I actually don't have much experience with custom isolation levels, I usually rely on default Read Committed."`,
+      `[${p2.name} (${p2.role})]: "That is perfectly fine, thank you for your transparency. Let's pivot to database indexing..."`,
       '',
       `[${p1.name} (${p1.role})]: "Do you have any questions for the panel?"`,
       `[Candidate]: "Yes, what is the company culture like?"`,
       `[${p1.name} (${p1.role})]: "Our culture is highly collaborative..."`,
       `[Candidate]: "Thank you, I have no more questions."`,
-      `[${p1.name} (${p1.role})]: "Thank you for your time today. We will review your profile and the recruiting team will be in touch with the next steps."`
+      `[${p1.name} (${p1.role})]: "Thank you for your time today, ${candidateFirstName}. The interview is now finished."`
     ]
       .filter(Boolean)
       .join('\n');
 
     // --- 3. Build and start the Agora agents ---
+    // --- 3. Build and start the Unified Committee Agora agent ---
     const client = new AgoraClient({
       area: Area.US,
       appId,
       appCertificate,
     });
 
-    const agentIds: string[] = [];
     const geminiKey = process.env.GEMINI_API_KEY_INTERVIEW || process.env.GEMINI_API_KEY;
-    const publicTunnel = process.env.PUBLIC_URL || process.env.TUNNEL_URL;
 
-    if (publicTunnel && publicTunnel.startsWith('http')) {
-      // Multi-agent routed setup when a public webhook tunnel is present
-      for (let i = 0; i < 3; i++) {
-        const panelist = activeAgents[i];
-        const assignedUid = String(AGENT_UIDS[i]);
+    const llmProvider = new OpenAI({
+      apiKey: geminiKey || 'dummy',
+      model: 'gemini-3.1-flash-lite',
+      url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+      greetingMessage: greeting,
+      failureMessage: 'Please wait a moment.',
+      maxHistory: 50,
+      temperature: 0.7,
+    });
 
-        const llmProvider = new CustomLLM({
-          url: `${publicTunnel}/api/llm-router?agent=${encodeURIComponent(panelist.name)}&channel=${encodeURIComponent(channel_name)}`,
-          apiKey: 'dummy-key',
-          model: 'gemini-custom',
-          greetingMessage: i === 0 ? greeting : undefined,
-          failureMessage: 'Please wait a moment.',
-          maxHistory: 50,
-          params: {
-            max_tokens: 1024,
-            temperature: 0.7,
-            top_p: 0.95,
-          },
-        });
-
-        const agent = new Agent({
-          client,
-          instructions: systemPrompt,
-          greeting: i === 0 ? greeting : undefined,
-          failureMessage: 'Please wait a moment.',
-          maxHistory: 50,
-          turnDetection: {
-            config: {
-              speech_threshold: 0.5,
-              start_of_speech: {
-                mode: 'vad',
-                vad_config: {
-                  interrupt_duration_ms: 160,
-                  prefix_padding_ms: 300,
-                },
-              },
-              end_of_speech: {
-                mode: 'vad',
-                vad_config: {
-                  silence_duration_ms: 1500,
-                },
-              },
+    const agent = new Agent({
+      client,
+      instructions: systemPrompt,
+      failureMessage: 'Please wait a moment.',
+      maxHistory: 50,
+      turnDetection: {
+        config: {
+          speech_threshold: 0.5,
+          start_of_speech: {
+            mode: 'vad',
+            vad_config: {
+              interrupt_duration_ms: 160,
+              prefix_padding_ms: 300,
             },
           },
-          advancedFeatures: { enable_rtm: true, enable_tools: false },
-          parameters: {
-            audio_scenario: 'chorus',
-            data_channel: 'datastream',
-            enable_error_message: true,
-            enable_metrics: true,
-          },
-        })
-          .withStt(
-            new DeepgramSTT({
-              model: 'nova-3',
-              language: 'en',
-            }),
-          )
-          .withLlm(llmProvider)
-          .withTts(
-            new MiniMaxTTS({
-              model: 'speech_2_6_turbo',
-              voiceId: panelist.voiceId,
-            }),
-          );
-
-        const session = agent.createSession({
-          channel: channel_name,
-          agentUid: assignedUid,
-          remoteUids: requester_id ? [String(requester_id), '*'] : ['*'],
-          idleTimeout: 60,
-          expiresIn: ExpiresIn.hours(1),
-          debug: false,
-        });
-
-        const agentId = await session.start();
-        agentIds.push(agentId);
-
-        if (i === 0) {
-          try {
-            await session.say(greeting);
-          } catch (sayErr) {
-            console.warn('session.say error (non-fatal):', sayErr);
-          }
-        }
-      }
-    } else {
-      // Unified Committee session: single agent orchestrator representing all 3 panelists
-      // Uses speaker role tags [David], [Alex], [Maya] to drive turn-taking and UI cards
-      const llmProvider = new OpenAI({
-        apiKey: geminiKey || 'dummy',
-        model: 'gemini-3.1-flash-lite',
-        url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-        greetingMessage: greeting,
-        failureMessage: 'Please wait a moment.',
-        maxHistory: 50,
-        temperature: 0.7,
-      });
-
-      const agent = new Agent({
-        client,
-        instructions: systemPrompt,
-        greeting: greeting,
-        failureMessage: 'Please wait a moment.',
-        maxHistory: 50,
-        turnDetection: {
-          config: {
-            speech_threshold: 0.5,
-            start_of_speech: {
-              mode: 'vad',
-              vad_config: {
-                interrupt_duration_ms: 160,
-                prefix_padding_ms: 300,
-              },
-            },
-            end_of_speech: {
-              mode: 'vad',
-              vad_config: {
-                silence_duration_ms: 1800,
-              },
+          end_of_speech: {
+            mode: 'vad',
+            vad_config: {
+              silence_duration_ms: 650, // Ultra-responsive: saves 1.35s of dead air!
             },
           },
         },
-        advancedFeatures: { enable_rtm: true, enable_tools: false },
-        parameters: {
-          audio_scenario: 'chorus',
-          data_channel: 'datastream',
-          enable_error_message: true,
-          enable_metrics: true,
-        },
-      })
-        .withStt(
-          new DeepgramSTT({
-            model: 'nova-3',
-            language: 'en',
-          }),
-        )
-        .withLlm(llmProvider)
-        .withTts(
-          new MiniMaxTTS({
-            model: 'speech_2_6_turbo',
-            voiceId: p1.voiceId, // David's validated Trustworthy Man voice
-          }),
-        );
+      },
+      advancedFeatures: { enable_rtm: true, enable_tools: false },
+      parameters: {
+        audio_scenario: 'chorus',
+        data_channel: 'datastream',
+        enable_error_message: true,
+        enable_metrics: true,
+      },
+    })
+      .withStt(
+        new DeepgramSTT({
+          model: 'nova-3',
+          language: 'en',
+        }),
+      )
+      .withLlm(llmProvider)
+      .withTts(
+        new MiniMaxTTS({
+          model: 'speech_2_6_turbo',
+          voiceId: p1.voiceId, // David's validated Trustworthy Man voice
+        }),
+      );
 
-      const session = agent.createSession({
-        channel: channel_name,
-        agentUid: '123456',
-        remoteUids: requester_id ? [String(requester_id), '*'] : ['*'],
-        idleTimeout: 60,
-        expiresIn: ExpiresIn.hours(1),
-        debug: false,
-      });
+    const session = agent.createSession({
+      channel: channel_name,
+      agentUid: '123456',
+      remoteUids: requester_id ? [String(requester_id), '*'] : ['*'],
+      idleTimeout: 60,
+      expiresIn: ExpiresIn.hours(1),
+      debug: false,
+    });
 
-      const agentId = await session.start();
-      agentIds.push(agentId);
-
-      // Proactively speak the committee greeting so the candidate is addressed immediately upon joining
-      try {
-        await session.say(greeting);
-      } catch (sayErr) {
-        console.warn('session.say error (non-fatal, greetingMessage configured on LLM):', sayErr);
-      }
-    }
+    const agentId = await session.start();
 
     return NextResponse.json({
-      agent_id: agentIds[0],
-      agent_ids: agentIds,
+      agent_id: agentId,
+      agent_ids: [agentId],
       create_ts: Math.floor(Date.now() / 1000),
       state: 'RUNNING',
     });

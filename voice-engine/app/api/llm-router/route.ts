@@ -37,15 +37,27 @@ export async function POST(request: NextRequest) {
       const systemMessage = messages.find((m: any) => m.role === 'system')?.content || '';
       const userMessages = messages.filter((m: any) => m.role !== 'system');
       
-      // Convert OpenAI style messages to Gemini style
-      const geminiContents = userMessages.map((m: any) => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
-      }));
+      // Convert OpenAI style messages to Gemini style, merging consecutive messages of same role
+      const geminiContents: { role: string; parts: { text: string }[] }[] = [];
+      for (const m of userMessages) {
+        const role = m.role === 'assistant' ? 'model' : 'user';
+        const text = typeof m.content === 'string' ? m.content : JSON.stringify(m.content);
+        if (!text || !text.trim()) continue;
+        if (geminiContents.length > 0 && geminiContents[geminiContents.length - 1].role === role) {
+          geminiContents[geminiContents.length - 1].parts[0].text += '\n' + text;
+        } else {
+          geminiContents.push({ role, parts: [{ text }] });
+        }
+      }
+
+      const activeContents =
+        geminiContents.length > 0
+          ? geminiContents
+          : [{ role: 'user', parts: [{ text: 'Hello, let us begin the interview.' }] }];
 
       const geminiPromise = ai.models.generateContent({
-        model: 'gemini-3.5-flash',
-        contents: geminiContents,
+        model: 'gemini-3.1-flash-lite',
+        contents: activeContents,
         config: {
           systemInstruction: systemMessage,
           temperature: 0.7,
@@ -62,26 +74,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Await the shared Gemini response
-    const geminiText = await turn.promise;
+    const geminiText = (await turn.promise).trim();
 
-    // The prompt instructs the LLM to start with a bracketed tag, e.g. "[Maya (Product Manager)] Hello!"
+    // The prompt instructs the LLM to start with a bracketed tag, e.g. "[Mark (Product Manager)] Hello!"
     // We need to parse who is supposed to speak.
     let responseText = '';
     const match = geminiText.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
     
     if (match) {
-      const speakerTag = match[1]; // e.g., "Maya (Product Manager)"
-      const messageContent = match[2];
+      const speakerTag = match[1]; // e.g., "Mark (Product Manager)"
+      const messageContent = match[2].trim();
       
       // Check if the current agent's name is in the speaker tag
       if (speakerTag.toLowerCase().includes(agentName.toLowerCase())) {
         responseText = messageContent;
       } else {
-        // Not this agent's turn. Return empty.
+        // Not this agent's turn. Return empty so TTS remains silent.
         responseText = '';
       }
     } else {
-      // Fallback: If the LLM failed to use the tag, we default to the Chairperson (David)
+      // Fallback: If the LLM failed to use the tag, default to the Chairperson (David)
       if (agentName.toLowerCase() === 'david') {
         responseText = geminiText;
       } else {
@@ -94,7 +106,7 @@ export async function POST(request: NextRequest) {
       id: `chatcmpl-${Date.now()}`,
       object: 'chat.completion',
       created: Math.floor(Date.now() / 1000),
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.1-flash-lite',
       choices: [
         {
           index: 0,

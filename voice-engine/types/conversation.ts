@@ -5,6 +5,7 @@ export interface AgoraTokenData {
   uid: string;
   channel: string;
   agentId?: string;
+  agentIds?: string[];
 }
 
 export interface ClientStartRequest {
@@ -13,11 +14,13 @@ export interface ClientStartRequest {
 }
 
 export interface StopConversationRequest {
-  agent_id: string;
+  agent_id?: string;
+  agent_ids?: string[];
 }
 
 export interface AgentResponse {
   agent_id: string;
+  agent_ids?: string[];
   create_ts: number;
   state: string;
 }

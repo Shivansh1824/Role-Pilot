@@ -1,5 +1,18 @@
 import type { Metadata, Viewport } from 'next';
+import { Outfit, Inter } from 'next/font/google';
 import './globals.css';
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -8,9 +21,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Talk to your voice agent | Agora',
+  title: 'Role-Pilot | Adaptive AI Multi-Role Voice Interview Panel',
   description:
-    "Next.js quickstart: real-time voice agent with live transcript, streaming audio, and low latency from Agora's Conversational AI Engine—API routes in one repo.",
+    'Real-time adaptive voice interview platform powered by Agora Conversational AI with multi-role committee (Alex: Tech Lead, Mark: Product Manager, David: Hiring Manager).',
   icons: {
     icon: [
       { url: '/favicon.ico' },
@@ -18,18 +31,6 @@ export const metadata: Metadata = {
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
     ],
     apple: [{ url: '/apple-touch-icon.png' }],
-    other: [
-      {
-        url: '/android-chrome-192x192.png',
-        sizes: '192x192',
-        type: 'image/png',
-      },
-      {
-        url: '/android-chrome-512x512.png',
-        sizes: '512x512',
-        type: 'image/png',
-      },
-    ],
   },
 };
 
@@ -39,8 +40,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
-      <body className="h-full min-h-screen">{children}</body>
+    <html lang="en" className={`h-full dark ${outfit.variable} ${inter.variable}`}>
+      <body className="h-full min-h-screen bg-background text-foreground antialiased font-sans">
+        {children}
+      </body>
     </html>
   );
 }

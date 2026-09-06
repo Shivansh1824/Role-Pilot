@@ -11,21 +11,21 @@ export type PanelistConfig = {
 export const PANEL_CONFIGS: Record<string, PanelistConfig[]> = {
   tech: [
     { name: 'Alex', role: 'Technical Lead', focus: 'Architecture & Scaling', color: 'blue', icon: Cpu },
-    { name: 'Maya', role: 'Product Manager', focus: 'UX & Customer Impact', color: 'purple', icon: Briefcase },
+    { name: 'Mark', role: 'Product Manager', focus: 'UX & Customer Impact', color: 'purple', icon: Briefcase },
     { name: 'David', role: 'Hiring Manager', focus: 'STAR & Communication', color: 'emerald', icon: Users },
   ],
   sales: [
-    { name: 'Sarah', role: 'VP of Sales', focus: 'Closing & Objections', color: 'blue', icon: Briefcase },
+    { name: 'Sean', role: 'VP of Sales', focus: 'Closing & Objections', color: 'blue', icon: Briefcase },
     { name: 'Marcus', role: 'Sales Director', focus: 'Pipeline & Margins', color: 'purple', icon: Users },
     { name: 'David', role: 'Hiring Manager', focus: 'Quota & Resilience', color: 'emerald', icon: Users },
   ],
   hr: [
-    { name: 'Elena', role: 'HR Director', focus: 'Policy & Relations', color: 'blue', icon: Briefcase },
+    { name: 'Ethan', role: 'HR Director', focus: 'Policy & Relations', color: 'blue', icon: Briefcase },
     { name: 'Sam', role: 'Culture Lead', focus: 'DEI & Safety', color: 'purple', icon: Users },
     { name: 'David', role: 'Hiring Manager', focus: 'Mediation & Ethics', color: 'emerald', icon: Users },
   ],
   product: [
-    { name: 'Maya', role: 'Product Lead', focus: 'Strategy & Roadmap', color: 'purple', icon: Briefcase },
+    { name: 'Mark', role: 'Product Lead', focus: 'Strategy & Roadmap', color: 'purple', icon: Briefcase },
     { name: 'Alex', role: 'Technical Lead', focus: 'Feasibility & Debt', color: 'blue', icon: Cpu },
     { name: 'David', role: 'Hiring Manager', focus: 'Stakeholder Alignment', color: 'emerald', icon: Users },
   ],
@@ -77,7 +77,7 @@ export const TRACK_EVALUATIONS: Record<string, TrackEvaluationConfig> = {
       cardBlurb: 'High marks for caching architecture, SQL write-sharding, and Big-O awareness.',
     },
     panelist2: {
-      name: 'Maya',
+      name: 'Mark',
       roleTitle: 'Product Manager',
       keywords: /user|customer|metric|conversion|retention|impact|ux|tradeoff|business|product|checkout|sla/i,
       strengthTitle: 'Customer Value & Impact Articulation',
@@ -99,7 +99,7 @@ export const TRACK_EVALUATIONS: Record<string, TrackEvaluationConfig> = {
   },
   sales: {
     panelist1: {
-      name: 'Sarah',
+      name: 'Sean',
       roleTitle: 'VP of Sales',
       keywords: /deal|discount|cfo|budget|close|closing|objection|value|roi|contract|price|negotiat/i,
       strengthTitle: 'Executive Deal Navigation & Objections',
@@ -131,7 +131,7 @@ export const TRACK_EVALUATIONS: Record<string, TrackEvaluationConfig> = {
   },
   hr: {
     panelist1: {
-      name: 'Elena',
+      name: 'Ethan',
       roleTitle: 'HR Director',
       keywords: /investigation|policy|compliance|legal|relation|conduct|fairness|documentation|hr/i,
       strengthTitle: 'Compliance & Fact-Finding Rigor',
@@ -163,7 +163,7 @@ export const TRACK_EVALUATIONS: Record<string, TrackEvaluationConfig> = {
   },
   product: {
     panelist1: {
-      name: 'Maya',
+      name: 'Mark',
       roleTitle: 'Product Lead',
       keywords: /roadmap|metric|retention|user|customer|priorit|north star|kpi|discovery|mvp|experiment|churn/i,
       strengthTitle: 'Product Strategy & Outcome Prioritization',

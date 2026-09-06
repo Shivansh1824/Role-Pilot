@@ -848,28 +848,31 @@
       font-style: italic;
     }
 
-    /* ─── POPUPS / MODALS (THEMED) ────────────────────────────────────── */
+    /* ─── POPUPS / MODALS (ULTRA-FLUID & SYNCHRONIZED) ──────────────────── */
     .popup-overlay {
-      display: none;
       position: fixed;
       inset: 0;
       z-index: 1100;
       background: var(--overlay-color);
       backdrop-filter: var(--glass-blur);
       -webkit-backdrop-filter: var(--glass-blur);
+      display: flex;
       align-items: center;
       justify-content: center;
       padding: 1.25rem;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                  visibility 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                  backdrop-filter 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, visibility;
     }
 
     .popup-overlay.show {
-      display: flex;
-      animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes modalFadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
     }
 
     .popup-card {
@@ -879,14 +882,21 @@
       padding: 2rem;
       width: 100%;
       max-width: 600px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 229, 255, 0.08);
-      animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 50px rgba(0, 229, 255, 0.08);
       position: relative;
+      transform: scale(0.93) translateY(24px);
+      opacity: 0;
+      transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.36s ease;
+      will-change: transform, opacity;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
-    @keyframes modalSlideUp {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    .popup-overlay.show .popup-card {
+      transform: scale(1) translateY(0);
+      opacity: 1;
     }
 
     .popup-header {
@@ -894,6 +904,39 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 0.85rem;
+    }
+
+    .popup-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .popup-close-icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--card-surface);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.88rem;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      outline: none;
+    }
+
+    .popup-close-icon-btn:hover {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.35);
+      color: #ef4444;
+      transform: scale(1.08);
+    }
+
+    .popup-close-icon-btn:active {
+      transform: scale(0.95);
     }
 
     .popup-title {
@@ -1393,7 +1436,12 @@
     <div class="popup-card">
       <div class="popup-header">
         <div class="popup-title"><i class="fa-solid fa-briefcase" style="color:var(--accent)"></i> Target Role</div>
-        <div class="voice-listening-tag"><i class="fa-solid fa-waveform"></i> Voice Synced</div>
+        <div class="popup-header-actions">
+          <div class="voice-listening-tag"><i class="fa-solid fa-waveform"></i> Voice Synced</div>
+          <button class="popup-close-icon-btn" onclick="closePopup('role-popup')" title="Close" aria-label="Close modal">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
       </div>
       <p class="popup-subtitle">Speak your target role to Nova, or select a role below. Our AI classifier automatically matches it to the best interview panel.</p>
 
@@ -1440,7 +1488,12 @@
     <div class="popup-card">
       <div class="popup-header">
         <div class="popup-title"><i class="fa-solid fa-layer-group" style="color:var(--primary)"></i> Experience Level</div>
-        <div class="voice-listening-tag"><i class="fa-solid fa-waveform"></i> Voice Synced</div>
+        <div class="popup-header-actions">
+          <div class="voice-listening-tag"><i class="fa-solid fa-waveform"></i> Voice Synced</div>
+          <button class="popup-close-icon-btn" onclick="closePopup('exp-popup')" title="Close" aria-label="Close modal">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
       </div>
       <p class="popup-subtitle">Select or state your experience level. Questions and depth will be systematically calibrated to this tier.</p>
 
@@ -1491,7 +1544,12 @@
     <div class="popup-card">
       <div class="popup-header">
         <div class="popup-title"><i class="fa-solid fa-flag-checkered" style="color:var(--success)"></i> Interview Overview</div>
-        <div class="voice-listening-tag"><i class="fa-solid fa-sparkles"></i> Final Setup</div>
+        <div class="popup-header-actions">
+          <div class="voice-listening-tag"><i class="fa-solid fa-sparkles"></i> Final Setup</div>
+          <button class="popup-close-icon-btn" onclick="closePopup('overview-popup')" title="Close" aria-label="Close modal">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Section A: Resume -->
@@ -1527,6 +1585,7 @@
       <button class="launch-btn-primary" id="final-launch-btn" onclick="enterPanelRoom()">
         <i class="fa-solid fa-door-open"></i> Enter Multi-Role Panel Interview
       </button>
+      <button class="confirm-secondary-btn" onclick="closePopup('overview-popup')">Dismiss / Review Later</button>
     </div>
   </div>
 
@@ -1563,16 +1622,49 @@
     let transcriptBuffer = [];
     let parseDebounce = null;
 
-    // ─── POPUP UTILS ──────────────────────────────────────────────────────
+    // ─── POPUP UTILS (SYNCHRONIZED & FLUID TRANSITIONS) ───────────────────
     function showPopup(id) {
-      document.querySelectorAll('.popup-overlay').forEach(p => p.classList.remove('show'));
-      const el = document.getElementById(id);
-      if (el) el.classList.add('show');
+      const target = document.getElementById(id);
+      if (!target) return;
+
+      const currentlyOpen = Array.from(document.querySelectorAll('.popup-overlay.show')).filter(p => p.id !== id);
+
+      if (currentlyOpen.length > 0) {
+        // Smoothly dismiss currently open popups first, then glide in target
+        currentlyOpen.forEach(p => p.classList.remove('show'));
+        setTimeout(() => {
+          target.classList.add('show');
+        }, 160);
+      } else {
+        target.classList.add('show');
+      }
     }
+    window.showPopup = showPopup;
+
     window.closePopup = function(id) {
-      const el = document.getElementById(id);
-      if (el) el.classList.remove('show');
+      if (id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('show');
+      } else {
+        document.querySelectorAll('.popup-overlay.show').forEach(p => p.classList.remove('show'));
+      }
     };
+
+    // Backdrop click-to-dismiss for all popups
+    document.querySelectorAll('.popup-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          window.closePopup(overlay.id);
+        }
+      });
+    });
+
+    // Escape key dismisses any active popup
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        window.closePopup();
+      }
+    });
 
     // ─── UI & CHAT STREAM CONTROLS ────────────────────────────────────────
     function escapeHtml(text) {
@@ -2362,7 +2454,7 @@
           state.track = track;
           feedback.className = 'panel-feedback matched';
           icon.className = 'fa-solid fa-check-circle';
-          text.textContent = `Matched to ${track.toUpperCase()} Panel (Alex, Maya, David).`;
+          text.textContent = `Matched to ${track.toUpperCase()} Panel (Alex, Mark, David).`;
           document.getElementById('val-panel').textContent = `${track.toUpperCase()} Panel`;
           document.getElementById('val-panel').classList.remove('empty');
           document.getElementById('hud-panel').classList.add('captured');

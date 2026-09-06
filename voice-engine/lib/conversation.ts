@@ -110,9 +110,46 @@ export function normalizeTranscript(
 export function getMessageList(
   transcript: TranscriptHelperItem<Partial<UserTranscription | AgentTranscription>>[],
 ) {
-  return transcript
+  const rawList = transcript
     .filter((item) => item.status !== TurnStatus.IN_PROGRESS)
     .map(toMessageListItem);
+
+  // Deduplicate by turn_id and consecutive identical messages from the same speaker
+  const seenTurnIds = new Set<string | number>();
+  const deduped: typeof rawList = [];
+
+  for (const item of rawList) {
+    if (item.turn_id !== undefined && item.turn_id !== null) {
+      if (seenTurnIds.has(item.turn_id)) {
+        // If already seen this turn_id, replace if current has longer text
+        const existingIdx = deduped.findIndex((m) => m.turn_id === item.turn_id);
+        if (
+          existingIdx !== -1 &&
+          (item.text?.length ?? 0) > (deduped[existingIdx].text?.length ?? 0)
+        ) {
+          deduped[existingIdx] = item;
+        }
+        continue;
+      }
+      seenTurnIds.add(item.turn_id);
+    }
+
+    // Check against previous item to avoid consecutive duplicate text from the same speaker
+    const prev = deduped[deduped.length - 1];
+    if (
+      prev &&
+      prev.uid === item.uid &&
+      prev.text?.trim() &&
+      item.text?.trim() &&
+      prev.text.trim().toLowerCase() === item.text.trim().toLowerCase()
+    ) {
+      continue;
+    }
+
+    deduped.push(item);
+  }
+
+  return deduped;
 }
 
 // Returns the single active in-progress turn, or null when none exists.

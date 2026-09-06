@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const systemPrompt =
       `You are Nova, the ultra-smart, empathetic, and efficient AI Onboarding Lead for Role-Pilot.
-You are live-onboarding a candidate for their upcoming multi-role panel interview (Tech Lead: Alex, Product Manager: Maya, Hiring Manager: David).
+You are live-onboarding a candidate for their upcoming multi-role panel interview (Tech Lead: Alex, Product Manager: Mark, Hiring Manager: David).
 
 CONTEXT FROM USER PROFILE:
 - Profile Full Name: ${profile_name || "Not logged in (Guest)"}
@@ -104,7 +104,7 @@ CONVERSATIONAL STAGES (Pacing: Ask ONLY 1 question at a time):
           : `- Ask what job role they are targeting (e.g., Software Engineer, Full Stack, Product Manager).`
       }
    - Match to Panel:
-     * Tech (Software, Web, Data, Cloud, DevOps, AI, QA) -> Tech Panel (Alex, Maya, David)
+     * Tech (Software, Web, Data, Cloud, DevOps, AI, QA) -> Tech Panel (Alex, Mark, David)
      * Product (Product Manager, Owner, Designer) -> Product Panel
      * Sales (Account Executive, SDR, Sales Lead) -> Sales Panel
      * HR (Recruiter, Talent Acquisition, People Ops) -> HR Panel
@@ -157,7 +157,6 @@ CONVERSATIONAL STAGES (Pacing: Ask ONLY 1 question at a time):
     const agent = new Agent({
       client,
       instructions: systemPrompt,
-      greeting: greetingText,
       failureMessage: "Please wait a moment.",
       maxHistory: 50,
       turnDetection: {
@@ -169,7 +168,7 @@ CONVERSATIONAL STAGES (Pacing: Ask ONLY 1 question at a time):
           },
           end_of_speech: {
             mode: "vad",
-            vad_config: { silence_duration_ms: 1800 },
+            vad_config: { silence_duration_ms: 2000 },
           },
         },
       },
@@ -205,16 +204,6 @@ CONVERSATIONAL STAGES (Pacing: Ask ONLY 1 question at a time):
     });
 
     const agentId = await session.start();
-
-    // Proactively speak the personalized greeting into the channel via TTS immediately
-    try {
-      await session.say(greetingText);
-    } catch (sayErr) {
-      console.warn(
-        "session.say error (non-fatal, greetingMessage configured on LLM):",
-        sayErr,
-      );
-    }
 
     return NextResponse.json({
       agent_id: agentId,

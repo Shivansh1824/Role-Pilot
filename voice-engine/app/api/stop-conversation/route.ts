@@ -25,11 +25,15 @@ function isAgentAlreadyStoppingOrStopped(error: unknown): boolean {
 export async function POST(request: Request) {
   try {
     const body: StopConversationRequest = await request.json();
-    const { agent_id } = body;
+    const agentIds: string[] = body.agent_ids && body.agent_ids.length > 0
+      ? body.agent_ids
+      : body.agent_id
+      ? [body.agent_id]
+      : [];
 
-    if (!agent_id) {
+    if (agentIds.length === 0) {
       return NextResponse.json(
-        { error: 'agent_id is required' },
+        { error: 'agent_id or agent_ids is required' },
         { status: 400 },
       );
     }
@@ -48,15 +52,20 @@ export async function POST(request: Request) {
       appId,
       appCertificate,
     });
-    try {
-      await client.stopAgent(agent_id);
-    } catch (error) {
-      if (isAgentAlreadyStoppingOrStopped(error)) {
-        // Treat stop as idempotent: agent is already exiting (or gone).
-        return NextResponse.json({ success: true, state: 'already-stopping' });
-      }
-      throw error;
-    }
+
+    await Promise.all(
+      agentIds.map(async (id) => {
+        try {
+          await client.stopAgent(id);
+        } catch (error) {
+          if (isAgentAlreadyStoppingOrStopped(error)) {
+            // Treat stop as idempotent
+            return;
+          }
+          console.warn(`Non-fatal warning stopping agent ${id}:`, error);
+        }
+      }),
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

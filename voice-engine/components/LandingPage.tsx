@@ -13,9 +13,9 @@ import type {
 import { ErrorBoundary } from './ErrorBoundary';
 import { LoadingSkeleton } from './LoadingSkeleton';
 import { QuickstartPreCallCard } from './QuickstartPreCallCard';
-
 import { AIDisclosureModal } from './AIDisclosureModal';
 import { EvidenceScorecard, type TranscriptEntry } from './EvidenceScorecard';
+import { RolePilotHeader } from './RolePilotHeader';
 
 // Dynamically import the ConversationComponent with ssr disabled
 const ConversationComponent = dynamic(() => import('./ConversationComponent'), {
@@ -172,7 +172,11 @@ export default function LandingPage() {
 
       // 3. All dependencies ready — store state and show conversation
       setRtmClient(rtm);
-      setAgoraData({ ...responseData, agentId: agentData?.agent_id });
+      setAgoraData({
+        ...responseData,
+        agentId: agentData?.agent_id,
+        agentIds: agentData?.agent_ids,
+      });
       setShowScorecard(false);
       setShowConversation(true);
     } catch (err) {
@@ -217,19 +221,25 @@ export default function LandingPage() {
   );
 
   const handleEndConversation = async (transcript?: any[]) => {
-    // Stop the AI agent
-    if (agoraData?.agentId) {
+    // Stop the AI agent(s)
+    const agentIdsToStop = agoraData?.agentIds && agoraData.agentIds.length > 0
+      ? agoraData.agentIds
+      : agoraData?.agentId
+      ? [agoraData.agentId]
+      : [];
+
+    if (agentIdsToStop.length > 0) {
       try {
         const response = await fetch('/api/stop-conversation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agent_id: agoraData.agentId }),
+          body: JSON.stringify({ agent_ids: agentIdsToStop }),
         });
         if (!response.ok) {
-          console.error('Failed to stop agent:', await response.text());
+          console.error('Failed to stop agent(s):', await response.text());
         }
       } catch (error) {
-        console.error('Error stopping agent:', error);
+        console.error('Error stopping agent(s):', error);
       }
     }
 
@@ -246,27 +256,42 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="relative flex h-dvh min-h-screen flex-col overflow-hidden bg-background text-foreground">
+    <div className="relative flex h-dvh min-h-screen flex-col overflow-hidden bg-background text-foreground transition-colors duration-300">
+      {/* Role-Pilot Ambient Glowing Background Layers */}
+      <div className="rolepilot-bg-layers">
+        <div className="rolepilot-glow-1" />
+        <div className="rolepilot-glow-2" />
+      </div>
+
+      {/* Global Role-Pilot App Header with Theme Toggle */}
+      <RolePilotHeader
+        track={setupConfig.track}
+        candidateName={setupConfig.candidate}
+        isInCall={showConversation}
+        onEndInterview={showConversation ? handleEndConversation : undefined}
+      />
+
       {/* Pre-interview AI Disclosure Modal */}
       <AIDisclosureModal
         isOpen={showDisclosureModal}
         isLoading={isLoading}
         onConfirm={handleStartConversation}
+        onClose={() => setShowDisclosureModal(false)}
       />
 
       {/* Main View Shell */}
       <div
-        className={`flex min-h-0 flex-1 flex-col ${
+        className={`relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden ${
           showConversation || showScorecard
             ? 'items-stretch justify-start'
-            : 'items-center justify-center'
+            : 'items-center justify-center p-4'
         }`}
       >
         <div
           className={`z-10 flex min-h-0 flex-1 flex-col ${
             showConversation || showScorecard
               ? 'h-full w-full max-w-none items-stretch gap-0 px-0 text-left'
-              : 'w-full max-w-none items-center justify-center px-4 text-center'
+              : 'w-full max-w-none items-center justify-center text-center'
           }`}
         >
           {showScorecard ? (
@@ -293,7 +318,7 @@ export default function LandingPage() {
           ) : agoraData && rtmClient ? (
             <>
               {agentJoinError && (
-                <div className="p-3 bg-destructive/10 rounded-md text-destructive text-sm max-w-sm">
+                <div className="m-3 p-3 bg-destructive/10 border border-destructive/25 rounded-2xl text-destructive text-xs max-w-md mx-auto">
                   Failed to connect with AI agent. The conversation may not work as expected.
                 </div>
               )}
@@ -320,32 +345,32 @@ export default function LandingPage() {
         </div>
       </div>
 
-
-      {/* Persistent attribution footer for the pre-call and in-call views. */}
-      <footer className="fixed bottom-0 right-0 z-40 py-4 pr-4 md:py-6 md:pr-6">
-        <div className="flex items-center justify-end gap-2 text-muted-foreground">
-          <span className="text-xs font-medium tracking-wide uppercase">
-            Powered by
-          </span>
-          <a
-            href="https://agora.io/en/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-primary transition-colors"
-            aria-label="Visit Agora's website"
-          >
-            <Image
-              src="/agora-logo-rgb-blue.svg"
-              alt="Agora"
-              width={86}
-              height={24}
-              priority
-              className="h-6 w-auto hover:opacity-80 transition-opacity translate-y-1"
-            />
-            <span className="sr-only">Agora</span>
-          </a>
-        </div>
-      </footer>
+      {/* Persistent attribution footer for the pre-call view */}
+      {!showConversation && !showScorecard && (
+        <footer className="fixed bottom-0 right-0 z-20 py-4 pr-4 md:py-5 md:pr-6 pointer-events-none">
+          <div className="flex items-center justify-end gap-2 text-muted-foreground pointer-events-auto bg-card/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-border/60 text-xs shadow-sm">
+            <span className="text-[10px] font-bold tracking-wider uppercase opacity-70">
+              Powered by
+            </span>
+            <a
+              href="https://agora.io/en/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-80 transition-opacity"
+              aria-label="Visit Agora's website"
+            >
+              <Image
+                src="/agora-logo-rgb-blue.svg"
+                alt="Agora"
+                width={70}
+                height={20}
+                priority
+                className="h-4 w-auto"
+              />
+            </a>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
