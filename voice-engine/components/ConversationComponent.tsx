@@ -23,7 +23,7 @@ import {
 } from 'agora-agent-client-toolkit';
 import { AgentVisualizer } from 'agora-agent-uikit';
 import { MicButtonWithVisualizer } from 'agora-agent-uikit/rtc';
-import { DEFAULT_AGENT_UID } from '@/lib/agora';
+import { DEFAULT_AGENT_UID, isAgentUid } from '@/lib/agora';
 import {
   getCurrentInProgressMessage,
   getMessageList,
@@ -93,6 +93,8 @@ function isRtmSalStatusPayload(value: unknown): value is RtmSalStatusPayload {
 export default function ConversationComponent({
   agoraData,
   rtmClient,
+  track = 'tech',
+  candidateName,
   onTokenWillExpire,
   onEndConversation,
 }: ConversationComponentProps) {
@@ -215,7 +217,7 @@ export default function ConversationComponent({
       try {
         const ai = await AgoraVoiceAI.init({
           rtcEngine: client,
-          rtmConfig: { rtmEngine: rtmClient },
+          rtmConfig: rtmClient ? { rtmEngine: rtmClient } : undefined,
           renderMode: TranscriptHelperMode.TEXT,
           enableLog: true,
         });
@@ -352,9 +354,13 @@ export default function ConversationComponent({
       }
     };
 
-    rtmClient.addEventListener('message', handleRtmMessage);
+    if (rtmClient) {
+      rtmClient.addEventListener('message', handleRtmMessage);
+    }
     return () => {
-      rtmClient.removeEventListener('message', handleRtmMessage);
+      if (rtmClient) {
+        rtmClient.removeEventListener('message', handleRtmMessage);
+      }
     };
   }, [rtmClient, addConnectionIssue]);
 
@@ -379,20 +385,23 @@ export default function ConversationComponent({
   usePublish([localMicrophoneTrack]);
 
   useClientEvent(client, 'user-joined', (user) => {
-    if (user.uid.toString() === agentUID) setIsAgentConnected(true);
+    if (isAgentUid(user.uid, client?.uid) || user.uid.toString() === agentUID) setIsAgentConnected(true);
   });
 
   useClientEvent(client, 'user-left', (user) => {
-    if (user.uid.toString() === agentUID) setIsAgentConnected(false);
+    const hasRemainingAgents = remoteUsers.some(
+      (u) => u.uid !== user.uid && (isAgentUid(u.uid, client?.uid) || u.uid.toString() === agentUID),
+    );
+    setIsAgentConnected(hasRemainingAgents);
   });
 
   // Sync isAgentConnected with remoteUsers (covers cases where user-joined/left are missed)
   useEffect(() => {
     const isAgentInRemoteUsers = remoteUsers.some(
-      (user) => user.uid.toString() === agentUID,
+      (user) => isAgentUid(user.uid, client?.uid) || user.uid.toString() === agentUID,
     );
     setIsAgentConnected(isAgentInRemoteUsers);
-  }, [remoteUsers, agentUID]);
+  }, [remoteUsers, client?.uid, agentUID]);
 
   useClientEvent(client, 'connection-state-change', (curState) => {
     setConnectionState(curState);
@@ -456,7 +465,9 @@ export default function ConversationComponent({
         joinedUID.toString(),
       );
       await client?.renewToken(rtcToken);
-      await rtmClient.renewToken(rtmToken);
+      if (rtmClient) {
+        await rtmClient.renewToken(rtmToken);
+      }
     } catch (error) {
       console.error('Failed to renew Agora token:', error);
     }
@@ -464,12 +475,143 @@ export default function ConversationComponent({
 
   useClientEvent(client, 'token-privilege-will-expire', handleTokenWillExpire);
 
+  const getPanelistNameByUid = useCallback(
+    (uid: number | string | undefined): string | null => {
+      const num = Number(uid);
+      if (num === 1001) return 'David';
+      if (num === 1002) {
+        if (track === 'sales') return 'Marcus';
+        if (track === 'hr') return 'Sam';
+        return 'Alex';
+      }
+      if (num === 1003) {
+        if (track === 'sales') return 'Sean';
+        if (track === 'hr') return 'Ethan';
+        return 'Mark';
+      }
+      return null;
+    },
+    [track],
+  );
+
+  const activeSpeaker = useMemo<string | null>(() => {
+    // Check in-progress agent turn first
+    if (currentInProgressMessage) {
+      const byUid = getPanelistNameByUid(currentInProgressMessage.uid);
+      if (byUid) return byUid;
+      const activeText = currentInProgressMessage.text || '';
+      const match = activeText.match(/\[([A-Za-z]+)/);
+      if (match) return match[1];
+    }
+    // Scan backwards through completed messages for the last agent utterance
+    for (let i = messageList.length - 1; i >= 0; i--) {
+      const msg = messageList[i];
+      if (isAgentUid(msg.uid, client.uid)) {
+        const byUid = getPanelistNameByUid(msg.uid);
+        if (byUid) return byUid;
+        const t = msg.text || '';
+        const match = t.match(/\[([A-Za-z]+)/);
+        if (match) return match[1];
+      }
+    }
+    return null;
+  }, [currentInProgressMessage, messageList, client.uid, getPanelistNameByUid]);
+
+  const isAgentSpeaking =
+    agentState === AgentState.SPEAKING || visualizerState === 'talking';
+
   const handleEndConversation = useCallback(async () => {
     onEndConversation(messageList);
   }, [onEndConversation, messageList]);
 
+  // Track hits from transcript with comprehensive matching
+  const hitCount = useMemo(() => {
+    let hits = 0;
+    const allMsgs = [...messageList, currentInProgressMessage].filter(Boolean);
+    for (const msg of allMsgs) {
+      if (!msg?.text || !isAgentUid(msg.uid, client.uid)) continue;
+      const t = msg.text.toLowerCase();
+      if (
+        t.includes('done a third hit') ||
+        t.includes('done a 3rd hit') ||
+        t.includes('third hit') ||
+        t.includes('that is 3 hits') ||
+        t.includes('3 strikes')
+      ) {
+        hits = Math.max(hits, 3);
+      } else if (
+        t.includes('done a second hit') ||
+        t.includes('done a 2nd hit') ||
+        t.includes('second hit') ||
+        t.includes('1 strike remaining') ||
+        t.includes('2 strikes')
+      ) {
+        hits = Math.max(hits, 2);
+      } else if (
+        t.includes('done a hit') ||
+        t.includes('done a first hit') ||
+        t.includes('done 1 hit') ||
+        t.includes('made a hit') ||
+        t.includes('first hit') ||
+        t.includes('2 strikes remaining')
+      ) {
+        hits = Math.max(hits, 1);
+      }
+    }
+    return hits;
+  }, [messageList, currentInProgressMessage]);
+
+  // Auto-end interview on candidate voice command ("interview finish") or agent conclusion or 3 hits
+  useEffect(() => {
+    const allMsgs = [...messageList, currentInProgressMessage].filter(Boolean);
+    if (allMsgs.length === 0) return;
+    const lastMsg = allMsgs[allMsgs.length - 1];
+    if (!lastMsg?.text) return;
+
+    const text = lastMsg.text.toLowerCase();
+    const isAgent = isAgentUid(lastMsg.uid, client.uid);
+
+    // 1. Candidate explicitly says "interview finish" or equivalent
+    const isCandidateFinishRequest =
+      !isAgent &&
+      (text.includes('interview finish') ||
+        text.includes('finish interview') ||
+        text.includes('finish the interview') ||
+        text.includes('end interview') ||
+        text.includes('end the interview') ||
+        text.includes('stop the interview') ||
+        text.includes('close interview') ||
+        text.includes('close the interview') ||
+        text.includes('we are done'));
+
+    // 2. Agent announces the interview is now finished / concluded
+    const isAgentFinishAnnouncement =
+      isAgent &&
+      (text.includes('interview is now finished') ||
+        text.includes('interview is now over') ||
+        text.includes('conclude the interview here') ||
+        text.includes('interview is now concluded'));
+
+    // 3. 3 strikes reached
+    const isMaxHits = hitCount >= 3;
+
+    if (isAgentFinishAnnouncement || isCandidateFinishRequest || isMaxHits) {
+      // Allow TTS audio to finish speaking to candidate before switching to scorecard
+      const delay = isAgentFinishAnnouncement ? 4000 : isMaxHits ? 4500 : 6000;
+      const timer = setTimeout(() => {
+        handleEndConversation();
+      }, delay);
+      return () => clearTimeout(timer);
+    }
+  }, [messageList, currentInProgressMessage, hitCount, client.uid, handleEndConversation]);
+
   return (
     <QuickstartConversationLayout
+      track={track}
+      candidateName={candidateName}
+      activeSpeaker={activeSpeaker}
+      isSpeaking={isAgentSpeaking}
+      hitCount={hitCount}
       statusPanel={
         <ConnectionStatusPanel
           connectionState={connectionState}
@@ -485,6 +627,8 @@ export default function ConversationComponent({
           messageList={messageList}
           currentInProgressMessage={currentInProgressMessage}
           agentUID={agentUID}
+          candidateName={candidateName}
+          candidateUid={agoraData.uid || client?.uid}
         />
       }
       visualizer={

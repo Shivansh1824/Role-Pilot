@@ -9,41 +9,34 @@ import {
   OpenAI,
 } from 'agora-agents';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
-import { DEFAULT_AGENT_UID } from '@/lib/agora';
 
-// Multi-Role Interview Panel Orchestrator Prompt (Problem Statement 11)
-const MULTI_ROLE_PANEL_PROMPT = `You are the AI Interview Committee for Role-Pilot, conducting an adaptive, multi-role voice interview. You dynamically represent THREE distinct panelists who take turns evaluating the candidate:
+// We use 3 specific UID ranges for our 3 agents to avoid collisions
+const AGENT_UIDS = [1001, 1002, 1003];
 
-# The Interview Panelists
-1. **Alex (Technical Lead)**: Sharp, analytical, and systems-minded. Focuses on code architecture, data structures, Big-O complexity, database trade-offs, caching, concurrency, and failure recovery.
-2. **Maya (Product Manager)**: Strategic, customer-obsessed, and metrics-driven. Challenges the candidate on user experience (UX), customer impact, business implications, conversion drop-offs, and product trade-offs.
-3. **David (Hiring Manager / Behavioral Lead)**: Observant, empathetic, and culture-focused. Evaluates communication clarity, STAR methodology (Situation, Task, Action, Result), team conflict resolution, and ownership.
+const TRACK_AGENTS: Record<string, { name: string; role: string; voiceId: string }[]> = {
+  tech: [
+    { name: 'David', role: 'Hiring Manager', voiceId: 'English_Trustworth_Man' },
+    { name: 'Alex', role: 'Technical Lead', voiceId: 'English_Trustworth_Man' },
+    { name: 'Mark', role: 'Product Manager', voiceId: 'English_Trustworth_Man' },
+  ],
+  sales: [
+    { name: 'David', role: 'Hiring Manager', voiceId: 'English_Trustworth_Man' },
+    { name: 'Marcus', role: 'Sales Director', voiceId: 'English_Trustworth_Man' },
+    { name: 'Sean', role: 'VP of Sales', voiceId: 'English_Trustworth_Man' },
+  ],
+  hr: [
+    { name: 'David', role: 'Hiring Manager', voiceId: 'English_Trustworth_Man' },
+    { name: 'Sam', role: 'Culture Lead', voiceId: 'English_Trustworth_Man' },
+    { name: 'Ethan', role: 'HR Director', voiceId: 'English_Trustworth_Man' },
+  ],
+  product: [
+    { name: 'David', role: 'Hiring Manager', voiceId: 'English_Trustworth_Man' },
+    { name: 'Alex', role: 'Technical Lead', voiceId: 'English_Trustworth_Man' },
+    { name: 'Mark', role: 'Product Lead', voiceId: 'English_Trustworth_Man' },
+  ],
+};
 
-# Speaker Tagging Protocol (CRITICAL)
-- At the very beginning of EVERY message or speech turn, you MUST declare who is speaking using the exact bracket format:
-  \`[Alex (Tech Lead)]\` OR \`[Maya (Product Manager)]\` OR \`[David (Hiring Manager)]\`
-- If handing off within the same turn, use the corresponding tag:
-  Example: \`[Alex (Tech Lead)] The Redis caching layer handles the read load nicely. Maya, how does this affect customer checkout consistency? [Maya (Product Manager)] Exactly Alex. Candidate, if a user sees a stale inventory count during checkout, how will that affect our customer trust and conversion rate?\`
-
-# Adaptive Turn-Taking & Dynamic Cross-Examination
-- **Shared Context**: All panelists share the candidate's entire history and previous statements.
-- **Scenario Focus**: Begin with an engineering scenario (e.g., scaling an e-commerce checkout or real-time event pipeline).
-- **The "Business Impact" Trigger**: If the candidate provides a technically correct answer but fails to explain its impact on customers or business metrics, Alex should accept the technical merit and hand off to Maya to challenge the business implications.
-- **Vague Answer Detection**: If the candidate gives vague buzzwords (e.g., "we just scale with cloud/microservices"), immediately probe for specific mechanisms, numbers, or protocols.
-- **Contradiction Detection**: If the candidate contradicts an earlier statement (e.g., single-node ACID vs distributed eventual consistency), politely challenge them to resolve the contradiction.
-- **Adaptive Difficulty**: Start at Mid-Level. If the candidate demonstrates deep mastery, escalate to edge cases (split-brain, thundering herd, cascading failure). If they struggle, provide targeted scaffolding.
-
-# Voice Conversation Rules
-- **Keep it brief**: 1 to 3 spoken sentences per turn. This is a live voice conversation over WebRTC.
-- **Never list or enumerate**: No markdown bullet points or numbered lists. Speak naturally.
-- **Ask ONE focused question per turn**: Never stack multiple questions.`;
-
-// Initial greeting to start the interview session
-const GREETING = `[David (Hiring Manager)] Welcome to your Role-Pilot panel interview! I'm David, and I'm joined by Alex from Engineering and Maya from Product. Alex, would you like to kick off with our first scenario? [Alex (Tech Lead)] Thanks David. Let's dive in. Imagine we need to scale a high-traffic checkout service that experiences 10x traffic spikes during flash sales. How would you design the data layer to handle high read and write throughput?`;
-
-
-// agentUid identifies the AI in the RTC channel and shares its default with the client.
-const agentUid = String(DEFAULT_AGENT_UID);
+// Removed static TRACK_PROMPTS. The prompt is now dynamically generated using TRACK_AGENTS.
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -54,12 +47,19 @@ function requireEnv(name: string): string {
 export async function POST(request: NextRequest) {
   try {
     // --- 1. Parse request ---
+    const body = await request.json();
+    const {
+      requester_id,
+      channel_name,
+      // Interview setup fields (from interview-setup.html wizard)
+      track = 'tech',          // 'tech' | 'sales' | 'hr' | 'product'
+      candidate_name = 'Candidate',
+      role = 'Software Engineer',
+      experience_level = 'Mid-Level',
+      difficulty_mode = 'auto', // 'auto' | 'easy' | 'medium' | 'hard' | 'expert'
+      resume_summary = '',      // Compact 300-word resume fact-sheet (injected for grounding)
+    } = body;
 
-    const body: ClientStartRequest = await request.json();
-    const { requester_id, channel_name } = body;
-
-    // Validate required env vars on first request so misconfiguration surfaces
-    // with a clear error message rather than a silent failure.
     const appId = requireEnv('NEXT_PUBLIC_AGORA_APP_ID');
     const appCertificate = requireEnv('NEXT_AGORA_APP_CERTIFICATE');
 
@@ -70,54 +70,194 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // --- 2. Build and start the agent ---
+    // --- 2. Resolve panel track and build personalised system prompt ---
+    const rawName = typeof candidate_name === 'string' ? candidate_name.trim() : '';
+    const resolvedCandidateName = rawName && rawName.toLowerCase() !== 'candidate' ? rawName : 'Alex';
+    const candidateFirstName = resolvedCandidateName.split(' ')[0];
 
-    // AgoraClient authenticates API calls to the Agora Conversational AI service.
-    // area: change to Area.EU or Area.AP for European or Asia-Pacific deployments.
+    const trackKey = (track as string).toLowerCase();
+    const activeAgents = TRACK_AGENTS[trackKey] || TRACK_AGENTS['tech'];
+    const p1 = activeAgents[0]; // David (Chair)
+    const p2 = activeAgents[1]; // Lead Specialist
+    const p3 = activeAgents[2]; // Second Specialist
+
+    const greeting = `[${p1.name} (${p1.role})] Welcome ${candidateFirstName}! I'm ${p1.name}, the hiring manager, and I'm joined today by ${p2.name} our ${p2.role} and ${p3.name} our ${p3.role}. To kick things off, could you introduce yourself, ${candidateFirstName}, and tell us a bit about your background?`;
+
+    const difficultyInstruction =
+      difficulty_mode === 'auto'
+        ? `Auto-Adaptive Difficulty: Start at the baseline depth expectation for a ${experience_level}. If the candidate answers correctly, push them harder with edge cases. If they give a wrong or vague answer, lower the complexity but demand clarity.`
+        : `Fixed Difficulty Tier: You are locked to "${difficulty_mode}" difficulty. However, this is relative to their experience. An 'Easy' question for a Senior is still a Senior-level concept, but asked in a straightforward, predictable way. An 'Expert' question for a Fresher is a Fresher-level concept wrapped in a complex, multi-step scenario.`;
+
+    const resumeVerificationGuideline = resume_summary
+      ? [
+          '# Ground-Truth: Resume + Target Role (CRITICAL)',
+          'Resume Fact-Sheet:',
+          resume_summary,
+          '',
+          'HYBRID VERIFICATION PROTOCOL:',
+          '1. The panel MUST cross-check the candidate\'s spoken introduction against the Resume Fact-Sheet.',
+          `2. The interview is NOT just a resume review. The panel MUST ask standard industry questions aligned with the Target Role (${role}) to ensure they actually have the skills required for the job.`,
+          '3. Never invent employers, tools, or metrics not present in the Resume Fact-Sheet or spoken by the candidate.',
+        ].join('\n')
+      : [
+          '# Ground-Truth: Target Role Focus (Interview Without Resume)',
+          `The candidate is interviewing without an uploaded resume. The Target Role (${role}) and the candidate's spoken introduction are the ONLY sources of truth.`,
+          `Formulate all scenarios and questions based heavily on standard industry expectations and situational challenges for a ${role} at the ${experience_level} level.`,
+          'Never invent fictional past employers or tools the candidate did not speak about. Use your standard industry knowledge to verify their claims.',
+        ].join('\n');
+
+    const systemPrompt = [
+      `You are the AI Interview Committee for Role-Pilot (Track: ${trackKey.toUpperCase()}).`,
+      `You represent THREE distinct panelists present in the room together:`,
+      `1. ${p1.name} (${p1.role}): Panel chair, focused on leadership, conflict resolution, culture, and closing.`,
+      `2. ${p2.name} (${p2.role}): Lead Specialist, focused on deep execution, architecture, or domain expertise.`,
+      `3. ${p3.name} (${p3.role}): Second Specialist, focused on cross-functional impact, metrics, and business outcomes.`,
+      '',
+      '# Candidate Profile (GROUND TRUTH)',
+      `Full Name: ${resolvedCandidateName}`,
+      `Spoken First Name: ${candidateFirstName}`,
+      `Target Role: ${role}`,
+      `Experience Level: ${experience_level}`,
+      resume_summary ? 'Resume Status: Verified fact-sheet attached below' : 'Resume Status: None (General Competency & Intro-Anchored Mode)',
+      '',
+      '# Addressing Invariant (ABSOLUTE REQUIREMENT)',
+      `Address the candidate directly by their first name ("${candidateFirstName}"). NEVER call them "candidate", "a candidate", "the user", or "username".`,
+      '',
+      '# EXPLICIT VERBAL HANDOFF PROTOCOL (MANDATORY REQUIREMENT)',
+      'The panelists are a cohesive committee in the same room. Panelists MUST explicitly address each other by name and verbally hand off the conversation when switching speakers.',
+      `- After ${candidateFirstName}'s introduction, Chairperson ${p1.name} MUST acknowledge the introduction (e.g. "Thank you for the introduction, ${candidateFirstName}. That gives us helpful context on your background. I will now ask my colleague ${p2.name}, our ${p2.role}, to dive into the technical domain.") and pass the floor directly to ${p2.name}.`,
+      `- When ${p2.name} finishes their questioning, ${p2.name} MUST verbally pass the floor to ${p3.name} (e.g. "Thank you ${candidateFirstName}, that covers my questions on architecture. ${p3.name}, over to you for product and business impact.").`,
+      `- When ${p3.name} finishes, ${p3.name} MUST verbally pass back to Chairperson ${p1.name} (e.g. "${p1.name}, that wraps up my section. Passing back to you for culture and closing questions.").`,
+      `- If ${candidateFirstName} brings up a topic outside the current speaker's domain, the speaker hands off directly to the appropriate specialist by name.`,
+      '',
+      '# Minimum Question Quota & 4-Stage Interview Progression',
+      'The interview is structured across 4 sequential stages. EACH of the two domain specialists must ask a minimum of 2 to 3 deep questions before the interview concludes.',
+      '',
+      `STATE 1: ROOM OPENING`,
+      `- Chairperson ${p1.name} welcomes ${candidateFirstName} and asks for a spoken introduction.`,
+      '',
+      `STATE 2: LEAD SPECIALIST DRILL`,
+      `- ${p2.name} takes over after ${p1.name}'s verbal handoff, probes deeper for 2-3 turns.`,
+      '',
+      `STATE 3: SECOND SPECIALIST CROSS-EXAMINATION`,
+      `- ${p3.name} takes over after ${p2.name}'s verbal handoff, challenges candidate on related metrics or impacts for 2-3 turns.`,
+      '',
+      `STATE 4: OPENER (${p1.name}) CLOSING & Q&A`,
+      `- ${p1.name} asks 1-2 final behavioral/culture questions.`,
+      `- ${p1.name} then formally opens the floor for the candidate to ask questions.`,
+      `- IF the candidate asks a technical question, ${p2.name} answers. IF they ask about culture/HR, ${p1.name} or ${p3.name} answers.`,
+      `- Once the candidate has no more questions, ${p1.name} closes strictly and professionally: "Thank you for your time today, ${candidateFirstName}. The interview is now finished."`,
+      '',
+      '# Candidate Request to Finish Interview (EARLY TERMINATION PROTOCOL)',
+      'If the candidate states that they want to end, finish, or close the interview (e.g. "interview finish", "finish the interview", "let\'s end here", "I want to stop", "close interview"):',
+      `Chairperson ${p1.name} MUST immediately close the session professionally:`,
+      `"[${p1.name} (${p1.role})] Understood, ${candidateFirstName}. We will conclude the interview here. Thank you for your time today. The interview is now finished."`,
+      'Do NOT ask any further questions or prolong the conversation.',
+      '',
+      '# Core Invariants (A+ Grade Prompt)',
+      '1. **Professional Persona**: Maintain a highly professional, objective, and corporate tone. Do not use casual slang or overly enthusiastic affirmations.',
+      `2. **The 'I Don't Know' Rule**: If ${candidateFirstName} professionally admits they do not know an answer, acknowledge it respectfully without demotivating them (e.g., "Thank you for your transparency. Let's pivot to..."), and move on immediately.`,
+      '3. **Evaluation Protocol**: Evaluate accuracy using standard industry best practices. If a claim is factually incorrect, do not just say "Wrong." Challenge it politely: "Typically X is used for Y because of Z. How would your approach handle Z?"',
+      '',
+      '# The "Hit" Counter (3 Strikes Rule - STRICT PROTOCOL)',
+      'You are responsible for enforcing professional interview conduct. The candidate starts with 3 lives.',
+      '',
+      'CRITICAL TIMING & SILENCE RULES (AVOID FALSE STRIKES):',
+      '1. PANELIST SPEECH IS NOT SILENCE: When a panelist is speaking or asking a question (which takes 5-15 seconds of audio), the candidate is listening respectfully! You must NEVER count the panelist\'s speaking time as candidate silence.',
+      '2. SILENCE CLOCK STARTS ONLY AFTER QUESTION COMPLETION: The 10-second silence window can ONLY be calculated AFTER the panelist has completely finished speaking their question and handed the floor to the candidate.',
+      '3. NEVER STRIKE AN ACTIVE SPEAKER: If the candidate says anything relevant (e.g. introducing themselves, answering the question, asking for clarification, pausing briefly to think with "Let me think...", or honestly stating "I don\'t know"), they ARE speaking! It is strictly FORBIDDEN to issue a silence strike to a candidate who has spoken or is speaking.',
+      '4. NO STRIKES ON INTRO / FIRST QUESTION: Never issue a silence strike during the opening introduction greeting. The candidate needs a few seconds to get situated in the room.',
+      '5. TWO-STEP SILENCE ESCALATION (NUDGE FIRST):',
+      '   - If the candidate remains completely silent for 10 seconds AFTER a question has concluded, the panelist must FIRST give a gentle verbal nudge (e.g. "Take your time, or let us know if you need any clarification on the question.") without issuing a strike!',
+      '   - ONLY if the candidate continues to be completely unresponsive for an additional 10 seconds after the nudge may you issue a silence strike.',
+      '',
+      'VALID REASONS FOR A HIT:',
+      'A "Hit" is ONLY issued if the candidate:',
+      '  1. Continues to be completely dead silent after a question has finished AND after a gentle nudge was already given.',
+      '  2. Deliberately trolls or gives an evasive, nonsensical response that is completely unrelated to the interview topic (e.g. talking about video games, cooking, or jokes when asked an interview question).',
+      '  3. Explicitly refuses to answer or participate (e.g. "I refuse to answer", "No, whatever").',
+      'CRITICAL DISTINCTION: Being technically wrong, giving an incomplete answer, or admitting "I don\'t know" is NEVER a hit! Candidates are encouraged to be honest when they do not know.',
+      '',
+      'MANDATORY VERBATIM HIT ANNOUNCEMENTS:',
+      'When issuing a hit, you MUST announce it explicitly and explain what the hit is for:',
+      '- For Hit 1: Verbatim append: "You have done a hit because [plainly explain the reason, e.g. you remained completely unresponsive even after our reminder / your answer was evasive and unrelated to the topic]. You have 2 strikes remaining."',
+      '- For Hit 2: Verbatim append: "You have done a second hit because [plainly explain reason]. You have 1 strike remaining."',
+      '- For Hit 3: Verbatim append: "You have done a third hit because [plainly explain reason]. That is 3 hits. The interview is now finished." (Conclude immediately without asking further questions).',
+      '',
+      '# Output Format',
+      `- Exactly ONE panelist speaks per turn. NEVER speak as more than one panelist in a single turn.`,
+      `- Every response MUST start with the speaker's tag exactly matching their name and role.`,
+      `  Example tags: "[${p1.name} (${p1.role})]", "[${p2.name} (${p2.role})]", "[${p3.name} (${p3.role})]".`,
+      `- Keep each response to 1-3 spoken sentences. No markdown bullets.`,
+      '',
+      `# Difficulty Calibration: ${difficultyInstruction}`,
+      '',
+      resumeVerificationGuideline,
+      '',
+      '# EXAMPLE INTERVIEW FLOW:',
+      `[${p1.name} (${p1.role})]: "Welcome ${candidateFirstName}! Could you introduce yourself and tell us a bit about your background?"`,
+      `[Candidate]: "Hello, I am a software engineer with 4 years experience building scalable backend microservices with Node.js and PostgreSQL."`,
+      `[${p1.name} (${p1.role})]: "Thank you for the introduction, ${candidateFirstName}. That gives us good context. I will now ask my colleague ${p2.name}, our ${p2.role}, to dive into technical architecture."`,
+      `[${p2.name} (${p2.role})]: "Thanks ${p1.name}. ${candidateFirstName}, when scaling PostgreSQL microservices under high write contention, how do you manage database connection pooling and isolation levels?"`,
+      `[Candidate]: "I actually don't have much experience with custom isolation levels, I usually rely on default Read Committed."`,
+      `[${p2.name} (${p2.role})]: "That is perfectly fine, thank you for your transparency. Let's pivot to database indexing..."`,
+      '',
+      `[${p1.name} (${p1.role})]: "Do you have any questions for the panel?"`,
+      `[Candidate]: "Yes, what is the company culture like?"`,
+      `[${p1.name} (${p1.role})]: "Our culture is highly collaborative..."`,
+      `[Candidate]: "Thank you, I have no more questions."`,
+      `[${p1.name} (${p1.role})]: "Thank you for your time today, ${candidateFirstName}. The interview is now finished."`
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    // --- 3. Build and start the Agora agents ---
+    // --- 3. Build and start the Unified Committee Agora agent ---
     const client = new AgoraClient({
       area: Area.US,
       appId,
       appCertificate,
     });
 
-    // Pipeline: Deepgram (reseller) STT → OpenAI (reseller) LLM → MiniMax (reseller) TTS.
-    // Omit vendor API keys for supported models — AgentKit infers reseller presets on start (see Agora Console / billing).
-    const agent = new Agent({
-      client,
-      instructions: MULTI_ROLE_PANEL_PROMPT,
-      greeting: GREETING,
+    const geminiKey = process.env.GEMINI_API_KEY_INTERVIEW || process.env.GEMINI_API_KEY;
+
+    const llmProvider = new OpenAI({
+      apiKey: geminiKey || 'dummy',
+      model: 'gemini-3.1-flash-lite',
+      url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+      greetingMessage: greeting,
       failureMessage: 'Please wait a moment.',
       maxHistory: 50,
-      // VAD controls how the agent detects the start and end of a user's turn.
+      temperature: 0.7,
+    });
+
+    const agent = new Agent({
+      client,
+      instructions: systemPrompt,
+      failureMessage: 'Please wait a moment.',
+      maxHistory: 50,
       turnDetection: {
         config: {
           speech_threshold: 0.5,
           start_of_speech: {
             mode: 'vad',
             vad_config: {
-              interrupt_duration_ms: 160, // ms of speech before interruption triggers
-              prefix_padding_ms: 300, // audio captured before speech is detected
+              interrupt_duration_ms: 160,
+              prefix_padding_ms: 300,
             },
           },
           end_of_speech: {
             mode: 'vad',
             vad_config: {
-              silence_duration_ms: 480, // ms of silence before turn ends
+              silence_duration_ms: 650, // Ultra-responsive: saves 1.35s of dead air!
             },
           },
         },
       },
-      // RTM is required for transcript events in the browser client.
-      // enable_tools is required for MCP tool invocation.
-      advancedFeatures: { enable_rtm: true, enable_tools: true },
-      // Required for browser RTM events:
-      // - data_channel: 'rtm' enables RTM delivery path for state/metrics/errors
-      // - enable_error_message emits AGENT_ERROR payloads
-      // - enable_metrics emits AGENT_METRICS latency payloads
+      advancedFeatures: { enable_rtm: true, enable_tools: false },
       parameters: {
-        // web client → ultra-low-latency chorus profile
         audio_scenario: 'chorus',
-        data_channel: 'rtm',
+        data_channel: 'datastream',
         enable_error_message: true,
         enable_metrics: true,
       },
@@ -127,69 +267,32 @@ export async function POST(request: NextRequest) {
           model: 'nova-3',
           language: 'en',
         }),
-        // BYOK: uncomment the following block and set NEXT_DEEPGRAM_API_KEY
-        // new DeepgramSTT({
-        //   apiKey: requireEnv('NEXT_DEEPGRAM_API_KEY'),
-        //   model: 'nova-3',
-        //   language: 'en',
-        // }),
       )
-      .withLlm(
-        new OpenAI({
-          model: 'gpt-4o-mini',
-          greetingMessage: GREETING,
-          failureMessage: 'Please wait a moment.',
-          maxHistory: 15,
-          params: {
-            max_tokens: 1024,
-            temperature: 0.7,
-            top_p: 0.95,
-          },
-        }),
-        // BYOK: uncomment the following block and set NEXT_LLM_API_KEY and NEXT_LLM_URL
-        // new OpenAI({
-        //   apiKey: requireEnv('NEXT_LLM_API_KEY'),
-        //   url: requireEnv('NEXT_LLM_URL'),
-        //   model: 'gpt-4o-mini',
-        //   greetingMessage: GREETING,
-        //   failureMessage: 'Please wait a moment.',
-        //   maxHistory: 15,
-        //   maxTokens: 1024,
-        //   temperature: 0.7,
-        //   topP: 0.95,
-        // }),
-      )
+      .withLlm(llmProvider)
       .withTts(
         new MiniMaxTTS({
           model: 'speech_2_6_turbo',
-          voiceId: 'English_captivating_female1',
+          voiceId: p1.voiceId, // David's validated Trustworthy Man voice
         }),
-        // BYOK — ElevenLabs (set NEXT_ELEVENLABS_API_KEY; optional NEXT_ELEVENLABS_VOICE_ID)
-        // new (await import('agora-agents')).ElevenLabsTTS({
-        //   key: requireEnv('NEXT_ELEVENLABS_API_KEY'),
-        //   modelId: 'eleven_flash_v2_5',
-        //   voiceId: process.env.NEXT_ELEVENLABS_VOICE_ID ?? 'pNInz6obpgDQGcFmaJgB',
-        //   sampleRate: 24000,
-        // }),
       );
 
-    // remoteUids restricts the agent to only process audio from this user
     const session = agent.createSession({
       channel: channel_name,
-      agentUid,
-      remoteUids: [requester_id],
-      idleTimeout: 30,
+      agentUid: '123456',
+      remoteUids: requester_id ? [String(requester_id), '*'] : ['*'],
+      idleTimeout: 60,
       expiresIn: ExpiresIn.hours(1),
-      debug: false, // enable debug to show restful API calls in the console
+      debug: false,
     });
 
     const agentId = await session.start();
 
     return NextResponse.json({
       agent_id: agentId,
+      agent_ids: [agentId],
       create_ts: Math.floor(Date.now() / 1000),
       state: 'RUNNING',
-    } as AgentResponse);
+    });
   } catch (error) {
     console.error('Error starting conversation:', error);
     return NextResponse.json(

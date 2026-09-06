@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RtcTokenBuilder, RtcRole } from 'agora-token';
+import { RtcTokenBuilder, RtcRole, RtmTokenBuilder } from 'agora-token';
 
 const EXPIRATION_TIME_IN_SECONDS = 3600;
 
@@ -29,24 +29,45 @@ export async function GET(request: NextRequest) {
     : parsedUid;
   const channelName = searchParams.get('channel') || generateChannelName();
 
-  const expirationTime =
-    Math.floor(Date.now() / 1000) + EXPIRATION_TIME_IN_SECONDS;
+  const expiry = EXPIRATION_TIME_IN_SECONDS; // 3600 seconds (1 hour)
 
   try {
-    // console.log('Building RTC+RTM token: uid =', uid, 'channel =', channelName);
-    const token = RtcTokenBuilder.buildTokenWithRtm(
+    // Generate RTC token for the numeric UID to join RTC channels
+    const rtcToken = RtcTokenBuilder.buildTokenWithUid(
       APP_ID,
       APP_CERTIFICATE,
       channelName,
-      uid.toString(),
+      uid,
       RtcRole.PUBLISHER,
-      expirationTime,
-      expirationTime,
+      expiry,
+      expiry,
     );
-    // console.log('Token generated successfully (RTC + RTM)');
+
+    // Build dedicated RTM token for client-side RTM login
+    let rtmToken: string = '';
+    try {
+      rtmToken = RtmTokenBuilder.buildToken(
+        APP_ID,
+        APP_CERTIFICATE,
+        uid.toString(),
+        expiry,
+      );
+    } catch (_) {
+      rtmToken = RtcTokenBuilder.buildTokenWithRtm(
+        APP_ID,
+        APP_CERTIFICATE,
+        channelName,
+        uid.toString(),
+        RtcRole.PUBLISHER,
+        expiry,
+        expiry,
+      );
+    }
 
     return NextResponse.json({
-      token,
+      token: rtcToken,
+      rtcToken,
+      rtmToken,
       uid: uid.toString(),
       channel: channelName,
     });
