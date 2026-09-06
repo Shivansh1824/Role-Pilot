@@ -56,13 +56,14 @@
         
         <div class="header-center">
             <nav class="header-nav">
-                <a href="index.html#how-it-guides" class="nav-link">Features</a>
-                <a href="index.html#live-dashboard" class="nav-link">Live Demo</a>
-                <a href="index.html#global-leaderboard" class="nav-link">Leaderboard</a>
+                <a href="index.html#panels-section" class="nav-link">Domain Panels</a>
+                <a href="index.html#nova-section" class="nav-link">Nova Voice Prep</a>
+                <a href="index.html#demo-section" class="nav-link">Interactive Demo</a>
+                <a href="careers.html" class="nav-link">Careers</a>
                 <a href="index.html#faq" class="nav-link">FAQ</a>
                 <div class="mobile-only-actions">
                     <a href="login.html" class="btn-secondary-outline mobile-nav-btn">Sign In</a>
-                    <a href="login.html" class="btn btn-header mobile-nav-btn">Get Started</a>
+                    <a href="gear-up.html" class="btn btn-header mobile-nav-btn">Launch Panel</a>
                 </div>
             </nav>
         </div>
@@ -70,7 +71,7 @@
         <div class="header-actions">
             <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
             <a href="login.html" id="header-signin-btn" class="btn-secondary-outline">Sign In</a>
-            <a href="login.html" class="btn btn-header header-signup-desktop">Get Started</a>
+            <a href="gear-up.html" class="btn btn-header header-signup-desktop">Launch Panel</a>
             <button class="mobile-menu-toggle" aria-label="Toggle Mobile Menu">
                 <i class="fa-solid fa-bars"></i>
             </button>
@@ -80,27 +81,39 @@
     <main class="page-main subpage-main">
         <section class="subpage-content-section">
             <div class="section-header">
-                <h2>Terms of Service</h2>
-                <p>The rules governing fair use and platform integrity.</p>
+                <h2>Terms of <span class="gradient-text">Service</span></h2>
+                <p>Platform rules, acceptable voice interaction standards, and simulation disclaimers.</p>
             </div>
             <div class="image-glass-wrapper content-glass-panel">
                 <div class="premium-content-body">
                     <h3>1. Acceptance of Terms</h3>
-                    <p>By accessing and using Role-Pilot, you accept and agree to be bound by the terms and provision of this agreement. In addition, when using Role-Pilot's specific services, you shall be subject to any posted guidelines or rules applicable to such services.</p>
+                    <p>By accessing or utilizing Role-Pilot ("Platform"), you agree to be bound by these Terms of Service. If you disagree with any portion of these terms, you must discontinue your use of our real-time voice interview platform, conversational onboarding agents, and analytical services immediately.</p>
 
-                    <h3>2. Fair Use and Coding Arena Integrity</h3>
-                    <p>The Coding Arena and Global Leaderboard are designed to be a meritocratic representation of a candidate's abilities. We enforce strict rules to maintain this integrity:</p>
+                    <h3>2. Real-Time Voice Streaming & Audio Access</h3>
+                    <p>Role-Pilot provides real-time, bidirectional voice simulation powered by Agora WebRTC communication. To access voice sessions with Nova and the multi-role interview committees, you must grant temporary browser microphone access. You acknowledge that your spoken audio will be processed in real time by neural speech recognition and language models strictly for the duration of the interview session.</p>
+
+                    <h3>3. Acceptable Use & Voice Conduct</h3>
+                    <p>Role-Pilot is an enterprise preparation platform for professionals. When engaging in voice sessions, you agree to adhere to standard professional conduct. You are strictly prohibited from:</p>
                     <ul>
-                        <li><strong>No Plagiarism:</strong> Copying code from external sources, utilizing unauthorized generative AI tools during timed assessments, or sharing solutions is strictly prohibited.</li>
-                        <li><strong>Multi-Account Cheating:</strong> Creating multiple accounts to artificially boost rankings, manipulate XP, or preview coding challenges is a violation of these terms and will result in immediate hardware-level bans.</li>
+                        <li><strong>Abusive or Defamatory Language:</strong> Using hate speech, harassment, vulgarity, or threatening behavior toward other users or platform AI personas.</li>
+                        <li><strong>Audio Stream Interception:</strong> Reverse-engineering Agora channel authorization tokens, unauthorized recording or rebroadcasting of internal voice feeds, or attempting packet tampering.</li>
+                        <li><strong>Prompt Injection Attacks:</strong> Attempting to manipulate AI interviewers into revealing system prompts, bypassing role constraints, or executing malicious code payloads.</li>
+                        <li><strong>Denial of Service:</strong> Flooding audio endpoints, initiating concurrent synthetic sessions, or attempting to exhaust platform API token quotas.</li>
                     </ul>
-                    <p>Our platform employs advanced heuristics to detect anomalous coding patterns and submission velocities to ensure a level playing field.</p>
 
-                    <h3>3. Recruiter Outreach and Communications</h3>
-                    <p>By opting into the Global Leaderboard, you agree that authorized recruiters and hiring partners may contact you regarding career opportunities based on your platform performance. Role-Pilot acts solely as a facilitator and is not responsible for the outcome of any external hiring processes, negotiations, or employment agreements.</p>
+                    <h3>4. Simulated Evaluation & No Guarantee of Employment</h3>
+                    <p>Role-Pilot provides simulated interview loops and automated feedback for educational, practice, and candidate readiness purposes. You acknowledge that:</p>
+                    <ul>
+                        <li>Interview competency scores, STAR evaluations, and growth gap assessments are generated by artificial intelligence.</li>
+                        <li>Role-Pilot does not guarantee employment offers, interview invitations, or hiring decisions with any third-party employer.</li>
+                        <li>Our evaluations represent automated readiness benchmarks, not binding professional or legal certifications.</li>
+                    </ul>
 
-                    <h3>4. AI Proctoring Consent</h3>
-                    <p>For specific high-stakes assessments, Role-Pilot may request permission to enable automated AI proctoring (monitoring active windows, analyzing typing cadence). Participation in these verified assessments implies consent to this monitoring for the duration of the test. Refusal to consent may limit your eligibility for certain leaderboard tiers.</p>
+                    <h3>5. Intellectual Property & Candidate Data</h3>
+                    <p>You retain full ownership of your uploaded resume, personal credentials, and interview transcript data. Role-Pilot and its licensors retain all proprietary rights to the platform software, multi-agent turn-taking orchestration algorithms, user interface designs, and AI audio pipelines.</p>
+
+                    <h3>6. Modifications to Service</h3>
+                    <p>We reserve the right to modify or discontinue features, update track rosters, or refine AI scoring algorithms to enhance platform performance and security.</p>
                 </div>
             </div>
         </section>
@@ -122,7 +135,7 @@
                         </svg>
                         <span class="logo-text">Role<span>Pilot</span></span>
                     </a>
-                    <p class="footer-pitch">Master technical interviews, optimize your ATS compatibility, and climb the recruiter-facing global leaderboard using voice-adaptive AI agents.</p>
+                    <p class="footer-pitch">The enterprise multi-role AI voice interview platform. Master technical, product, and leadership rounds with specialized AI committees.</p>
                     <div class="footer-socials">
                         <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
                         <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
@@ -135,21 +148,21 @@
                 <div class="footer-links-col">
                     <h3>Product</h3>
                     <ul>
-                        <li><a href="login.html">AI Mock Interviews</a></li>
-                        <li><a href="login.html">ATS Compatibility</a></li>
-                        <li><a href="login.html">Resume Tailoring</a></li>
-                        <li><a href="login.html">Coding Arena</a></li>
+                        <li><a href="gear-up.html">Voice Warm-Up (Nova)</a></li>
+                        <li><a href="interview-setup.html">Multi-Role Panels</a></li>
+                        <li><a href="interview-setup.html">Adaptive Difficulty</a></li>
+                        <li><a href="interview-setup.html">Evidence Scorecard</a></li>
                     </ul>
                 </div>
                 
-                <!-- Column 3: Resources -->
+                <!-- Column 3: Domain Panels -->
                 <div class="footer-links-col">
-                    <h3>Resources</h3>
+                    <h3>Domain Panels</h3>
                     <ul>
-                        <li><a href="#">System Design Guide</a></li>
-                        <li><a href="login.html">Global Leaderboard</a></li>
-                        <li><a href="#">Developer Documentation</a></li>
-                        <li><a href="#">API Status</a></li>
+                        <li><a href="interview-setup.html?track=tech">Tech Engineering</a></li>
+                        <li><a href="interview-setup.html?track=product">Product Leadership</a></li>
+                        <li><a href="interview-setup.html?track=sales">Enterprise Sales & GTM</a></li>
+                        <li><a href="interview-setup.html?track=hr">HR & People Ops</a></li>
                     </ul>
                 </div>
                 
@@ -158,15 +171,16 @@
                     <h3>Company</h3>
                     <ul>
                         <li><a href="about.html">About Us</a></li>
-                        <li><a href="#">Careers</a></li>
+                        <li><a href="careers.html">Careers</a></li>
                         <li><a href="privacy.html">Privacy Policy</a></li>
                         <li><a href="terms.html">Terms of Service</a></li>
+                        <li><a href="cookies.html">Cookies</a></li>
                     </ul>
                 </div>
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2026 Role-Pilot. All rights reserved. Built for modern engineers.</p>
+                <p>&copy; 2026 Role-Pilot. All rights reserved. Enterprise AI Voice Interview Platform.</p>
                 <div class="footer-bottom-links">
                     <a href="privacy.html">Privacy</a>
                     <a href="terms.html">Terms</a>

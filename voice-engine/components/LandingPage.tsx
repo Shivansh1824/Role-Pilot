@@ -299,7 +299,7 @@ export default function LandingPage() {
               transcript={finalTranscript}
               agentUID={agoraData?.agentId || '123456'}
               onRestart={() => setShowScorecard(false)}
-              onReturnToDashboard={() => (window.location.href = 'http://localhost:8000/dashboard.html')}
+              onReturnToDashboard={() => (window.location.href = '/dashboard.html')}
               role={setupConfig.role}
               difficulty={setupConfig.difficulty}
               track={setupConfig.track}

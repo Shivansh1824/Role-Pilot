@@ -117,7 +117,7 @@ export function EvidenceScorecard({
       });
     }
 
-    // 2. Analyze Panelist 2 (Cross-Functional / PS11 Interjection Lead)
+    // 2. Analyze Panelist 2 (Cross-Functional / Specialist Lead)
     const p2Regex = new RegExp(`\\[${evalConfig.panelist2.name}|^${evalConfig.panelist2.name}:|${evalConfig.panelist2.name}\\s*\\(`, 'i');
     const p2Prompt = agentTurns.find((t) => p2Regex.test(t.text || ''));
     const p2Answer = candidateTurns.find((t) => evalConfig.panelist2.keywords.test(t.text || '')) || candidateTurns[1] || candidateTurns[0];

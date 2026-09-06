@@ -74,7 +74,7 @@ export function RolePilotHeader({
       {/* Left: Brand Logo matching Role-Pilot base design */}
       <div className="flex items-center gap-3">
         <a
-          href="http://localhost:8000/dashboard.html"
+          href="/dashboard.html"
           className="group flex items-center gap-2.5 transition-transform duration-200 hover:scale-[1.02]"
           title="Return to Role-Pilot Dashboard"
         >
@@ -100,7 +100,7 @@ export function RolePilotHeader({
         {/* Small separator & Session Indicator */}
         <div className="hidden lg:flex items-center gap-2 border-l border-border/70 pl-3">
           <span className="rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
-            EchoSphere PS11
+            AI Voice Committee
           </span>
         </div>
       </div>
@@ -108,14 +108,14 @@ export function RolePilotHeader({
       {/* Center: Main Navigation Tabs */}
       <nav className="hidden md:flex items-center gap-1 rounded-full border border-border/60 bg-muted/30 p-1 backdrop-blur-md">
         <a
-          href="http://localhost:8000/dashboard.html"
+          href="/dashboard.html"
           className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-card/40"
         >
           <LayoutDashboard className="h-3.5 w-3.5" />
           <span>Dashboard</span>
         </a>
         <a
-          href="http://localhost:8000/gear-up.html"
+          href="/gear-up.html"
           className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-card/40"
         >
           <Mic className="h-3.5 w-3.5 text-cyan-400" />
@@ -156,7 +156,7 @@ export function RolePilotHeader({
 
         {/* Return to Dashboard */}
         <a
-          href="http://localhost:8000/dashboard.html"
+          href="/dashboard.html"
           className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-border/70 bg-card/60 px-3.5 py-1.5 text-xs font-semibold text-foreground transition-all duration-200 hover:bg-card hover:border-primary/40 hover:shadow-sm"
         >
           <LayoutDashboard className="h-3.5 w-3.5 text-muted-foreground" />
@@ -178,14 +178,14 @@ export function RolePilotHeader({
       {mobileMenuOpen && (
         <div className="absolute top-16 left-0 z-50 flex w-full flex-col gap-3 border-b border-border/70 bg-card/95 p-4 shadow-2xl backdrop-blur-2xl md:hidden animate-fade-in">
           <a
-            href="http://localhost:8000/dashboard.html"
+            href="/dashboard.html"
             className="flex items-center gap-2 rounded-lg p-2.5 text-sm font-medium text-foreground hover:bg-muted"
           >
             <LayoutDashboard className="h-4 w-4" />
             <span>Dashboard</span>
           </a>
           <a
-            href="http://localhost:8000/gear-up.html"
+            href="/gear-up.html"
             className="flex items-center gap-2 rounded-lg p-2.5 text-sm font-medium text-foreground hover:bg-muted"
           >
             <Mic className="h-4 w-4 text-cyan-400" />

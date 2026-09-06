@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - Role-Pilot</title>
+    <title>Cookie Policy - Role-Pilot</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Inline Theme Script (Crucial: Place immediately in <head> to prevent FOUC / flickering) -->
@@ -56,14 +56,13 @@
         
         <div class="header-center">
             <nav class="header-nav">
-                <a href="index.html#panels-section" class="nav-link">Domain Panels</a>
-                <a href="index.html#nova-section" class="nav-link">Nova Voice Prep</a>
-                <a href="index.html#demo-section" class="nav-link">Interactive Demo</a>
-                <a href="careers.html" class="nav-link">Careers</a>
+                <a href="index.html#how-it-guides" class="nav-link">Features</a>
+                <a href="index.html#live-dashboard" class="nav-link">Live Demo</a>
+                <a href="index.html#global-leaderboard" class="nav-link">Leaderboard</a>
                 <a href="index.html#faq" class="nav-link">FAQ</a>
                 <div class="mobile-only-actions">
                     <a href="login.html" class="btn-secondary-outline mobile-nav-btn">Sign In</a>
-                    <a href="gear-up.html" class="btn btn-header mobile-nav-btn">Launch Panel</a>
+                    <a href="login.html" class="btn btn-header mobile-nav-btn">Get Started</a>
                 </div>
             </nav>
         </div>
@@ -71,7 +70,7 @@
         <div class="header-actions">
             <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
             <a href="login.html" id="header-signin-btn" class="btn-secondary-outline">Sign In</a>
-            <a href="gear-up.html" class="btn btn-header header-signup-desktop">Launch Panel</a>
+            <a href="login.html" class="btn btn-header header-signup-desktop">Get Started</a>
             <button class="mobile-menu-toggle" aria-label="Toggle Mobile Menu">
                 <i class="fa-solid fa-bars"></i>
             </button>
@@ -81,47 +80,25 @@
     <main class="page-main subpage-main">
         <section class="subpage-content-section">
             <div class="section-header">
-                <h2>Privacy <span class="gradient-text">Policy</span></h2>
-                <p>Enterprise data security, ephemeral audio processing, and candidate privacy rights.</p>
+                <h2>Cookie Policy</h2>
+                <p>How we use cookies to provide a seamless platform experience.</p>
             </div>
             <div class="image-glass-wrapper content-glass-panel">
                 <div class="premium-content-body">
-                    <h3>Introduction</h3>
-                    <p>Role-Pilot ("we", "our", "us") is dedicated to protecting your personal information, biometric voice data, and privacy rights. This Privacy Policy governs the collection, processing, and protection of information when you interact with our real-time AI voice interview platform, conversational onboarding agents, and evidence scorecards.</p>
+                    <h3>What Are Cookies?</h3>
+                    <p>Cookies are small text files that are stored on your device (computer, tablet, or mobile) when you visit a website. They are widely used to make websites work more efficiently and provide information to the owners of the site.</p>
 
-                    <h3>Real-Time Voice Streaming & Ephemeral Audio Processing</h3>
-                    <p>During voice sessions with Nova and our multi-role interview committees, audio is transmitted in real time using the Agora Software-Defined Real-Time Network (SD-RTN™):</p>
-                    <ul>
-                        <li><strong>Ephemeral Voice Pipelines:</strong> Spoken audio streams are converted to text in transient memory using Deepgram STT and answered via MiniMax TTS. <strong>Your raw microphone audio streams are never persistently recorded, stored on disk, or used to train public foundation models without your explicit consent.</strong></li>
-                        <li><strong>Encryption in Transit:</strong> All voice packets are protected with industry-standard DTLS and SRTP encryption from your browser directly through Agora edge servers.</li>
-                    </ul>
+                    <h3>Essential Session Tracking</h3>
+                    <p>Role-Pilot uses strictly necessary cookies to maintain your session state. This ensures that when you transition between the ATS Analyzer, the Coding Arena, and the TruGen Voice agent, your authentication status and assessment progress are preserved without requiring repeated logins. These cookies are critical for the platform's core functionality.</p>
 
-                    <h3>Conversational Transcripts & Evidence Scorecards</h3>
-                    <p>To deliver our core service—evaluating candidate responses and providing multi-agent committee interaction:</p>
-                    <ul>
-                        <li>We generate textual transcripts during live sessions to coordinate turn-taking between AI panelists (e.g., David, Alex, Mark, Marcus, Sean, Sam, Ethan).</li>
-                        <li>Transcripts are analyzed by our scoring engine to map answers against STAR behavioral competencies and domain depth criteria.</li>
-                        <li>Generated scorecards, including cited quotes and growth feedback, are saved privately to your account dashboard and are visible only to you.</li>
-                    </ul>
+                    <h3>Theme and UI Preferences</h3>
+                    <p>We utilize local storage (which functions similarly to cookies) to remember your interface preferences, such as your chosen light or dark mode theme. This ensures a consistent, flicker-free visual experience across all platform pages upon your return.</p>
 
-                    <h3>Resume Fact-Sheet Synthesis</h3>
-                    <p>When you provide your resume during onboarding or review your background with Nova, our system extracts a compact, 300-word candidate fact-sheet. This fact-sheet is utilized exclusively during that specific session to ground panelist questions in your verified background and prevent AI hallucinations. You can remove or re-upload your resume at any time.</p>
+                    <h3>Performance and Analytics Telemetry</h3>
+                    <p>With your consent, we deploy performance cookies to understand how users interact with the Role-Pilot platform. This helps us optimize load times, debug complex UI interactions, and improve the overall responsiveness of our web application. The data collected is aggregated and anonymized.</p>
 
-                    <h3>Security & Sub-Processors</h3>
-                    <p>We work with enterprise infrastructure providers that maintain rigorous compliance certifications (SOC 2 Type II, ISO 27001, GDPR):</p>
-                    <ul>
-                        <li><strong>Agora:</strong> Real-time WebRTC audio transport and low-latency channel streaming.</li>
-                        <li><strong>Deepgram:</strong> Streaming speech-to-text transcription with continuous interim results.</li>
-                        <li><strong>Supabase:</strong> Encrypted database and user authentication with Row Level Security (RLS).</li>
-                    </ul>
-
-                    <h3>Your Privacy Rights & Data Deletion</h3>
-                    <p>You maintain full ownership of your interview data. Through your account settings, you have the right to:</p>
-                    <ul>
-                        <li>Export your complete interview history and performance scorecards.</li>
-                        <li>Permanently delete individual session transcripts or wipe your entire candidate profile with immediate effect.</li>
-                        <li>Revoke browser microphone permissions at any time.</li>
-                    </ul>
+                    <h3>Managing Your Preferences</h3>
+                    <p>You have the right to decide whether to accept or reject non-essential cookies. You can exercise your cookie rights by setting your preferences in the cookie consent banner that appears upon your first visit, or by modifying your browser settings to decline cookies. Please note that disabling essential cookies may prevent you from utilizing our core AI features.</p>
                 </div>
             </div>
         </section>
@@ -143,7 +120,7 @@
                         </svg>
                         <span class="logo-text">Role<span>Pilot</span></span>
                     </a>
-                    <p class="footer-pitch">The enterprise multi-role AI voice interview platform. Master technical, product, and leadership rounds with specialized AI committees.</p>
+                    <p class="footer-pitch">Master technical interviews, optimize your ATS compatibility, and climb the recruiter-facing global leaderboard using voice-adaptive AI agents.</p>
                     <div class="footer-socials">
                         <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
                         <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
@@ -156,21 +133,21 @@
                 <div class="footer-links-col">
                     <h3>Product</h3>
                     <ul>
-                        <li><a href="gear-up.html">Voice Warm-Up (Nova)</a></li>
-                        <li><a href="interview-setup.html">Multi-Role Panels</a></li>
-                        <li><a href="interview-setup.html">Adaptive Difficulty</a></li>
-                        <li><a href="interview-setup.html">Evidence Scorecard</a></li>
+                        <li><a href="login.html">AI Mock Interviews</a></li>
+                        <li><a href="login.html">ATS Compatibility</a></li>
+                        <li><a href="login.html">Resume Tailoring</a></li>
+                        <li><a href="login.html">Coding Arena</a></li>
                     </ul>
                 </div>
                 
-                <!-- Column 3: Domain Panels -->
+                <!-- Column 3: Resources -->
                 <div class="footer-links-col">
-                    <h3>Domain Panels</h3>
+                    <h3>Resources</h3>
                     <ul>
-                        <li><a href="interview-setup.html?track=tech">Tech Engineering</a></li>
-                        <li><a href="interview-setup.html?track=product">Product Leadership</a></li>
-                        <li><a href="interview-setup.html?track=sales">Enterprise Sales & GTM</a></li>
-                        <li><a href="interview-setup.html?track=hr">HR & People Ops</a></li>
+                        <li><a href="#">System Design Guide</a></li>
+                        <li><a href="login.html">Global Leaderboard</a></li>
+                        <li><a href="#">Developer Documentation</a></li>
+                        <li><a href="#">API Status</a></li>
                     </ul>
                 </div>
                 
@@ -179,16 +156,15 @@
                     <h3>Company</h3>
                     <ul>
                         <li><a href="about.html">About Us</a></li>
-                        <li><a href="careers.html">Careers</a></li>
+                        <li><a href="#">Careers</a></li>
                         <li><a href="privacy.html">Privacy Policy</a></li>
                         <li><a href="terms.html">Terms of Service</a></li>
-                        <li><a href="cookies.html">Cookies</a></li>
                     </ul>
                 </div>
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2026 Role-Pilot. All rights reserved. Enterprise AI Voice Interview Platform.</p>
+                <p>&copy; 2026 Role-Pilot. All rights reserved. Built for modern engineers.</p>
                 <div class="footer-bottom-links">
                     <a href="privacy.html">Privacy</a>
                     <a href="terms.html">Terms</a>

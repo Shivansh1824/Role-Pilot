@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Careers — Role-Pilot</title>
+    <meta name="description" content="Join Role-Pilot to build the next frontier of real-time conversational voice intelligence and multi-agent AI interview panels." />
+    <!-- Inline Theme Script -->
+    <script>
+      (function() {
+          const currentTheme = localStorage.getItem('theme') || 'dark';
+          if (currentTheme === 'light') {
+              document.documentElement.classList.add('light-theme');
+          } else {
+              document.documentElement.classList.remove('light-theme');
+          }
+      })();
+    </script>
+    <script src="js/theme.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="subpage">
+    <div class="bg-layers">
+        <div class="bg-layer dark-bg"></div>
+        <div class="bg-layer light-bg"></div>
+    </div>
+    <div class="landing-overlay"></div>
+
+    <header class="app-header">
+        <div class="header-left">
+            <a href="index.html" class="logo-wrapper">
+                <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--primary)" />
+                            <stop offset="100%" stop-color="var(--accent)" />
+                        </linearGradient>
+                    </defs>
+                    <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                    <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                    <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                    <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                    <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                    <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                </svg>
+                <span class="logo-text">Role<span>Pilot</span></span>
+            </a>
+        </div>
+        
+        <div class="header-center">
+            <nav class="header-nav">
+                <a href="index.html#panels-section" class="nav-link">Domain Panels</a>
+                <a href="index.html#nova-section" class="nav-link">Nova Voice Prep</a>
+                <a href="index.html#demo-section" class="nav-link">Interactive Demo</a>
+                <a href="about.html" class="nav-link">About Us</a>
+                <a href="index.html#faq" class="nav-link">FAQ</a>
+                <div class="mobile-only-actions">
+                    <a href="login.html" class="btn-secondary-outline mobile-nav-btn">Sign In</a>
+                    <a href="gear-up.html" class="btn btn-header mobile-nav-btn">Launch Panel</a>
+                </div>
+            </nav>
+        </div>
+
+        <div class="header-actions">
+            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+            <a href="login.html" id="header-signin-btn" class="btn-secondary-outline">Sign In</a>
+            <a href="gear-up.html" class="btn btn-header header-signup-desktop">Launch Panel</a>
+            <button class="mobile-menu-toggle" aria-label="Toggle Mobile Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="page-main subpage-main">
+        <section class="subpage-content-section">
+            <div class="section-header">
+                <h2>Build the Future of <span class="gradient-text">Voice AI</span></h2>
+                <p>Join a fast-moving team pioneering real-time multi-agent conversational interfaces.</p>
+            </div>
+            
+            <div class="image-glass-wrapper content-glass-panel">
+                <div class="premium-content-body">
+                    <h3>Why Role-Pilot?</h3>
+                    <p>At Role-Pilot, we are redefining human-AI interaction. Rather than building static question-answer bots, we engineer real-time, multi-party voice committees capable of natural turn-taking, instantaneous barge-in interruptions, and grounded cross-examination. Our platform empowers professionals around the world to accelerate their careers with confidence.</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 1.5rem 0 2rem 0;">
+                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 1.25rem; border-radius: 14px;">
+                            <i class="fa-solid fa-bolt" style="color: var(--accent); font-size: 1.4rem; margin-bottom: 8px;"></i>
+                            <h4 style="margin: 0 0 6px 0; font-size: 1rem;">Sub-160ms Engineering</h4>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">We push the absolute limits of WebRTC audio pipelines, neural speech models, and distributed edge computing.</p>
+                        </div>
+                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 1.25rem; border-radius: 14px;">
+                            <i class="fa-solid fa-users-gear" style="color: #a855f7; font-size: 1.4rem; margin-bottom: 8px;"></i>
+                            <h4 style="margin: 0 0 6px 0; font-size: 1rem;">Multi-Agent Systems</h4>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">Designing novel coordination algorithms for simultaneous, coordinated LLM agents with shared memory.</p>
+                        </div>
+                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 1.25rem; border-radius: 14px;">
+                            <i class="fa-solid fa-heart-pulse" style="color: #ec4899; font-size: 1.4rem; margin-bottom: 8px;"></i>
+                            <h4 style="margin: 0 0 6px 0; font-size: 1rem;">Candidate-First Mission</h4>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">Leveling the playing field for job seekers globally with objective, evidence-based feedback.</p>
+                        </div>
+                    </div>
+
+                    <h3>Open Roles</h3>
+                    <p>We are hiring across engineering, AI research, and product design. All positions are remote-friendly with competitive equity and compensation.</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 18px; margin-top: 1.5rem;">
+                        
+                        <!-- Role 1 -->
+                        <div style="background: rgba(14, 21, 38, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                                <div>
+                                    <h4 style="margin: 0; font-size: 1.2rem; color: #fff;">Lead WebRTC & Real-Time Audio Engineer</h4>
+                                    <span style="font-size: 0.85rem; color: var(--accent);"><i class="fa-solid fa-location-dot"></i> Remote (US / Global) • Full-Time</span>
+                                </div>
+                                <a href="mailto:careers@role-pilot.com?subject=Application:%20Lead%20WebRTC%20Audio%20Engineer" class="btn btn-secondary-outline btn-sm" style="text-decoration:none;">
+                                    Apply for Role <i class="fa-solid fa-arrow-right" style="margin-left: 4px;"></i>
+                                </a>
+                            </div>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">Lead the optimization of our Agora SD-RTN™ audio streaming pipelines, jitter buffers, dynamic packet loss concealment, and client-side barge-in detection mechanisms.</p>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">WebRTC / RTC</span>
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">Opus Audio</span>
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">Agora SDK</span>
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">C++ / TypeScript</span>
+                            </div>
+                        </div>
+
+                        <!-- Role 2 -->
+                        <div style="background: rgba(14, 21, 38, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                                <div>
+                                    <h4 style="margin: 0; font-size: 1.2rem; color: #fff;">Conversational AI Systems Architect</h4>
+                                    <span style="font-size: 0.85rem; color: #a855f7;"><i class="fa-solid fa-location-dot"></i> Remote (US / Global) • Full-Time</span>
+                                </div>
+                                <a href="mailto:careers@role-pilot.com?subject=Application:%20Conversational%20AI%20Systems%20Architect" class="btn btn-secondary-outline btn-sm" style="text-decoration:none;">
+                                    Apply for Role <i class="fa-solid fa-arrow-right" style="margin-left: 4px;"></i>
+                                </a>
+                            </div>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">Architect multi-agent turn-taking orchestration frameworks, bracketed speaker tokens, real-time context injection, and evidence-based STAR competency scoring pipelines.</p>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">Multi-Agent Systems</span>
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">Deepgram STT</span>
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">MiniMax / Gemini</span>
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">Streaming LLMs</span>
+                            </div>
+                        </div>
+
+                        <!-- Role 3 -->
+                        <div style="background: rgba(14, 21, 38, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                                <div>
+                                    <h4 style="margin: 0; font-size: 1.2rem; color: #fff;">Staff Full-Stack Engineer (Next.js & Supabase)</h4>
+                                    <span style="font-size: 0.85rem; color: var(--accent);"><i class="fa-solid fa-location-dot"></i> Remote • Full-Time</span>
+                                </div>
+                                <a href="mailto:careers@role-pilot.com?subject=Application:%20Staff%20Full-Stack%20Engineer" class="btn btn-secondary-outline btn-sm" style="text-decoration:none;">
+                                    Apply for Role <i class="fa-solid fa-arrow-right" style="margin-left: 4px;"></i>
+                                </a>
+                            </div>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">Scale our Next.js edge runtime, interactive voice cockpit, Supabase Auth and database layer, and real-time candidate scorecards.</p>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">Next.js 16</span>
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">React 19</span>
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">Supabase</span>
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">Tailwind / CSS</span>
+                            </div>
+                        </div>
+
+                        <!-- Role 4 -->
+                        <div style="background: rgba(14, 21, 38, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                                <div>
+                                    <h4 style="margin: 0; font-size: 1.2rem; color: #fff;">Voice UX & Conversational Designer</h4>
+                                    <span style="font-size: 0.85rem; color: #ec4899;"><i class="fa-solid fa-location-dot"></i> Remote • Full-Time</span>
+                                </div>
+                                <a href="mailto:careers@role-pilot.com?subject=Application:%20Voice%20UX%20Designer" class="btn btn-secondary-outline btn-sm" style="text-decoration:none;">
+                                    Apply for Role <i class="fa-solid fa-arrow-right" style="margin-left: 4px;"></i>
+                                </a>
+                            </div>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">Craft the acoustic personas, conversational pacing, conversational repair strategies, and visual audio telemetry for Nova and our committee panelists.</p>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">Voice UX</span>
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">Sound Design</span>
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">Persona Engineering</span>
+                                <span class="tag tag-ai" style="font-size: 0.75rem;">Figma</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div style="margin-top: 2rem; text-align: center; padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border-radius: 14px; border: 1px solid var(--glass-border);">
+                        <p style="margin: 0 0 8px 0; font-weight: 600; color: #fff;">Don't see a role that fits your exact profile?</p>
+                        <p style="margin: 0 0 14px 0; font-size: 0.9rem; color: var(--text-secondary);">We are always eager to connect with exceptional engineers, researchers, and creators. Send an open application with your portfolio or GitHub.</p>
+                        <a href="mailto:careers@role-pilot.com?subject=Open%20Application%20-%20Role-Pilot" class="btn btn-primary-gradient" style="text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+                            <i class="fa-regular fa-envelope"></i> Send Open Application
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- Column 1: Brand -->
+                <div class="footer-brand-col">
+                    <a href="index.html" class="logo-wrapper">
+                        <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                            <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                            <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                            <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                            <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                            <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                        </svg>
+                        <span class="logo-text">Role<span>Pilot</span></span>
+                    </a>
+                    <p class="footer-pitch">The enterprise multi-role AI voice interview platform. Master technical, product, and leadership rounds with specialized AI committees.</p>
+                    <div class="footer-socials">
+                        <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+                        <a href="#" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Column 2: Product -->
+                <div class="footer-links-col">
+                    <h3>Product</h3>
+                    <ul>
+                        <li><a href="gear-up.html">Voice Warm-Up (Nova)</a></li>
+                        <li><a href="interview-setup.html">Multi-Role Panels</a></li>
+                        <li><a href="interview-setup.html">Adaptive Difficulty</a></li>
+                        <li><a href="interview-setup.html">Evidence Scorecard</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 3: Domain Panels -->
+                <div class="footer-links-col">
+                    <h3>Domain Panels</h3>
+                    <ul>
+                        <li><a href="interview-setup.html?track=tech">Tech Engineering</a></li>
+                        <li><a href="interview-setup.html?track=product">Product Leadership</a></li>
+                        <li><a href="interview-setup.html?track=sales">Enterprise Sales & GTM</a></li>
+                        <li><a href="interview-setup.html?track=hr">HR & People Ops</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 4: Company -->
+                <div class="footer-links-col">
+                    <h3>Company</h3>
+                    <ul>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="careers.html">Careers</a></li>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms of Service</a></li>
+                        <li><a href="cookies.html">Cookies</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2026 Role-Pilot. All rights reserved. Enterprise AI Voice Interview Platform.</p>
+                <div class="footer-bottom-links">
+                    <a href="privacy.html">Privacy</a>
+                    <a href="terms.html">Terms</a>
+                    <a href="cookies.html">Cookies</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const header = document.querySelector('.app-header');
+            
+            if (menuToggle && header) {
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    header.classList.toggle('mobile-nav-active');
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (header.classList.contains('mobile-nav-active') && !header.contains(e.target)) {
+                        header.classList.remove('mobile-nav-active');
+                    }
+                });
+                
+                const navLinks = header.querySelectorAll('.nav-link, .mobile-nav-btn');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        header.classList.remove('mobile-nav-active');
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

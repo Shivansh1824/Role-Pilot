@@ -497,21 +497,21 @@ export default function ConversationComponent({
   const activeSpeaker = useMemo<string | null>(() => {
     // Check in-progress agent turn first
     if (currentInProgressMessage) {
+      const activeText = currentInProgressMessage.text || '';
+      const allMatches = [...activeText.matchAll(/\[([A-Za-z]+)/g)];
+      if (allMatches.length > 0) return allMatches[allMatches.length - 1][1];
       const byUid = getPanelistNameByUid(currentInProgressMessage.uid);
       if (byUid) return byUid;
-      const activeText = currentInProgressMessage.text || '';
-      const match = activeText.match(/\[([A-Za-z]+)/);
-      if (match) return match[1];
     }
     // Scan backwards through completed messages for the last agent utterance
     for (let i = messageList.length - 1; i >= 0; i--) {
       const msg = messageList[i];
       if (isAgentUid(msg.uid, client.uid)) {
+        const t = msg.text || '';
+        const allMatches = [...t.matchAll(/\[([A-Za-z]+)/g)];
+        if (allMatches.length > 0) return allMatches[allMatches.length - 1][1];
         const byUid = getPanelistNameByUid(msg.uid);
         if (byUid) return byUid;
-        const t = msg.text || '';
-        const match = t.match(/\[([A-Za-z]+)/);
-        if (match) return match[1];
       }
     }
     return null;

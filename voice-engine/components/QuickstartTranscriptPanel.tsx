@@ -67,11 +67,39 @@ export function QuickstartTranscriptPanel({
     return list;
   }, [currentInProgressMessage, messageList]);
 
+  // Split any compound turns that contain multiple speaker tags so each panelist gets their own turn bubble
+  const displayMessages = useMemo(() => {
+    const result: typeof messages = [];
+    for (const msg of messages) {
+      const text = msg.text || '';
+      const tagRegex = /\[([A-Za-z]+)(?:\s*\(([^)]+)\))?\]/g;
+      const matches = [...text.matchAll(tagRegex)];
+
+      if (matches.length <= 1) {
+        result.push(msg);
+      } else {
+        for (let i = 0; i < matches.length; i++) {
+          const startIndex = matches[i].index!;
+          const endIndex = i + 1 < matches.length ? matches[i + 1].index! : text.length;
+          const chunk = text.slice(startIndex, endIndex).trim();
+          if (chunk) {
+            result.push({
+              ...msg,
+              turn_id: `${msg.turn_id ?? 'sub'}-${i}` as unknown as number,
+              text: chunk,
+            });
+          }
+        }
+      }
+    }
+    return result;
+  }, [messages]);
+
   useEffect(() => {
     const node = scrollRef.current;
     if (!node) return;
     node.scrollTop = node.scrollHeight;
-  }, [messages]);
+  }, [displayMessages]);
 
   const parseSpeakerInfo = (text?: string, isAgent?: boolean, uid?: number | string) => {
     if (!isAgent) {
@@ -90,12 +118,22 @@ export function QuickstartTranscriptPanel({
     let name = '';
     let role = 'Panelist';
 
-    // 1. First check if text starts with [Name (Role)]
+    const ROLE_MAP: Record<string, string> = {
+      David: 'Hiring Manager',
+      Alex: 'Technical Lead',
+      Mark: 'Product Manager',
+      Sean: 'VP of Sales',
+      Marcus: 'Sales Director',
+      Ethan: 'HR Director',
+      Sam: 'Culture Lead',
+    };
+
+    // 1. First check if text starts with [Name] or [Name (Role)]
     if (text) {
       const match = text.match(/^\[([A-Za-z]+)(?:\s*\(([^)]+)\))?\]/);
       if (match) {
         name = match[1];
-        role = match[2] || 'Panelist';
+        role = match[2] || ROLE_MAP[name] || 'Panelist';
       }
     }
 
@@ -164,13 +202,13 @@ export function QuickstartTranscriptPanel({
         ref={scrollRef}
         className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-4 py-4"
       >
-        {messages.length === 0 ? (
+        {displayMessages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center p-6 text-xs text-muted-foreground">
             <Sparkles className="h-6 w-6 text-primary mb-2 opacity-60" />
             <p>Connect to the panel and begin speaking to see real-time turn-taking and committee responses.</p>
           </div>
         ) : (
-          messages.map((message, index) => {
+          displayMessages.map((message, index) => {
             const isAgent =
               isAgentUid(message.uid, candidateUid) || String(message.uid) === agentUID;
             const rawText = message.text?.trim();

@@ -4,11 +4,13 @@
   "description": "Next.js quickstart for building conversational AI applications with Agora's Conversational AI Engine",
   "private": true,
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
   },
   "scripts": {
+    "sync-static": "node scripts/sync-static.mjs",
+    "prebuild": "node scripts/sync-static.mjs",
     "doctor": "node scripts/doctor.mjs",
-    "dev": "next dev --webpack",
+    "dev": "node scripts/sync-static.mjs && next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

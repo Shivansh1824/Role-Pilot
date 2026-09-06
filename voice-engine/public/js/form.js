@@ -1,0 +1,900 @@
+import { getSupabaseClient } from './supabase-client.js';
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // Hide header Sign In button since user is authenticated
+    const headerSigninBtn = document.getElementById('header-signin-btn');
+    if (headerSigninBtn) {
+        headerSigninBtn.style.display = 'none';
+    }
+
+    // 1. Initialize Supabase Client & Auth Guard
+    let db = null;
+    let user = null;
+
+    try {
+        db = await getSupabaseClient();
+        const { data: userData, error: authError } = await db.auth.getUser();
+        
+        if (authError || !userData || !userData.user) {
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        user = userData.user;
+    } catch (e) {
+        console.error("Database connection failed:", e);
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // 2. Fetch profile to check if already complete
+    try {
+        const { data: profile } = await db
+            .from('profiles')
+            .select('username, avatar_url, full_name, target_role, experience_level')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profile && profile.username && profile.avatar_url && profile.target_role && profile.experience_level) {
+            window.location.href = 'dashboard.html';
+            return;
+        }
+
+        // Pre-fill full name if metadata contains it
+        if (user.user_metadata && user.user_metadata.full_name) {
+            document.getElementById('onboarding-name').value = user.user_metadata.full_name;
+        } else if (profile && profile.full_name) {
+            document.getElementById('onboarding-name').value = profile.full_name;
+        }
+    } catch (err) {
+        console.warn("Could not retrieve current profile metadata:", err);
+    }
+
+    // 3. Define Form DOM Elements
+    const form = document.getElementById('onboarding-form');
+    const nameInput = document.getElementById('onboarding-name');
+    const usernameInput = document.getElementById('onboarding-username');
+    const usernameStatus = document.getElementById('username-status');
+    const avatarGrid = document.getElementById('avatar-grid');
+    const selectedAvatarInput = document.getElementById('selected-avatar');
+    const submitBtn = document.getElementById('onboarding-submit');
+    const spinner = document.getElementById('onboarding-spinner');
+    
+    const roleDropdown = document.getElementById('role-dropdown');
+    const roleDropdownSelected = document.getElementById('role-dropdown-selected');
+    const roleDropdownOptions = document.getElementById('role-dropdown-options');
+    const selectedRoleInput = document.getElementById('selected-role');
+
+    const selectedExperienceInput = document.getElementById('selected-experience');
+    const experienceCards = document.querySelectorAll('.experience-card');
+
+    const skillsInput = document.getElementById('skills-input');
+    const skillsWrapper = document.getElementById('skills-wrapper');
+    const skillsDropdown = document.getElementById('skills-dropdown');
+    const skillsListContainer = document.getElementById('skills-list-container');
+    const signoutBtn = document.getElementById('onboarding-signout-btn');
+
+    let skillsList = [];
+    let isUsernameValid = false;
+
+    // Modal & status elements for skill validation
+    const skillsStatus = document.getElementById('skills-status');
+    const skillsConfirmModal = document.getElementById('skills-confirm-modal');
+    const modalSkillsList = document.getElementById('modal-skills-list');
+    const modalEditBtn = document.getElementById('modal-edit-btn');
+    const modalContinueBtn = document.getElementById('modal-continue-btn');
+    let pendingSkillsList = []; // Stores corrected skills list if confirmation is needed
+
+    // 4. Generate 12 Sleek Avatars (Dicebear + Gradient Fallback)
+    const avatarsInfo = [
+        { grad: ['hsl(263, 70%, 50%)', 'hsl(190, 90%, 50%)'], icon: 'fa-user-tie' },
+        { grad: ['hsl(340, 80%, 50%)', 'hsl(20, 90%, 55%)'], icon: 'fa-user-ninja' },
+        { grad: ['hsl(142, 70%, 45%)', 'hsl(190, 90%, 50%)'], icon: 'fa-user-astronaut' },
+        { grad: ['hsl(210, 80%, 50%)', 'hsl(263, 70%, 50%)'], icon: 'fa-laptop-code' },
+        { grad: ['hsl(45, 90%, 50%)', 'hsl(15, 90%, 50%)'], icon: 'fa-user-graduate' },
+        { grad: ['hsl(300, 70%, 50%)', 'hsl(263, 70%, 50%)'], icon: 'fa-robot' },
+        { grad: ['hsl(200, 80%, 50%)', 'hsl(142, 70%, 45%)'], icon: 'fa-rocket' },
+        { grad: ['hsl(160, 80%, 40%)', 'hsl(190, 90%, 50%)'], icon: 'fa-compass' },
+        { grad: ['hsl(10, 80%, 50%)', 'hsl(340, 80%, 55%)'], icon: 'fa-brain' },
+        { grad: ['hsl(280, 70%, 50%)', 'hsl(340, 80%, 50%)'], icon: 'fa-microscope' },
+        { grad: ['hsl(180, 70%, 40%)', 'hsl(263, 70%, 50%)'], icon: 'fa-seedling' },
+        { grad: ['hsl(60, 85%, 45%)', 'hsl(142, 70%, 45%)'], icon: 'fa-chart-line' },
+        { grad: ['hsl(320, 80%, 50%)', 'hsl(220, 90%, 50%)'], icon: 'fa-bolt' },
+        { grad: ['hsl(15, 80%, 50%)', 'hsl(45, 90%, 50%)'], icon: 'fa-fire' },
+        { grad: ['hsl(240, 70%, 50%)', 'hsl(300, 70%, 50%)'], icon: 'fa-wand-magic-sparkles' }
+    ];
+
+    const generateAvatarsGrid = () => {
+        avatarGrid.innerHTML = '';
+
+        // Add custom upload option with Supabase integration
+        const customUploadDiv = document.createElement('div');
+        customUploadDiv.className = 'avatar-option custom-upload-btn';
+        customUploadDiv.style.position = 'relative';
+        customUploadDiv.style.border = '2px dashed var(--glass-border)';
+        
+        // Define the inner HTML including the hidden file input
+        customUploadDiv.innerHTML = `
+            <div id="custom-upload-content" style="width: 100%; height: 100%; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-secondary); background: rgba(255, 255, 255, 0.02); transition: var(--transition); overflow: hidden; position: relative;">
+                <i id="custom-upload-icon" class="fa-solid fa-cloud-arrow-up" style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--primary);"></i>
+                <span id="custom-upload-text" style="font-size: 0.7rem; font-weight: 600; text-align: center; line-height: 1.2;">Upload<br>Custom</span>
+                <img id="custom-upload-preview" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 8px; z-index: 2;" />
+            </div>
+            <input type="file" id="custom-avatar-input" accept="image/*" style="display: none;">
+        `;
+        
+        avatarGrid.appendChild(customUploadDiv);
+
+        const customInput = document.getElementById('custom-avatar-input');
+        const customContent = document.getElementById('custom-upload-content');
+        const customIcon = document.getElementById('custom-upload-icon');
+        const customText = document.getElementById('custom-upload-text');
+        const customPreview = document.getElementById('custom-upload-preview');
+
+        customUploadDiv.addEventListener('click', () => {
+            customInput.click();
+        });
+
+        let cropper = null;
+        const cropModal = document.getElementById('avatar-crop-modal');
+        const cropperImage = document.getElementById('cropper-image');
+        const cropperCancelBtn = document.getElementById('cropper-cancel-btn');
+        const cropperSaveBtn = document.getElementById('cropper-save-btn');
+        const cropperSpinner = document.getElementById('cropper-spinner');
+
+        customInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Enforce max size (e.g., 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert("File is too large. Please upload an image under 5MB.");
+                customInput.value = ''; // Reset input
+                return;
+            }
+
+            // Read the file for the cropper
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                cropperImage.src = e.target.result;
+                cropModal.classList.add('open');
+
+                // Destroy existing cropper if any
+                if (cropper) {
+                    cropper.destroy();
+                }
+
+                // Initialize new cropper
+                cropper = new Cropper(cropperImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 1,
+                    restore: false,
+                    guides: false,
+                    center: false,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+
+        cropperCancelBtn.addEventListener('click', () => {
+            cropModal.classList.remove('open');
+            customInput.value = '';
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        });
+
+        cropperSaveBtn.addEventListener('click', async () => {
+            if (!cropper) return;
+
+            // Show loading state
+            cropperSaveBtn.disabled = true;
+            cropperSpinner.style.display = 'block';
+            cropperSaveBtn.querySelector('span').textContent = 'Uploading...';
+
+            // Get the cropped canvas
+            const canvas = cropper.getCroppedCanvas({
+                width: 400,
+                height: 400,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+
+            if (!canvas) {
+                alert("Failed to crop image.");
+                resetCropperBtn();
+                return;
+            }
+
+            // Convert canvas to blob
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    alert("Failed to process image.");
+                    resetCropperBtn();
+                    return;
+                }
+
+                // Visual feedback for upload state on the main tile
+                customIcon.className = "fa-solid fa-spinner fa-spin";
+                customIcon.style.color = "var(--text-secondary)";
+                customText.innerHTML = "Uploading...";
+
+                // Prepare Supabase file path
+                const fileExt = 'jpeg';
+                const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+                const uploadFile = new File([blob], filePath, { type: 'image/jpeg' });
+
+                try {
+                    // Upload to Supabase Storage
+                    const { data, error } = await db.storage
+                        .from('avatars')
+                        .upload(filePath, uploadFile, {
+                            cacheControl: '3600',
+                            upsert: true
+                        });
+
+                    if (error) throw error;
+
+                    // Retrieve public URL
+                    const { data: publicUrlData } = db.storage
+                        .from('avatars')
+                        .getPublicUrl(filePath);
+
+                    const publicUrl = publicUrlData.publicUrl;
+
+                    // Create new avatar option tile
+                    const newDiv = document.createElement('div');
+                    newDiv.className = 'avatar-option';
+                    newDiv.style.position = 'relative';
+                    newDiv.innerHTML = `
+                        <img src="${publicUrl}" alt="Custom Avatar" style="width: 100%; height: 100%; border-radius: 8px; object-fit: cover;">
+                    `;
+
+                    newDiv.addEventListener('click', () => {
+                        document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                        newDiv.classList.add('selected');
+                        selectedAvatarInput.value = publicUrl;
+                        validateForm();
+                        
+                        // Move to front
+                        if (avatarGrid.children.length > 1 && avatarGrid.children[1] !== newDiv) {
+                            avatarGrid.insertBefore(newDiv, avatarGrid.children[1]);
+                            avatarGrid.scrollTo({ left: 0, behavior: 'smooth' });
+                        }
+                    });
+
+                    // Deselect others and select new one
+                    document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                    newDiv.classList.add('selected');
+                    selectedAvatarInput.value = publicUrl;
+                    validateForm();
+
+                    // Insert at index 1
+                    if (avatarGrid.children.length > 1) {
+                        avatarGrid.insertBefore(newDiv, avatarGrid.children[1]);
+                    } else {
+                        avatarGrid.appendChild(newDiv);
+                    }
+                    avatarGrid.scrollTo({ left: 0, behavior: 'smooth' });
+
+                    // Close modal and cleanup
+                    cropModal.classList.remove('open');
+                    customInput.value = '';
+                    cropper.destroy();
+                    cropper = null;
+
+                } catch (err) {
+                    console.error("Avatar upload failed:", err);
+                    alert("Upload failed. Ensure the 'avatars' bucket exists, is public, and allows uploads.");
+                } finally {
+                    // Revert UI of the upload button
+                    customIcon.className = "fa-solid fa-cloud-arrow-up";
+                    customIcon.style.color = "var(--primary)";
+                    customText.innerHTML = "Upload<br>Custom";
+                    customUploadDiv.classList.remove('selected');
+                    resetCropperBtn();
+                }
+            }, 'image/jpeg', 0.9);
+        });
+
+        function resetCropperBtn() {
+            cropperSaveBtn.disabled = false;
+            cropperSpinner.style.display = 'none';
+            cropperSaveBtn.querySelector('span').textContent = 'Crop & Upload';
+        }
+
+        avatarsInfo.forEach((avatar, index) => {
+            const seed = `RolePilot_${user.id}_${index + 1}`;
+            // Dicebear personas library
+            const dicebearUrl = `https://api.dicebear.com/7.x/personas/svg?seed=${seed}&backgroundColor=transparent`;
+            
+            const div = document.createElement('div');
+            div.className = 'avatar-option';
+            div.style.position = 'relative';
+            div.innerHTML = `
+                <div class="avatar-fallback" style="width: 100%; height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5rem; background: linear-gradient(135deg, ${avatar.grad[0]}, ${avatar.grad[1]});">
+                    <i class="fa-solid ${avatar.icon}"></i>
+                </div>
+                <img src="${dicebearUrl}" alt="Avatar ${index + 1}" style="position: absolute; width: calc(100% - 8px); height: calc(100% - 8px); top: 4px; left: 4px; z-index: 2; opacity: 0; transition: opacity 0.3s; object-fit: contain;" onload="this.style.opacity=1;">
+            `;
+
+            div.addEventListener('click', () => {
+                document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+                div.classList.add('selected');
+                selectedAvatarInput.value = dicebearUrl; // store URL as profile avatar_url
+                validateForm();
+                
+                // Move to front (after custom upload button)
+                if (avatarGrid.children.length > 1 && avatarGrid.children[1] !== div) {
+                    avatarGrid.insertBefore(div, avatarGrid.children[1]);
+                    // Smooth scroll to left to ensure it's visible
+                    avatarGrid.scrollTo({ left: 0, behavior: 'smooth' });
+                }
+            });
+
+            avatarGrid.appendChild(div);
+        });
+    };
+    generateAvatarsGrid();
+
+    // 5. Populate Custom Roles Dropdown
+    const careerRoles = [
+        { id: 'software_engineer', name: 'Software Engineer', icon: 'fa-laptop-code' },
+        { id: 'frontend', name: 'Frontend Engineer', icon: 'fa-code' },
+        { id: 'backend', name: 'Backend Engineer', icon: 'fa-server' },
+        { id: 'fullstack', name: 'Full Stack Developer', icon: 'fa-layer-group' },
+        { id: 'data_scientist', name: 'Data Scientist', icon: 'fa-brain' },
+        { id: 'product_manager', name: 'Product Manager', icon: 'fa-compass' },
+        { id: 'ui_ux_designer', name: 'UI/UX Designer', icon: 'fa-palette' },
+        { id: 'devops', name: 'DevOps Engineer', icon: 'fa-cloud' },
+        { id: 'mobile_developer', name: 'Mobile Developer', icon: 'fa-mobile-screen-button' },
+        { id: 'qa_engineer', name: 'QA Engineer', icon: 'fa-bug' },
+        { id: 'security_analyst', name: 'Cybersecurity Analyst', icon: 'fa-shield-halved' },
+        { id: 'gen_ai_engineer', name: 'Gen AI Engineer', icon: 'fa-robot' },
+        { id: 'prompt_engineer', name: 'Prompt Engineer', icon: 'fa-terminal' },
+        { id: 'mlops_engineer', name: 'MLOps Engineer', icon: 'fa-gears' },
+        { id: 'ai_product_manager', name: 'AI Product Manager', icon: 'fa-chart-pie' },
+        { id: 'ai_ethics_specialist', name: 'AI Ethics Specialist', icon: 'fa-scale-balanced' },
+        { id: 'customer_support', name: 'Customer Support', icon: 'fa-headset' },
+        { id: 'call_agent', name: 'Call Agent / Telesales', icon: 'fa-phone-volume' },
+        { id: 'client_relations', name: 'Client Relations Manager', icon: 'fa-handshake' }
+    ];
+
+    const populateRoles = () => {
+        roleDropdownOptions.innerHTML = '';
+
+        // Add Search Input once
+        const searchContainer = document.createElement('div');
+        searchContainer.className = 'dropdown-search-container';
+        searchContainer.innerHTML = `
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="role-search-input" placeholder="Search roles..." autocomplete="off">
+        `;
+        roleDropdownOptions.appendChild(searchContainer);
+
+        const listContainer = document.createElement('div');
+        listContainer.className = 'dropdown-list-container';
+        roleDropdownOptions.appendChild(listContainer);
+
+        const renderList = (filterText) => {
+            listContainer.innerHTML = '';
+            const lowerFilter = filterText.toLowerCase();
+            const filteredRoles = careerRoles.filter(role => role.name.toLowerCase().includes(lowerFilter));
+
+            if (filteredRoles.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'dropdown-item no-results';
+                noResults.style.color = 'var(--text-muted)';
+                noResults.style.cursor = 'default';
+                noResults.innerText = 'No roles found';
+                listContainer.appendChild(noResults);
+            }
+
+            filteredRoles.forEach(role => {
+                const item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.innerHTML = `
+                    <div class="role-icon-small">
+                        <i class="fa-solid ${role.icon}"></i>
+                    </div>
+                    <span>${role.name}</span>
+                `;
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent dropdown from toggling again if clicking inside
+                    roleDropdownSelected.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <i class="fa-solid ${role.icon}" style="color:var(--primary);"></i>
+                            <span>${role.name}</span>
+                        </div>
+                    `;
+                    selectedRoleInput.value = role.name;
+                    roleDropdown.classList.remove('open');
+                    validateForm();
+                });
+                listContainer.appendChild(item);
+            });
+        };
+
+        renderList('');
+
+        const searchInput = searchContainer.querySelector('input');
+        searchContainer.addEventListener('click', (e) => e.stopPropagation());
+        searchInput.addEventListener('click', (e) => e.stopPropagation());
+        
+        searchInput.addEventListener('input', (e) => {
+            renderList(e.target.value);
+        });
+    };
+    populateRoles();
+
+    roleDropdownSelected.addEventListener('click', () => {
+        roleDropdown.classList.toggle('open');
+        if (roleDropdown.classList.contains('open')) {
+            const searchInput = document.getElementById('role-search-input');
+            if (searchInput) {
+                searchInput.focus();
+            }
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!roleDropdown.contains(e.target)) {
+            roleDropdown.classList.remove('open');
+        }
+        if (skillsDropdown && !skillsDropdown.contains(e.target)) {
+            skillsDropdown.classList.remove('open');
+        }
+    });
+
+    // 6. Experience level selector mapping
+    experienceCards.forEach(card => {
+        card.addEventListener('click', () => {
+            experienceCards.forEach(el => el.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedExperienceInput.value = card.dataset.level;
+            validateForm();
+        });
+    });
+
+    // 7. Interactive Key Skills Tagging
+    const renderSkillTags = () => {
+        // Reset validation message on modification
+        if (skillsStatus) {
+            skillsStatus.textContent = '';
+            skillsStatus.className = 'input-status-msg';
+        }
+
+        // Clear existing tags but preserve the input element itself
+        const tags = skillsWrapper.querySelectorAll('.skill-tag');
+        tags.forEach(tag => tag.remove());
+
+        skillsList.forEach((skill, idx) => {
+            const tag = document.createElement('div');
+            tag.className = 'skill-tag';
+            tag.innerHTML = `
+                <span>${skill}</span>
+                <i class="fa-solid fa-xmark" data-index="${idx}"></i>
+            `;
+            // Remove tag listener
+            tag.querySelector('i').addEventListener('click', (e) => {
+                const indexToRemove = parseInt(e.target.dataset.index);
+                skillsList.splice(indexToRemove, 1);
+                renderSkillTags();
+            });
+            skillsWrapper.insertBefore(tag, skillsInput);
+        });
+
+        if (skillsList.length > 0) {
+            skillsInput.placeholder = '';
+        } else {
+            skillsInput.placeholder = 'Type a skill and press Enter';
+        }
+        validateForm();
+    };
+
+    const PREDEFINED_SKILLS = [
+        'React', 'Node.js', 'Python', 'JavaScript', 'TypeScript',
+        'AWS', 'Docker', 'Kubernetes', 'SQL', 'MongoDB',
+        'GraphQL', 'Git', 'CI/CD', 'Go', 'Rust', 'Java', 'C++',
+        'Swift', 'Kotlin', 'Firebase', 'Supabase', 'Next.js'
+    ];
+
+    const renderSkillsDropdown = (filterText = '') => {
+        if (!skillsListContainer) return;
+        skillsListContainer.innerHTML = '';
+        const lowerFilter = filterText.toLowerCase();
+        
+        // Filter out skills that are already added
+        const availableSkills = PREDEFINED_SKILLS.filter(s => !skillsList.includes(s));
+        const filteredSkills = availableSkills.filter(s => s.toLowerCase().includes(lowerFilter));
+
+        if (filteredSkills.length === 0) {
+            const noRes = document.createElement('div');
+            noRes.className = 'dropdown-item no-results';
+            noRes.style.color = 'var(--text-muted)';
+            noRes.style.cursor = 'default';
+            noRes.innerText = filterText ? 'Press Enter to add custom skill' : 'All standard skills added';
+            skillsListContainer.appendChild(noRes);
+        }
+
+        filteredSkills.forEach(skill => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.innerHTML = `<span>${skill}</span>`;
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                skillsList.push(skill);
+                renderSkillTags();
+                skillsInput.value = '';
+                skillsDropdown.classList.remove('open');
+                skillsInput.focus();
+            });
+            skillsListContainer.appendChild(item);
+        });
+    };
+
+    if (skillsInput && skillsDropdown) {
+        skillsInput.addEventListener('focus', () => {
+            skillsDropdown.classList.add('open');
+            renderSkillsDropdown(skillsInput.value);
+        });
+
+        skillsInput.addEventListener('input', (e) => {
+            skillsDropdown.classList.add('open');
+            renderSkillsDropdown(e.target.value);
+        });
+
+        skillsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                const value = skillsInput.value.trim().replace(/[^a-zA-Z0-9+#.\s-]/g, '');
+                if (value && !skillsList.includes(value)) {
+                    skillsList.push(value);
+                    renderSkillTags();
+                }
+                skillsInput.value = '';
+                skillsDropdown.classList.remove('open');
+            }
+        });
+        
+        // Ensure clicking anywhere in the wrapper focuses the input
+        skillsWrapper.addEventListener('click', () => {
+            skillsInput.focus();
+        });
+    }
+
+    // 8. Username Check Uniqueness Debounced
+    let usernameTimeout;
+    
+    // Prevent typing spaces entirely
+    usernameInput.addEventListener('keydown', (e) => {
+        if (e.key === ' ') {
+            e.preventDefault();
+        }
+    });
+    
+    const checkUsernameAvailability = async () => {
+        const val = usernameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+        if (usernameInput.value !== val) {
+            usernameInput.value = val;
+        }
+
+        if (val.length < 3) {
+            usernameStatus.textContent = 'Username must be at least 3 characters.';
+            usernameStatus.className = 'input-status-msg error';
+            isUsernameValid = false;
+            validateForm();
+            return;
+        }
+
+        if (/^[0-9]/.test(val)) {
+            usernameStatus.textContent = "Username cannot start with a number.";
+            usernameStatus.className = 'input-status-msg error';
+            isUsernameValid = false;
+            validateForm();
+            return;
+        }
+
+        if (/^[0-9]+$/.test(val)) {
+            usernameStatus.textContent = "Username cannot be only numbers.";
+            usernameStatus.className = 'input-status-msg error';
+            isUsernameValid = false;
+            validateForm();
+            return;
+        }
+
+        usernameStatus.textContent = 'Checking availability...';
+        usernameStatus.className = 'input-status-msg';
+
+        try {
+            const { data, error } = await db
+                .from('profiles')
+                .select('username')
+                .eq('username', val)
+                .maybeSingle();
+
+            if (error) throw error;
+
+            if (data) {
+                // Taken
+                const alternative = val + Math.floor(Math.random() * 100);
+                usernameStatus.innerHTML = `Taken. Try: <span id="suggested-username" style="text-decoration:underline; cursor:pointer; font-weight:700;">${alternative}</span>`;
+                usernameStatus.className = 'input-status-msg error';
+                isUsernameValid = false;
+                
+                // Allow user to click alternative
+                document.getElementById('suggested-username').addEventListener('click', () => {
+                    usernameInput.value = alternative;
+                    checkUsernameAvailability();
+                });
+            } else {
+                // Available
+                usernameStatus.textContent = 'Username is available!';
+                usernameStatus.className = 'input-status-msg success';
+                isUsernameValid = true;
+            }
+        } catch (e) {
+            console.error("Error checking username:", e);
+            usernameStatus.textContent = 'Connection error checking availability.';
+            usernameStatus.className = 'input-status-msg error';
+            isUsernameValid = false;
+        }
+        validateForm();
+    };
+
+    usernameInput.addEventListener('input', () => {
+        clearTimeout(usernameTimeout);
+        isUsernameValid = false;
+        validateForm();
+        usernameTimeout = setTimeout(checkUsernameAvailability, 500);
+    });
+
+    // Auto-generate username from name once name is typed
+    nameInput.addEventListener('blur', () => {
+        if (!usernameInput.value && nameInput.value.trim()) {
+            let draft = nameInput.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 15);
+            // Ensure auto-generated username doesn't start with a number or underscore
+            draft = draft.replace(/^[0-9_]+/, '');
+            if (draft.length >= 3) {
+                usernameInput.value = draft;
+                checkUsernameAvailability();
+            }
+        }
+    });
+
+    nameInput.addEventListener('input', validateForm);
+
+    // 9. Validation helper
+    function validateForm() {
+        const isNameEntered = nameInput.value.trim().length > 0;
+        const isAvatarSelected = selectedAvatarInput.value.length > 0;
+        const isRoleSelected = selectedRoleInput.value.length > 0;
+        const isExperienceSelected = selectedExperienceInput.value.length > 0;
+        const isSkillsEntered = skillsList.length > 0;
+
+        if (isNameEntered && isAvatarSelected && isRoleSelected && isExperienceSelected && isUsernameValid && isSkillsEntered) {
+            submitBtn.disabled = false;
+        } else {
+            submitBtn.disabled = true;
+        }
+    }
+
+    const compileFinalSkills = (results) => {
+        return skillsList.map(originalSkill => {
+            const matchedPredefined = PREDEFINED_SKILLS.find(
+                pre => pre.toLowerCase() === originalSkill.toLowerCase()
+            );
+            if (matchedPredefined) {
+                return matchedPredefined;
+            }
+
+            const aiResult = results.find(res => res.original.toLowerCase() === originalSkill.toLowerCase());
+            if (aiResult && aiResult.isValid && aiResult.correctedName) {
+                return aiResult.correctedName;
+            }
+            return originalSkill;
+        });
+    };
+
+    const saveProfile = async () => {
+        submitBtn.disabled = true;
+        if (spinner) spinner.style.display = 'block';
+
+        const profileData = {
+            full_name: nameInput.value.trim(),
+            username: usernameInput.value.trim().toLowerCase(),
+            avatar_url: selectedAvatarInput.value,
+            target_role: selectedRoleInput.value,
+            experience_level: selectedExperienceInput.value,
+            skills: skillsList,
+            updated_at: new Date().toISOString()
+        };
+
+        try {
+            const { error } = await db
+                .from('profiles')
+                .update(profileData)
+                .eq('id', user.id);
+
+            if (error) throw error;
+            window.location.href = 'dashboard.html';
+        } catch (error) {
+            console.error("Profile submit error:", error);
+            alert("Failed to save profile onboarding: " + (error.message || error));
+            submitBtn.disabled = false;
+            if (spinner) spinner.style.display = 'none';
+        }
+    };
+
+    // 10. Form submission to database
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (submitBtn.disabled) return;
+
+        const submitBtnText = submitBtn.querySelector('span');
+        const originalText = submitBtnText ? submitBtnText.textContent : 'Complete & Go to Dashboard';
+
+        // Clear any previous error messages
+        if (skillsStatus) {
+            skillsStatus.textContent = '';
+            skillsStatus.className = 'input-status-msg';
+        }
+        document.querySelectorAll('.skill-tag').forEach(tag => tag.classList.remove('invalid'));
+
+        // Identify custom skills
+        const customSkills = skillsList.filter(skill => {
+            return !PREDEFINED_SKILLS.some(pre => pre.toLowerCase() === skill.toLowerCase());
+        });
+
+        // If there are custom skills, run AI validation
+        if (customSkills.length > 0) {
+            submitBtn.disabled = true;
+            if (spinner) spinner.style.display = 'block';
+            if (submitBtnText) submitBtnText.textContent = 'Validating skills...';
+
+            try {
+                const { data, error } = await db.functions.invoke('skill-checker', {
+                    body: { skills: customSkills }
+                });
+
+                if (error) throw error;
+
+                if (data) {
+                    if (data.allValid === false) {
+                        // Mark invalid tags in red
+                        const results = data.results || [];
+                        results.forEach(res => {
+                            if (!res.isValid) {
+                                const tags = skillsWrapper.querySelectorAll('.skill-tag');
+                                tags.forEach(tag => {
+                                    const span = tag.querySelector('span');
+                                    if (span && span.textContent.trim().toLowerCase() === res.original.toLowerCase()) {
+                                        tag.classList.add('invalid');
+                                    }
+                                });
+                            }
+                        });
+
+                        // Show validation message
+                        if (skillsStatus) {
+                            skillsStatus.innerHTML = `
+                                <div class="ai-status-msg error-state" style="display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; background: rgba(239, 68, 68, 0.06); border: 1px dashed rgba(239, 68, 68, 0.3); padding: 10px 14px; border-radius: 8px; color: var(--text-primary); font-size: 0.88rem; line-height: 1.4;">
+                                    <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent); font-size: 1.1rem; margin-top: 2px; filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.45));"></i>
+                                    <div>
+                                        <span style="font-weight: 700; color: var(--error); display: block; margin-bottom: 2px;">AI Verification Detected Gaps:</span>
+                                        <span style="color: var(--text-secondary);">The highlighted tags do not match recognized professional skills. Please remove them to proceed.</span>
+                                    </div>
+                                </div>
+                            `;
+                            skillsStatus.className = 'input-status-msg';
+                        }
+
+                        // Restore submit button
+                        submitBtn.disabled = false;
+                        if (spinner) spinner.style.display = 'none';
+                        if (submitBtnText) submitBtnText.textContent = originalText;
+                        return; // Halt form submission
+                    }
+
+                    // Compile the fully resolved and corrected skills list
+                    pendingSkillsList = compileFinalSkills(data.results);
+
+                    if (data.requiresConfirmation) {
+                        // Show modal with corrections
+                        if (modalSkillsList) {
+                            modalSkillsList.innerHTML = '';
+                            data.results.forEach(res => {
+                                if (res.wasModified && res.correctedName) {
+                                    const row = document.createElement('div');
+                                    row.className = 'modal-skill-row';
+                                    row.innerHTML = `
+                                        <span class="modal-skill-original">${res.original}</span>
+                                        <i class="fa-solid fa-arrow-right-long modal-skill-arrow"></i>
+                                        <span class="modal-skill-corrected">${res.correctedName}</span>
+                                    `;
+                                    modalSkillsList.appendChild(row);
+                                }
+                            });
+                        }
+
+                        // Open modal
+                        if (skillsConfirmModal) {
+                            skillsConfirmModal.classList.add('open');
+                        }
+
+                        // Restore submit button
+                        submitBtn.disabled = false;
+                        if (spinner) spinner.style.display = 'none';
+                        if (submitBtnText) submitBtnText.textContent = originalText;
+                        return; // Wait for modal confirmation
+                    } else {
+                        // If no confirmation needed, update skillsList and proceed
+                        skillsList = pendingSkillsList;
+                    }
+                }
+            } catch (err) {
+                console.error("Skills validation error:", err);
+                if (skillsStatus) {
+                    skillsStatus.textContent = "Skills check failed. Please check your network and try again.";
+                    skillsStatus.className = "input-status-msg error";
+                }
+                submitBtn.disabled = false;
+                if (spinner) spinner.style.display = 'none';
+                if (submitBtnText) submitBtnText.textContent = originalText;
+                return;
+            }
+        } else {
+            // If all skills are predefined, just format them correctly
+            skillsList = skillsList.map(skill => {
+                const matched = PREDEFINED_SKILLS.find(pre => pre.toLowerCase() === skill.toLowerCase());
+                return matched || skill;
+            });
+        }
+
+        // Proceed to save profile
+        await saveProfile();
+    });
+
+    // Modal buttons click events
+    if (modalEditBtn && skillsConfirmModal) {
+        modalEditBtn.addEventListener('click', () => {
+            skillsConfirmModal.classList.remove('open');
+            skillsInput.focus();
+        });
+    }
+
+    if (modalContinueBtn && skillsConfirmModal) {
+        modalContinueBtn.addEventListener('click', async () => {
+            skillsConfirmModal.classList.remove('open');
+            skillsList = pendingSkillsList;
+            renderSkillTags();
+            await saveProfile();
+        });
+    }
+
+    // 11. Onboarding Cancel & Sign Out
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', async () => {
+            signoutBtn.innerHTML = 'Signing out...';
+            try {
+                await db.auth.signOut();
+            } catch (err) {
+                console.error("Sign out error:", err);
+            }
+            // Clear local cached sessions
+            for (let key in localStorage) {
+                if (key.startsWith('sb-')) {
+                    localStorage.removeItem(key);
+                }
+            }
+            window.location.href = 'index.html';
+        });
+    }
+});
