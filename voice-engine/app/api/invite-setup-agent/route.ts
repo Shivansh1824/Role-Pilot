@@ -20,7 +20,14 @@ function requireEnv(name: string): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { channel_name, requester_id } = body as ClientStartRequest;
+    const {
+      channel_name,
+      requester_id,
+      profile_name,
+      profile_role,
+      profile_experience,
+      saved_resumes,
+    } = body as any;
 
     if (!channel_name || !requester_id) {
       return NextResponse.json({ error: 'Missing channel_name or requester_id' }, { status: 400 });
@@ -32,25 +39,53 @@ export async function POST(request: NextRequest) {
       appCertificate: requireEnv('NEXT_AGORA_APP_CERTIFICATE'),
     });
 
-    const llmRouterHost = 'http://127.0.0.1:3000'; // Target the local API route
-    
-    // Nova's exact instructions
-    const systemPrompt = `You are Nova, a friendly, ultra-professional AI Setup Assistant for Role-Pilot Mock Interviews.
-Your job is to verbally onboard the user into their mock interview.
+    // Determine personalized opening greeting
+    const userFirstName = profile_name ? (profile_name.trim().split(' ')[0] || profile_name) : null;
+    const greetingText = userFirstName
+      ? `Hi ${userFirstName}! I'm Nova, your AI onboarding assistant. You're going to have a panel interview, so I'm here to onboard you for that. Are you ready to gear up, or is this interview for someone else?`
+      : "Hello! I'm Nova, your AI onboarding assistant. You are going to have a panel interview, so I need to onboard you for that. What is your name?";
 
-INSTRUCTIONS:
-1. Greet the user warmly and ask for their first name.
-2. Once they provide their name, ask what Job Role they are targeting (e.g. Software Engineer, Sales Manager).
-3. Once they provide the role, ask about their experience level (Junior, Mid-Level, Senior, Staff, Principal).
-4. Once they provide experience, ask if they want to upload a new resume or proceed without one.
-5. If they upload a resume (the UI will handle the upload), ask them to "Please check the verified data on your screen."
-6. Finally, confirm if they are ready to start the interview panel.
+    const systemPrompt = `You are Nova, an ultra-smooth, friendly, and efficient AI Onboarding Assistant for Role-Pilot.
+You are onboarding the user for their upcoming multi-role panel interview.
+
+CONTEXT FROM USER PROFILE:
+- Profile Name: ${profile_name || 'Not logged in (Guest)'}
+- Profile Target Role: ${profile_role || 'Not set'}
+- Profile Experience: ${profile_experience || 'Not set'}
+- Saved Resumes: ${saved_resumes && saved_resumes.length > 0 ? `Yes (${saved_resumes.map((r: any) => r.title).join(', ')})` : 'None'}
+
+OPENING:
+Start with:
+"${greetingText}"
+
+STRICT CONVERSATIONAL FLOW & PACING (Ask ONLY 1 question at a time):
+1. IDENTITY CONFIRMATION:
+   - If the candidate confirms they are ${userFirstName || 'the user'}, accept it immediately and move to Step 2.
+   - If they say "No, it's for [Name]" or "No", ask for their name, accept it, and move to Step 2.
+   - If guest, take whatever name they provide.
+2. TARGET ROLE:
+   ${profile_role ? `- Mention their profile target role: "I see your target role in your profile is ${profile_role}. Would you like to stick with this, or change it?"
+   - If they stick with it, confirm it. If they want to change, ask what role they'd prefer.` : `- Ask what job role they are targeting (e.g. Software Engineer, Product Manager).`}
+   - If the role fits Tech, Product, Sales, or HR, confirm that panel match.
+   - If unsupported (e.g. pilot, chef, doctor), politely explain that this role is not currently included in our active panels and will be added in the future, then suggest selecting Tech, Product, Sales, or HR.
+3. SYSTEMATIC EXPERIENCE LEVEL:
+   - Ask for their experience level from our systematic tiers:
+     * 0 to 1 year (1-year fresher)
+     * 1 to 3 years (fresher)
+     * 3 to 5 years (mid-level)
+     * 5 to 8 or 9 years (senior)
+     * More than 9 years (lead)
+   - Take their answer once and lock it in.
+4. RESUME & DIFFICULTY:
+   ${saved_resumes && saved_resumes.length > 0 ? `- Mention their saved resume: "I see your saved resume (${saved_resumes[0].title}). Would you like to use this, upload a new one, or quick-start without one?"` : `- Ask if they want to upload a resume or proceed with direct quick-start without one.`}
+   - Explain difficulty: By default we use Auto-Adaptive AI (the interviewers dynamically adapt question complexity to their answers). If they prefer manual fixed difficulty (Easy, Medium, Hard), explain that too.
+5. FINAL CONFIRMATION:
+   - Briefly summarize: candidate name, role, experience level, panel, and difficulty.
+   - Ask: "Everything is set! Are you ready for your panel interview to begin?"
 
 RULES:
-- Be concise! Do not give long speeches. Ask ONE question at a time.
-- Wait for the user to answer before moving to the next question.
-- Do not make up form data; wait for the user to provide it.
-- Your voice is friendly, encouraging, and clear.`;
+- Single-Take Rule: Never ask for a requirement more than once after it has been answered.
+- Concise: Keep each utterance to 1-2 friendly, conversational sentences.`;
 
     const geminiKey = process.env.GEMINI_API_KEY;
     const publicTunnel = process.env.PUBLIC_URL || process.env.TUNNEL_URL;
@@ -60,16 +95,16 @@ RULES:
       ? new CustomLLM({
           url: `${publicTunnel}/api/setup-agent-llm`,
           apiKey: 'dummy-key',
-          model: 'gemini-3.5-flash',
-          greetingMessage: 'Hi! I am Nova, your setup assistant. What is your name?',
+          model: 'gemini-3.6-flash',
+          greetingMessage: greetingText,
           failureMessage: 'Please wait a moment.',
           maxHistory: 50,
           params: { max_tokens: 512, temperature: 0.7, top_p: 0.95 },
         })
       : new Gemini({
           apiKey: geminiKey || 'dummy',
-          model: 'gemini-3.5-flash',
-          greetingMessage: 'Hi! I am Nova, your setup assistant. What is your name?',
+          model: 'gemini-3.6-flash',
+          greetingMessage: greetingText,
           failureMessage: 'Please wait a moment.',
           maxHistory: 50,
           temperature: 0.7,
@@ -78,7 +113,7 @@ RULES:
     const agent = new Agent({
       client,
       instructions: systemPrompt,
-      greeting: 'Hi! I am Nova, your setup assistant. What is your name?',
+      greeting: greetingText,
       failureMessage: 'Please wait a moment.',
       maxHistory: 50,
       turnDetection: {
@@ -112,20 +147,27 @@ RULES:
       .withTts(
         new MiniMaxTTS({
           model: 'speech_2_6_turbo',
-          voiceId: 'Female-01', // A standard clear female voice for Nova
+          voiceId: 'English_captivating_female1', // High-fidelity female voice for Nova
         }),
       );
 
     const session = agent.createSession({
       channel: channel_name,
       agentUid: '9000', // Unique UID for setup agent
-      remoteUids: [requester_id],
-      idleTimeout: 60,
+      remoteUids: requester_id ? [String(requester_id), '*'] : ['*'],
+      idleTimeout: 120,
       expiresIn: ExpiresIn.hours(1),
       debug: false,
     });
 
     const agentId = await session.start();
+
+    // Proactively speak the personalized greeting into the channel via TTS immediately
+    try {
+      await session.say(greetingText);
+    } catch (sayErr) {
+      console.warn('session.say error (non-fatal, greetingMessage configured on LLM):', sayErr);
+    }
 
     return NextResponse.json({
       agent_id: agentId,

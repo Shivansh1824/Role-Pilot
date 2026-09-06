@@ -45,25 +45,42 @@ Output exactly this JSON structure:
 
 CRITICAL: Ignore phone numbers, email addresses, LinkedIn URLs, and irrelevant fluff. Only extract the professional data needed for a technical/domain interview.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: [
-        systemInstruction,
-        {
-          inlineData: {
-            data: base64Data,
-            mimeType: mimeType
-          }
-        },
-        "Please extract the data from this resume."
-      ],
-      config: {
-        temperature: 0.1,
-        responseMimeType: 'application/json'
-      }
-    });
+    let responseText = '';
+    const modelsToTry = ['gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.7-flash', 'gemini-flash-latest'];
+    let lastError = null;
 
-    const output = response.text?.trim() || '{}';
+    for (const modelName of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: [
+            systemInstruction,
+            {
+              inlineData: {
+                data: base64Data,
+                mimeType: mimeType
+              }
+            },
+            "Please extract the data from this resume."
+          ],
+          config: {
+            temperature: 0.1,
+            responseMimeType: 'application/json'
+          }
+        });
+        responseText = response.text?.trim() || '{}';
+        if (responseText) break;
+      } catch (err) {
+        lastError = err;
+        console.warn(`Resume OCR model ${modelName} failed, trying next...`, err);
+      }
+    }
+
+    if (!responseText && lastError) {
+      throw lastError;
+    }
+
+    const output = responseText;
     
     try {
       const parsedJson = JSON.parse(output);
