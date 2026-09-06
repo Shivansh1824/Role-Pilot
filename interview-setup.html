@@ -694,6 +694,14 @@
         </div>
         <input type="file" id="resume-file-input" accept=".pdf,.docx,.txt" />
 
+        <!-- Resume text paste container -->
+        <div id="resume-text-container" style="display:none; margin-top: 12px;">
+          <div style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">
+            Or paste key resume points (projects, stack, metrics):
+          </div>
+          <textarea id="resume-text-input" placeholder="e.g. Led migration of checkout service at FinTech Corp using Go & Redis. Scaled payments engine to 15k req/s with 99.99% uptime..." rows="3" style="width:100%; border-radius:12px; border:1px solid var(--glass-border); background:var(--panel-bg); color:var(--text-primary); padding:10px 12px; font-size:0.85rem; resize:vertical; font-family:inherit;"></textarea>
+        </div>
+
         <!-- Option C: Quick Start -->
         <label class="resume-option" id="opt-quick" onclick="selectResume('quick')">
           <input type="radio" name="resume-source" value="quick" />
@@ -1038,8 +1046,17 @@
       });
       document.getElementById(`opt-${source}`)?.classList.add('selected');
       const dz = document.getElementById('drop-zone');
-      if (source === 'upload') { dz.classList.add('visible'); }
-      else { dz.classList.remove('visible'); }
+      const tc = document.getElementById('resume-text-container');
+      if (source === 'upload') {
+        dz.classList.add('visible');
+        if (tc) tc.style.display = 'block';
+      } else {
+        dz.classList.remove('visible');
+        if (tc) tc.style.display = 'none';
+        if (source === 'quick') {
+          state.resumeSummary = '';
+        }
+      }
     };
 
     document.getElementById('drop-zone').addEventListener('dragover', e => {
@@ -1056,11 +1073,19 @@
     document.getElementById('resume-file-input').addEventListener('change', e => {
       if (e.target.files[0]) handleResumeFile(e.target.files[0]);
     });
-    function handleResumeFile(file) {
+    async function handleResumeFile(file) {
       state.resumeFileName = file.name;
       document.getElementById('drop-zone').innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--accent)"></i><strong>${file.name}</strong><span>Ready to use</span>`;
-      // NOTE: Actual PDF parsing / text extraction happens in Phase 4 backend work.
-      // For now we store the file name so the briefing screen reflects the choice.
+      if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+        try {
+          const text = await file.text();
+          state.resumeSummary = text.slice(0, 2000);
+          const ta = document.getElementById('resume-text-input');
+          if (ta) ta.value = state.resumeSummary;
+        } catch (e) {
+          console.warn('Could not read text file:', e);
+        }
+      }
     }
 
     // ─── PANEL ────────────────────────────────────────────────────────────
@@ -1198,15 +1223,21 @@
       const enteredName = (nameInput && nameInput.value.trim()) || state.candidateName || 'Alex';
       state.candidateName = enteredName;
 
+      // Persist resume text in sessionStorage for voice engine grounding
+      if (state.resumeSummary && state.resumeSummary.trim()) {
+        sessionStorage.setItem('rolepilot_resume_summary', state.resumeSummary.trim());
+      } else {
+        sessionStorage.removeItem('rolepilot_resume_summary');
+      }
+
       // Build query params to pass setup config to the voice-engine
       const params = new URLSearchParams({
         track: state.track,
-        role: encodeURIComponent(state.role),
-        level: encodeURIComponent(state.level),
+        role: state.role,
+        level: state.level,
         difficulty: state.diffMode === 'auto' ? 'auto' : state.fixedTier,
-        candidate: encodeURIComponent(state.candidateName),
+        candidate: state.candidateName,
         panel: state.panelChoice === 'custom' ? state.customPanelists.join(',') : 'recommended',
-        // resume_summary is passed after backend extraction — for now empty
         resume: state.resumeSource,
       });
 
@@ -1223,6 +1254,11 @@
       state.candidateName = val;
       const briefName = document.getElementById('briefing-name');
       if (briefName) briefName.textContent = val || 'Alex';
+    });
+
+    // Resume text input handler
+    document.getElementById('resume-text-input')?.addEventListener('input', e => {
+      state.resumeSummary = e.target.value.trim();
     });
 
     // Sync selects to state on change

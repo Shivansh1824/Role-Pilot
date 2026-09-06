@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Voice Architecture & Implementation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #334155;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Top Bar Tabs */
+        .tabs {
+            display: flex;
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1rem;
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--text-main);
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* Tab Content Areas */
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Tracker Tab specific styles */
+        .tracker-container {
+            padding: 2rem;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            overflow-y: auto;
+        }
+
+        .tracker-container h1 {
+            margin-top: 0;
+            font-size: 2rem;
+            color: var(--text-main);
+        }
+
+        .tracker-container p.desc {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .task-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+        
+        .task-card.done {
+            border-left: 4px solid var(--success);
+            opacity: 0.7;
+        }
+        .task-card.in-progress {
+            border-left: 4px solid var(--warning);
+        }
+        .task-card.pending {
+            border-left: 4px solid var(--border);
+        }
+
+        .task-status {
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .task-details h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+        }
+
+        .task-details p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-top: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .badge.ui { color: #c084fc; background: rgba(192, 132, 252, 0.1); }
+        .badge.backend { color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
+        .badge.ai { color: #4ade80; background: rgba(34, 197, 94, 0.1); }
+
+        /* Simulation Tab specific styles */
+        .sidebar {
+            width: 350px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .sidebar h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.2rem;
+            color: var(--text-main);
+        }
+
+        .test-case {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .test-case:hover {
+            border-color: var(--accent);
+        }
+
+        .test-case.active {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .test-case h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .test-case p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .status-icon { font-size: 1.2rem; }
+
+        .main-sim {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .stage {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .agent-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            width: 150px;
+            transition: all 0.3s;
+            opacity: 0.5;
+        }
+
+        .agent-card.active {
+            opacity: 1;
+            border-color: var(--success);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+            transform: scale(1.05);
+        }
+
+        .agent-card.candidate {
+            border-color: var(--accent);
+            opacity: 1;
+        }
+
+        .agent-card.candidate.active {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--border);
+            margin: 0 auto 1rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .agent-card h3 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+        .tag { font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; }
+
+        .transcript-container {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 1rem;
+            border-radius: 8px;
+            line-height: 1.5;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-candidate { align-self: flex-end; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.5); }
+        .msg-agent { align-self: flex-start; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); }
+        .msg-david { border-left: 4px solid #facc15; }
+        .msg-maya { border-left: 4px solid #a78bfa; }
+        .msg-alex { border-left: 4px solid #4ade80; }
+        .msg-system { align-self: center; background: rgba(245, 158, 11, 0.1); color: var(--warning); font-size: 0.85rem; padding: 0.5rem 1rem; border-radius: 20px; text-align: center; }
+        .msg-name { font-weight: bold; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-muted); }
+
+        .controls { margin-top: 1rem; display: flex; justify-content: center; gap: 1rem; }
+        button { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; background: var(--accent); color: white; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #2563eb; }
+        button:disabled { background: var(--border); cursor: not-allowed; }
+        button.success { background: var(--success); }
+        button.danger { background: var(--danger); }
+
+    </style>
+</head>
+<body>
+
+    <!-- Top Tabs -->
+    <div class="tabs">
+        <div class="tab" id="tab-tracker" onclick="switchTab('tracker')">📋 Implementation Tracker</div>
+        <div class="tab" id="tab-architecture" onclick="switchTab('architecture')">🏗️ Architecture Map</div>
+        <div class="tab active" id="tab-demo" onclick="switchTab('demo')">🎮 Simulation Demo</div>
+    </div>
+
+    <!-- Tab: Architecture Map -->
+    <div class="tab-content" id="content-architecture">
+        <div class="tracker-container">
+            <h1>The True Multi-Voice Architecture</h1>
+            <p class="desc">How we achieve a perfectly synchronized, 3-person AI interview panel with zero overlapping voices and a unified memory.</p>
+            
+            <div style="display: flex; flex-direction: column; gap: 2rem; margin-top: 2rem;">
+                
+                <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 1.5rem; border-radius: 8px;">
+                    <h3 style="margin-top: 0; color: #ef4444;">❌ The Problem with Default AI Agents</h3>
+                    <p style="color: var(--text-muted); line-height: 1.6;">If you put 3 independent AI agents in a room, they act like 3 people wearing noise-canceling headphones. They don't share memories, they waste tokens by thinking separately, and when the candidate speaks, <strong>they all try to answer at the exact same time.</strong></p>
+                </div>
+
+                <div style="background: rgba(34, 197, 94, 0.1); border-left: 4px solid #22c55e; padding: 1.5rem; border-radius: 8px;">
+                    <h3 style="margin-top: 0; color: #22c55e;">✅ Our Solution: The "Puppeteer" Architecture</h3>
+                    <p style="color: var(--text-muted); line-height: 1.6;">Instead of 3 separate brains, we use <strong>One Central Brain (Gemini)</strong> controlling 3 "Dumb" Voice Bodies (Agora). Here is how it flows in real-time:</p>
+                    
+                    <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                        
+                        <div style="background: var(--panel-bg); padding: 1rem; border: 1px solid var(--border); border-radius: 8px;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #60a5fa;">1. The Ears & Mouth (Agora Cloud)</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">The candidate speaks. Agora instantly translates the audio to text (STT). Because there are 3 agents in the room, Agora sends 3 identical text transcripts to our server at the exact same millisecond.</p>
+                        </div>
+
+                        <div style="background: var(--panel-bg); padding: 1rem; border: 1px solid var(--border); border-radius: 8px;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #facc15;">2. The Barrier (Next.js LLM Router)</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">Our Custom LLM API Route acts as a traffic controller. It receives all 3 requests but intentionally "holds" them. Using a lightning-fast <strong>In-Memory Global Map</strong>, it deduplicates the requests so we don't process the same sentence three times.</p>
+                        </div>
+
+                        <div style="background: var(--panel-bg); padding: 1rem; border: 1px solid var(--border); border-radius: 8px;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #a78bfa;">3. The Brain (Gemini Flash)</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">Our server makes <strong>one single, highly efficient call</strong> to Gemini. Gemini reads the transcript, applies our Prompt Engineering rules (like the Hit Counter and Verbal Handoffs), and decides who should speak next (e.g. Maya).</p>
+                        </div>
+
+                        <div style="background: var(--panel-bg); padding: 1rem; border: 1px solid var(--border); border-radius: 8px;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #4ade80;">4. The Puppet Strings (Audio Routing)</h4>
+                            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);">Our server now has 3 HTTP connections waiting for an answer. It sends the AI text exclusively down <strong>Maya's</strong> connection. It explicitly returns a blank/silent response to <strong>David and Alex's</strong> connections. Result? Maya speaks, and the other two stay perfectly quiet.</p>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 1: Implementation Tracker -->
+    <div class="tab-content" id="content-tracker">
+        <div class="tracker-container">
+            <h1>Implementation Tracker</h1>
+            <p class="desc">A master checklist of all functionalities designed for the True Multi-Voice Architecture. We will update these statuses as we build them in the codebase.</p>
+            
+            <div class="task-list">
+                <div class="task-card done">
+                    <div class="task-status">✅</div>
+                    <div class="task-details">
+                        <h3>1. Architecture Design & Planning</h3>
+                        <p>Complete the architectural layout, memory synchronization design (In-Memory Map), and define the LLM interaction pattern.</p>
+                        <span class="badge ui">Planning</span>
+                    </div>
+                </div>
+
+                <div class="task-card pending">
+                    <div class="task-status">⏳</div>
+                    <div class="task-details">
+                        <h3>2. Gemini API Key Configuration</h3>
+                        <p>Receive and securely add the Gemini API key to the .env.local file to authenticate the Custom LLM router.</p>
+                        <span class="badge backend">Backend</span>
+                    </div>
+                </div>
+
+                <div class="task-card pending">
+                    <div class="task-status">⏳</div>
+                    <div class="task-details">
+                        <h3>3. Dynamic Agent Spawning (/api/invite-agent)</h3>
+                        <p>Refactor the existing invite-agent route to automatically join 3 distinct voice agents based on the selected interview track (Tech, Sales, HR, Product).</p>
+                        <span class="badge backend">Backend</span> <span class="badge ai">Agora</span>
+                    </div>
+                </div>
+
+                <div class="task-card pending">
+                    <div class="task-status">⏳</div>
+                    <div class="task-details">
+                        <h3>4. Create the LLM Router Endpoint (/api/llm-router)</h3>
+                        <p>Create the Next.js API route that will act as the "barrier". It must intercept HTTP POST requests from Agora and establish the In-Memory Global Map to deduplicate the 3 simultaneous requests.</p>
+                        <span class="badge backend">Backend</span>
+                    </div>
+                </div>
+
+                <div class="task-card pending">
+                    <div class="task-status">⏳</div>
+                    <div class="task-details">
+                        <h3>5. Master Prompt Engineering (The Rules)</h3>
+                        <p>Write the highly complex system prompt for Gemini 2.5 Flash. This prompt must include instructions for the Verbal Handoff rule, the 3-Hit rule, domain expertise, and the 4 phases of the interview.</p>
+                        <span class="badge ai">AI / Prompting</span>
+                    </div>
+                </div>
+
+                <div class="task-card pending">
+                    <div class="task-status">⏳</div>
+                    <div class="task-details">
+                        <h3>6. Audio Stream Routing & Silence</h3>
+                        <p>Implement the logic that reads Gemini's decision (e.g. &lt;speaker&gt;Maya&lt;/speaker&gt;), pipes the text to Maya's HTTP connection, and explicitly returns \n (silence) to David and Alex's HTTP connections.</p>
+                        <span class="badge backend">Backend</span>
+                    </div>
+                </div>
+
+                <div class="task-card pending">
+                    <div class="task-status">⏳</div>
+                    <div class="task-details">
+                        <h3>7. Testing the Hit Mechanics</h3>
+                        <p>Test the application using voice to trigger Hit 1 (vague), Hit 2 (silence), and Hit 3 (termination) to verify that the interview ends cleanly.</p>
+                        <span class="badge ui">Testing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Simulation Demo -->
+    <div class="tab-content active" id="content-demo">
+        <div class="sidebar">
+            <h2>Automated Test Cases</h2>
+            <div id="test-list">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+        <div class="main-sim">
+            <div class="stage">
+                <div class="agent-card candidate" id="node-candidate">
+                    <div class="avatar" style="background: var(--accent);">👤</div>
+                    <h3>Candidate</h3>
+                    <span class="tag">Interviewee</span>
+                </div>
+                <div class="agent-card" id="node-david">
+                    <div class="avatar" style="border: 2px solid #facc15;">D</div>
+                    <h3>David</h3>
+                    <span class="tag">Hiring Mgr</span>
+                </div>
+                <div class="agent-card" id="node-maya">
+                    <div class="avatar" style="border: 2px solid #a78bfa;">M</div>
+                    <h3>Maya</h3>
+                    <span class="tag">Product PM</span>
+                </div>
+                <div class="agent-card" id="node-alex">
+                    <div class="avatar" style="border: 2px solid #4ade80;">A</div>
+                    <h3>Alex</h3>
+                    <span class="tag">Tech Lead</span>
+                </div>
+            </div>
+            <div class="transcript-container" id="transcript">
+                <div class="msg-system">Select a test case from the sidebar and click "Run Simulation" to begin.</div>
+            </div>
+            <div class="controls">
+                <button id="runBtn" disabled>Run Simulation</button>
+                <button id="passBtn" class="success" style="display:none;">Mark Pass ✓</button>
+                <button id="failBtn" class="danger" style="display:none;">Mark Fail ✗</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`content-${tabId}`).classList.add('active');
+        }
+
+        // Define Test Cases
+        const testCases = [
+            { id: 1, title: "Test Case 1: Standard Opening", description: "David opens the room, asks for an intro. Candidate replies. David validates and passes mic to Lead.", status: "pending", flow: [ { speaker: 'david', text: "Welcome to Role-Pilot! I'm David, the Hiring Manager. To kick things off, could you introduce yourself?" }, { speaker: 'candidate', text: "Hi, I'm Shivansh. I recently built a voice AI product using Next.js and Agora." }, { speaker: 'system', text: "LLM Router analyzes intro against resume... No hits issued." }, { speaker: 'david', text: "That sounds excellent, Shivansh. Let's dive right into the product side. Maya, do you want to take over?" }, { speaker: 'maya', text: "Sure thing! So Shivansh, what was the biggest user experience challenge you faced while building that?" } ] },
+            { id: 2, title: "Test Case 2: Verbal Handoff", description: "Maya asks a product question, but candidate gives a highly technical answer. Maya acknowledges and verbally hands off to Alex.", status: "pending", flow: [ { speaker: 'maya', text: "How did you ensure the product scaled properly for thousands of users?" }, { speaker: 'candidate', text: "We optimized the PostgreSQL indexes and implemented Redis caching on the backend servers." }, { speaker: 'system', text: "LLM Router detects deep technical terms. Triggers Verbal Handoff Rule." }, { speaker: 'maya', text: "That definitely solves the scale issue for the users. Since you brought up database indexing and Redis, I'll let Alex jump in here." }, { speaker: 'alex', text: "Thanks Maya. Shivansh, regarding the Redis caching, what eviction policy did you use?" } ] },
+            { id: 3, title: "Test Case 3: Silence / Nudge (Hit 1)", description: "Candidate is silent. Agent nudges. Still silent. Agent issues 1 hit and moves to next question.", status: "pending", flow: [ { speaker: 'alex', text: "Can you explain how a reverse proxy works?" }, { speaker: 'system', text: "Waiting 4 seconds for candidate..." }, { speaker: 'alex', text: "Take your time, Shivansh, or if you prefer, we can jump to the next topic." }, { speaker: 'system', text: "Waiting 5 more seconds... No response detected." }, { speaker: 'alex', text: "You have made 1 hit because you did not provide an answer. 2 more and the interview is over. Let's move on. What is the difference between TCP and UDP?" } ] },
+            { id: 4, title: "Test Case 4: Vague Answer (Hit)", description: "Candidate answers completely out of context. Agent issues a hit for wasting time.", status: "pending", flow: [ { speaker: 'maya', text: "What metrics did you use to measure the success of your last feature launch?" }, { speaker: 'candidate', text: "Well, I really like playing video games on the weekend. My favorite game is Minecraft." }, { speaker: 'system', text: "LLM Router analyzes context. Identifies answer is completely unrelated to the interview." }, { speaker: 'maya', text: "You have made 1 hit because that answer was completely unrelated to the interview topic. 2 more and the interview is over. My question was about product metrics." } ] },
+            { id: 5, title: "Test Case 5: Wrong Answer (No Hit)", description: "Candidate gives a factually incorrect answer. NO hit is issued (proving wrong answers are safe).", status: "pending", flow: [ { speaker: 'alex', text: "What HTTP method should be used to completely replace a resource?" }, { speaker: 'candidate', text: "You should definitely use the GET method to replace data on the server." }, { speaker: 'system', text: "LLM Router analyzes context. Answer is technically wrong, but relevant. No hit issued." }, { speaker: 'alex', text: "Actually, GET is for retrieving data. You would typically use PUT to replace a resource. But let's move on to databases." } ] },
+            { id: 6, title: "Test Case 6: Interview Termination", description: "Candidate accumulates the 3rd Hit. The interview is immediately terminated.", status: "pending", flow: [ { speaker: 'david', text: "Can you tell us about a time you resolved a conflict with a team member?" }, { speaker: 'candidate', text: "I don't really want to answer that." }, { speaker: 'system', text: "LLM Router detects refusal/vague. Checking In-Memory Hit Count... Previous Hits: 2. New Hit: 3." }, { speaker: 'david', text: "You have made 3 hits because you refused to answer the question. The interview is now over. Thank you for your time." }, { speaker: 'system', text: "Call disconnected. Final Transcript saved to database." } ] },
+            { id: 7, title: "Master Simulation: Full Interview", description: "A complete 5-minute continuous interview showing introductions, handoffs, wrong answers, strikes, and a final termination.", status: "pending", flow: [ { speaker: 'david', text: "Welcome to Role-Pilot! I'm David, the Hiring Manager. To kick things off, could you introduce yourself?" }, { speaker: 'candidate', text: "Hi, I'm Shivansh. I recently built a voice AI product using Next.js and Agora." }, { speaker: 'system', text: "LLM Router analyzes intro... No hits. Routing to Maya for Product phase." }, { speaker: 'david', text: "That sounds excellent. Let's dive right into the product side. Maya, over to you." }, { speaker: 'maya', text: "Thanks David. Shivansh, what was the biggest scale challenge you faced while building that?" }, { speaker: 'candidate', text: "We struggled with latency, so we optimized the PostgreSQL indexes and implemented Redis caching." }, { speaker: 'system', text: "LLM Router detects technical domain. Triggers Verbal Handoff to Alex." }, { speaker: 'maya', text: "That definitely solves the scale issue for the users! Since you brought up database indexing and Redis, I'll let Alex jump in to cover the technical architecture." }, { speaker: 'alex', text: "Thanks Maya. Shivansh, regarding the Redis caching, what eviction policy did you use?" }, { speaker: 'candidate', text: "We used the Random Eviction policy because it's the most efficient for session data." }, { speaker: 'system', text: "LLM Router analyzes: Technically incorrect, but relevant. No Hit." }, { speaker: 'alex', text: "Actually, for session data, Least Recently Used (LRU) is usually standard, but I understand the approach. Moving on..." }, { speaker: 'alex', text: "How did you manage state synchronization across the Next.js serverless functions?" }, { speaker: 'candidate', text: "I just used HTML and CSS mostly to make it look good." }, { speaker: 'system', text: "LLM Router analyzes: Out of context. Issuing Hit 1." }, { speaker: 'alex', text: "You have made 1 hit because that answer was completely unrelated to backend state management. 2 more and the interview is over." }, { speaker: 'david', text: "Let's pivot to culture. Shivansh, how do you handle disagreements with your engineering manager?" }, { speaker: 'system', text: "Waiting 4 seconds... Nudging..." }, { speaker: 'david', text: "Take your time, or we can move to a different question." }, { speaker: 'system', text: "Waiting 5 seconds... No response. Issuing Hit 2." }, { speaker: 'david', text: "You have made a 2nd hit for failing to respond. 1 more and we are done. Let's try again: what is your preferred working style?" }, { speaker: 'candidate', text: "I don't know, whatever." }, { speaker: 'system', text: "LLM Router analyzes: Vague/Refusal. Issuing Hit 3." }, { speaker: 'david', text: "You have made your 3rd hit because you refused to provide a constructive answer. This interview is now terminated. Thank you for your time." }, { speaker: 'system', text: "Interview Session Ended. Total time: 8m 42s. Saving scorecard." } ] }
+        ];
+
+        let activeTestCase = null;
+        let isRunning = false;
+
+        function renderSidebar() {
+            const list = document.getElementById('test-list');
+            list.innerHTML = '';
+            
+            testCases.forEach(tc => {
+                const div = document.createElement('div');
+                div.className = `test-case ${activeTestCase?.id === tc.id ? 'active' : ''}`;
+                
+                let icon = '⏳';
+                if (tc.status === 'pass') icon = '✅';
+                if (tc.status === 'fail') icon = '❌';
+
+                div.innerHTML = `<h4>${tc.title} <span class="status-icon">${icon}</span></h4><p>${tc.description}</p>`;
+                
+                div.onclick = () => {
+                    if (isRunning) return;
+                    activeTestCase = tc;
+                    renderSidebar();
+                    document.getElementById('runBtn').disabled = false;
+                    document.getElementById('passBtn').style.display = 'none';
+                    document.getElementById('failBtn').style.display = 'none';
+                    resetStage();
+                };
+                list.appendChild(div);
+            });
+        }
+
+        function resetStage() {
+            document.getElementById('transcript').innerHTML = '<div class="msg-system">Select a test case from the sidebar and click "Run Simulation" to begin.</div>';
+            document.querySelectorAll('.agent-card').forEach(el => el.classList.remove('active'));
+        }
+
+        async function runSimulation() {
+            if (!activeTestCase || isRunning) return;
+            isRunning = true;
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('transcript').innerHTML = '';
+
+            const transcriptDiv = document.getElementById('transcript');
+
+            for (let step of activeTestCase.flow) {
+                document.querySelectorAll('.agent-card').forEach(el => el.classList.remove('active'));
+                if (step.speaker !== 'system') document.getElementById(`node-${step.speaker}`).classList.add('active');
+
+                const msgDiv = document.createElement('div');
+                if (step.speaker === 'system') {
+                    msgDiv.className = 'message msg-system';
+                    msgDiv.innerText = step.text;
+                } else if (step.speaker === 'candidate') {
+                    msgDiv.className = 'message msg-candidate';
+                    msgDiv.innerHTML = `<div class="msg-name">Candidate</div>${step.text}`;
+                } else {
+                    msgDiv.className = `message msg-agent msg-${step.speaker}`;
+                    const name = step.speaker.charAt(0).toUpperCase() + step.speaker.slice(1);
+                    msgDiv.innerHTML = `<div class="msg-name">${name}</div>${step.text}`;
+                }
+
+                transcriptDiv.appendChild(msgDiv);
+                transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+
+                const waitTime = step.speaker === 'system' ? 1200 : Math.max(1500, step.text.length * 35);
+                await sleep(waitTime);
+            }
+
+            document.querySelectorAll('.agent-card').forEach(el => el.classList.remove('active'));
+            document.getElementById('passBtn').style.display = 'inline-block';
+            document.getElementById('failBtn').style.display = 'inline-block';
+            isRunning = false;
+        }
+
+        document.getElementById('runBtn').onclick = runSimulation;
+        document.getElementById('passBtn').onclick = () => { activeTestCase.status = 'pass'; renderSidebar(); document.getElementById('passBtn').style.display = 'none'; document.getElementById('failBtn').style.display = 'none'; };
+        document.getElementById('failBtn').onclick = () => { activeTestCase.status = 'fail'; renderSidebar(); document.getElementById('passBtn').style.display = 'none'; document.getElementById('failBtn').style.display = 'none'; };
+
+        renderSidebar();
+    </script>
+</body>
+</html>

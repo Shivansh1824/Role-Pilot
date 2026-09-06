@@ -71,13 +71,15 @@ export default function LandingPage() {
     difficulty: 'auto',
     candidate: 'Alex',
     resume: 'none',
+    resumeSummary: '',
   });
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.search) {
+    if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const rawCandidate = params.get('candidate') ? decodeURIComponent(params.get('candidate')!).trim() : '';
       const cleanCandidate = rawCandidate && rawCandidate.toLowerCase() !== 'candidate' ? rawCandidate : 'Alex';
+      const resumeSummary = sessionStorage.getItem('rolepilot_resume_summary') || '';
       setSetupConfig({
         track: params.get('track') || 'tech',
         role: params.get('role') ? decodeURIComponent(params.get('role')!) : 'Senior Full-Stack Engineer',
@@ -85,6 +87,7 @@ export default function LandingPage() {
         difficulty: params.get('difficulty') || 'auto',
         candidate: cleanCandidate,
         resume: params.get('resume') || 'none',
+        resumeSummary,
       });
     }
   }, []);
@@ -132,6 +135,7 @@ export default function LandingPage() {
             experience_level: setupConfig.level,
             difficulty_mode: setupConfig.difficulty,
             candidate_name: setupConfig.candidate,
+            resume_summary: setupConfig.resumeSummary,
           }),
         })
           .then(async (res) => {
