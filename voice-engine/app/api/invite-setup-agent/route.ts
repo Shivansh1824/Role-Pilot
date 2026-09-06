@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   AgoraClient,
   Agent,
+  Area,
   DeepgramSTT,
   ExpiresIn,
   MiniMaxTTS,
   CustomLLM,
+  Gemini,
 } from 'agora-agents';
 import { ClientStartRequest } from '@/types/conversation';
 
@@ -25,8 +27,9 @@ export async function POST(request: NextRequest) {
     }
 
     const client = new AgoraClient({
-      appId: requireEnv('AGORA_APP_ID'),
-      appCertificate: requireEnv('AGORA_APP_CERTIFICATE'),
+      area: Area.US,
+      appId: requireEnv('NEXT_PUBLIC_AGORA_APP_ID'),
+      appCertificate: requireEnv('NEXT_AGORA_APP_CERTIFICATE'),
     });
 
     const llmRouterHost = 'http://127.0.0.1:3000'; // Target the local API route
@@ -49,6 +52,29 @@ RULES:
 - Do not make up form data; wait for the user to provide it.
 - Your voice is friendly, encouraging, and clear.`;
 
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const publicTunnel = process.env.PUBLIC_URL || process.env.TUNNEL_URL;
+
+    // Use CustomLLM only if a public tunnel URL is provided (Agora Cloud blocks localhost/127.0.0.1)
+    const llmProvider = (publicTunnel && publicTunnel.startsWith('http'))
+      ? new CustomLLM({
+          url: `${publicTunnel}/api/setup-agent-llm`,
+          apiKey: 'dummy-key',
+          model: 'gemini-3.5-flash',
+          greetingMessage: 'Hi! I am Nova, your setup assistant. What is your name?',
+          failureMessage: 'Please wait a moment.',
+          maxHistory: 50,
+          params: { max_tokens: 512, temperature: 0.7, top_p: 0.95 },
+        })
+      : new Gemini({
+          apiKey: geminiKey || 'dummy',
+          model: 'gemini-1.5-flash',
+          greetingMessage: 'Hi! I am Nova, your setup assistant. What is your name?',
+          failureMessage: 'Please wait a moment.',
+          maxHistory: 50,
+          temperature: 0.7,
+        });
+
     const agent = new Agent({
       client,
       instructions: systemPrompt,
@@ -64,7 +90,7 @@ RULES:
           },
           end_of_speech: {
             mode: 'vad',
-            vad_config: { silence_duration_ms: 1500 }, // Faster turn taking for setup
+            vad_config: { silence_duration_ms: 1500 }, // Under 2000ms limit
           },
         },
       },
@@ -82,17 +108,7 @@ RULES:
           language: 'en',
         }),
       )
-      .withLlm(
-        new CustomLLM({
-          url: `${llmRouterHost}/api/setup-agent-llm`,
-          apiKey: 'dummy-key',
-          model: 'gemini-3.5-flash',
-          greetingMessage: 'Hi! I am Nova, your setup assistant. What is your name?',
-          failureMessage: 'Please wait a moment.',
-          maxHistory: 50,
-          params: { max_tokens: 512, temperature: 0.7, top_p: 0.95 },
-        }),
-      )
+      .withLlm(llmProvider)
       .withTts(
         new MiniMaxTTS({
           model: 'speech_2_6_turbo',

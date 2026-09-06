@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       }));
 
       const geminiPromise = ai.models.generateContent({
-        model: 'gemini-3.5-flash-lite',
+        model: 'gemini-3.5-flash',
         contents: geminiContents,
         config: {
           systemInstruction: systemMessage,
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // The prompt instructs the LLM to start with a bracketed tag, e.g. "[Maya (Product Manager)] Hello!"
     // We need to parse who is supposed to speak.
     let responseText = '';
-    const match = geminiText.match(/^\[([^\]]+)\]\s*(.*)$/s);
+    const match = geminiText.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
     
     if (match) {
       const speakerTag = match[1]; // e.g., "Maya (Product Manager)"
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       id: `chatcmpl-${Date.now()}`,
       object: 'chat.completion',
       created: Math.floor(Date.now() / 1000),
-      model: 'gemini-3.5-flash-lite',
+      model: 'gemini-3.5-flash',
       choices: [
         {
           index: 0,

@@ -7,6 +7,7 @@ import {
   ExpiresIn,
   MiniMaxTTS,
   CustomLLM,
+  Gemini,
 } from 'agora-agents';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 
@@ -197,16 +198,37 @@ export async function POST(request: NextRequest) {
       appCertificate,
     });
 
-    const activeAgents = TRACK_AGENTS[trackKey] || TRACK_AGENTS['tech'];
     const agentIds: string[] = [];
-    
-    // Determine the host for the LLM router webhook
-    // We use localhost for Next.js API route communication.
-    const llmRouterHost = 'http://127.0.0.1:3000';
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const publicTunnel = process.env.PUBLIC_URL || process.env.TUNNEL_URL;
 
     for (let i = 0; i < 3; i++) {
       const panelist = activeAgents[i];
       const assignedUid = String(AGENT_UIDS[i]);
+
+      // Use CustomLLM only if a public tunnel URL is provided (Agora Cloud blocks localhost/127.0.0.1)
+      const llmProvider = (publicTunnel && publicTunnel.startsWith('http'))
+        ? new CustomLLM({
+            url: `${publicTunnel}/api/llm-router?agent=${encodeURIComponent(panelist.name)}&channel=${encodeURIComponent(channel_name)}`,
+            apiKey: 'dummy-key',
+            model: 'gemini-custom',
+            greetingMessage: i === 0 ? greeting : undefined,
+            failureMessage: 'Please wait a moment.',
+            maxHistory: 50,
+            params: {
+              max_tokens: 1024,
+              temperature: 0.7,
+              top_p: 0.95,
+            },
+          })
+        : new Gemini({
+            apiKey: geminiKey || 'dummy',
+            model: 'gemini-1.5-flash',
+            greetingMessage: i === 0 ? greeting : undefined,
+            failureMessage: 'Please wait a moment.',
+            maxHistory: 50,
+            temperature: 0.7,
+          });
       
       const agent = new Agent({
         client,
@@ -227,7 +249,7 @@ export async function POST(request: NextRequest) {
             end_of_speech: {
               mode: 'vad',
               vad_config: {
-                silence_duration_ms: 2500,
+                silence_duration_ms: 1800,
               },
             },
           },
@@ -246,21 +268,7 @@ export async function POST(request: NextRequest) {
             language: 'en',
           }),
         )
-        .withLlm(
-          new CustomLLM({
-            url: `${llmRouterHost}/api/llm-router?agent=${encodeURIComponent(panelist.name)}&channel=${encodeURIComponent(channel_name)}`,
-            apiKey: 'dummy-key',
-            model: 'gemini-custom',
-            greetingMessage: i === 0 ? greeting : undefined,
-            failureMessage: 'Please wait a moment.',
-            maxHistory: 50,
-            params: {
-              max_tokens: 1024,
-              temperature: 0.7,
-              top_p: 0.95,
-            },
-          }),
-        )
+        .withLlm(llmProvider)
         .withTts(
           new MiniMaxTTS({
             model: 'speech_2_6_turbo',

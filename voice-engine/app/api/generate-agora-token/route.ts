@@ -29,24 +29,35 @@ export async function GET(request: NextRequest) {
     : parsedUid;
   const channelName = searchParams.get('channel') || generateChannelName();
 
-  const expirationTime =
-    Math.floor(Date.now() / 1000) + EXPIRATION_TIME_IN_SECONDS;
+  const expiry = EXPIRATION_TIME_IN_SECONDS; // 3600 seconds (1 hour)
 
   try {
-    // console.log('Building RTC+RTM token: uid =', uid, 'channel =', channelName);
-    const token = RtcTokenBuilder.buildTokenWithRtm(
+    // Generate RTC token for the numeric UID to join RTC channels
+    const rtcToken = RtcTokenBuilder.buildTokenWithUid(
+      APP_ID,
+      APP_CERTIFICATE,
+      channelName,
+      uid,
+      RtcRole.PUBLISHER,
+      expiry,
+      expiry,
+    );
+
+    // Also build a combined RTC+RTM token with string account for RTM / toolkit compatibility
+    const combinedToken = RtcTokenBuilder.buildTokenWithRtm(
       APP_ID,
       APP_CERTIFICATE,
       channelName,
       uid.toString(),
       RtcRole.PUBLISHER,
-      expirationTime,
-      expirationTime,
+      expiry,
+      expiry,
     );
-    // console.log('Token generated successfully (RTC + RTM)');
 
     return NextResponse.json({
-      token,
+      token: rtcToken,
+      rtcToken,
+      rtmToken: combinedToken,
       uid: uid.toString(),
       channel: channelName,
     });
