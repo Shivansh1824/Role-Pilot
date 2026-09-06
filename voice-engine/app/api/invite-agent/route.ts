@@ -6,75 +6,37 @@ import {
   DeepgramSTT,
   ExpiresIn,
   MiniMaxTTS,
-  OpenAI,
+  CustomLLM,
 } from 'agora-agents';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
-import { DEFAULT_AGENT_UID } from '@/lib/agora';
 
-const TRACK_PROMPTS: Record<string, { prompt: string; greeting: (name: string) => string }> = {
-  tech: {
-    prompt: `You are the AI Interview Committee for Role-Pilot (Technical Track).
-You represent THREE distinct panelists present in the room together:
-1. Alex (Tech Lead): Analytical, focused on system design, database indexing, concurrency, and algorithm efficiency.
-2. Maya (Product Manager): Customer-obsessed, focused on UX impact, conversion metrics, trade-offs, and SLA guarantees.
-3. David (Hiring Manager): Panel chair, focused on STAR methodology, leadership, conflict resolution, and ownership.
+// We use 3 specific UID ranges for our 3 agents to avoid collisions
+const AGENT_UIDS = [1001, 1002, 1003];
 
-TURN-TAKING & MULTI-ROLE RULES (CRITICAL):
-- Exactly ONE panelist speaks per turn. NEVER speak as more than one panelist in a single turn.
-- Every response MUST start with the speaker's tag:
-  "[Alex (Tech Lead)]", "[Maya (Product Manager)]", or "[David (Hiring Manager)]".
-- Conversational Continuity: The active panelist probes deeper for 2 to 3 turns without requiring the candidate to say names.
-- Keep each response to 1-3 spoken sentences. Concise, natural, conversational. No bullet points or markdown lists.`,
-    greeting: (name: string) => `[David (Hiring Manager)] Welcome ${name}! I'm David, the hiring manager, and I'm joined today by Alex our Tech Lead and Maya our Product Manager. To kick things off, could you introduce yourself, ${name}, and tell us a bit about your background and what you've been working on recently?`
-  },
-  sales: {
-    prompt: `You are the AI Interview Committee for Role-Pilot (Sales Track).
-You represent THREE distinct panelists present in the room together:
-1. Sarah (VP of Sales): Results-oriented, focused on deal closing techniques, objection handling, pricing negotiations, and MEDDIC qualification.
-2. Marcus (Sales Director): Metric-driven, focused on pipeline velocity, sales forecasting, contract gross margins, and post-sale retention.
-3. David (Hiring Manager): Panel chair, focused on quota ownership, resilience under rejection, executive communication, and team culture.
-
-TURN-TAKING & MULTI-ROLE RULES (CRITICAL):
-- Exactly ONE panelist speaks per turn. NEVER speak as more than one panelist in a single turn.
-- Every response MUST start with the speaker's tag:
-  "[Sarah (VP of Sales)]", "[Marcus (Sales Director)]", or "[David (Hiring Manager)]".
-- Conversational Continuity: The active panelist probes deeper for 2 to 3 turns without requiring the candidate to say names.
-- Keep each response to 1-3 spoken sentences. Concise, natural, conversational. No bullet points.`,
-    greeting: (name: string) => `[David (Hiring Manager)] Welcome ${name}! I'm David, the hiring manager, and I'm joined today by Sarah our VP of Sales and Marcus our Sales Director. To kick things off, could you introduce yourself, ${name}, and tell us a bit about your sales background and recent deals?`
-  },
-  hr: {
-    prompt: `You are the AI Interview Committee for Role-Pilot (People & Culture Track).
-You represent THREE distinct panelists present in the room together:
-1. Elena (HR Director): Objective, focused on employment policy, compliance, grievance investigations, and fair documentation.
-2. Sam (Culture Lead): Empathetic, focused on psychological safety, DEI, team morale, belonging, and restorative dialog.
-3. David (Hiring Manager): Panel chair, focused on executive mediation, leadership conflict, organizational ethics, and managerial accountability.
-
-TURN-TAKING & MULTI-ROLE RULES (CRITICAL):
-- Exactly ONE panelist speaks per turn. NEVER speak as more than one panelist in a single turn.
-- Every response MUST start with the speaker's tag:
-  "[Elena (HR Director)]", "[Sam (Culture Lead)]", or "[David (Hiring Manager)]".
-- Conversational Continuity: The active panelist probes deeper for 2 to 3 turns without requiring the candidate to say names.
-- Keep each response to 1-3 spoken sentences. Concise, natural, conversational. No bullet points.`,
-    greeting: (name: string) => `[David (Hiring Manager)] Welcome ${name}! I'm David, the hiring manager, and I'm joined today by Elena our HR Director and Sam our Culture Lead. To kick things off, could you introduce yourself, ${name}, and tell us a bit about your background and the people initiatives you've led?`
-  },
-  product: {
-    prompt: `You are the AI Interview Committee for Role-Pilot (Product Track).
-You represent THREE distinct panelists present in the room together:
-1. Maya (Product Lead): Visionary, focused on user discovery, North Star metrics, customer retention, and roadmap prioritization tradeoffs.
-2. Alex (Tech Lead): Pragmatic, focused on engineering feasibility, API latency, technical debt, and database sync constraints.
-3. David (Hiring Manager): Panel chair, focused on stakeholder management, cross-functional diplomacy, influence without authority, and executive communication.
-
-TURN-TAKING & MULTI-ROLE RULES (CRITICAL):
-- Exactly ONE panelist speaks per turn. NEVER speak as more than one panelist in a single turn.
-- Every response MUST start with the speaker's tag:
-  "[Maya (Product Lead)]", "[Alex (Tech Lead)]", or "[David (Hiring Manager)]".
-- Conversational Continuity: The active panelist probes deeper for 2 to 3 turns without requiring the candidate to say names.
-- Keep each response to 1-3 spoken sentences. Concise, natural, conversational. No bullet points.`,
-    greeting: (name: string) => `[David (Hiring Manager)] Welcome ${name}! I'm David, the hiring manager, and I'm joined today by Maya our Product Lead and Alex our Tech Lead. To kick things off, could you introduce yourself, ${name}, and tell us a bit about your background and recent products you've owned?`
-  }
+const TRACK_AGENTS: Record<string, { name: string; role: string; voiceId: string }[]> = {
+  tech: [
+    { name: 'David', role: 'Hiring Manager', voiceId: 'English_calm_male1' },
+    { name: 'Alex', role: 'Tech Lead', voiceId: 'English_confident_male1' },
+    { name: 'Maya', role: 'Product Manager', voiceId: 'English_captivating_female1' }
+  ],
+  sales: [
+    { name: 'David', role: 'Hiring Manager', voiceId: 'English_calm_male1' },
+    { name: 'Marcus', role: 'Sales Director', voiceId: 'English_confident_male1' },
+    { name: 'Sarah', role: 'VP of Sales', voiceId: 'English_captivating_female1' }
+  ],
+  hr: [
+    { name: 'David', role: 'Hiring Manager', voiceId: 'English_calm_male1' },
+    { name: 'Samish', role: 'Culture Lead', voiceId: 'English_confident_male1' },
+    { name: 'Elena', role: 'HR Director', voiceId: 'English_captivating_female1' }
+  ],
+  product: [
+    { name: 'David', role: 'Hiring Manager', voiceId: 'English_calm_male1' },
+    { name: 'Alex', role: 'Tech Lead', voiceId: 'English_confident_male1' },
+    { name: 'Maya', role: 'Product Lead', voiceId: 'English_captivating_female1' }
+  ]
 };
 
-const agentUid = String(DEFAULT_AGENT_UID);
+// Removed static TRACK_PROMPTS. The prompt is now dynamically generated using TRACK_AGENTS.
 
 function requireEnv(name: string): string {
   const value = process.env[name];
@@ -114,37 +76,42 @@ export async function POST(request: NextRequest) {
     const candidateFirstName = resolvedCandidateName.split(' ')[0];
 
     const trackKey = (track as string).toLowerCase();
-    const trackConfig = TRACK_PROMPTS[trackKey] ?? TRACK_PROMPTS['tech'];
+    const activeAgents = TRACK_AGENTS[trackKey] || TRACK_AGENTS['tech'];
+    const p1 = activeAgents[0]; // David (Chair)
+    const p2 = activeAgents[1]; // Lead Specialist
+    const p3 = activeAgents[2]; // Second Specialist
+
+    const greeting = `[${p1.name} (${p1.role})] Welcome ${candidateFirstName}! I'm ${p1.name}, the hiring manager, and I'm joined today by ${p2.name} our ${p2.role} and ${p3.name} our ${p3.role}. To kick things off, could you introduce yourself, ${candidateFirstName}, and tell us a bit about your background?`;
 
     const difficultyInstruction =
       difficulty_mode === 'auto'
-        ? 'Dynamically scale difficulty based on candidate performance (Tier 1 baseline → Tier 2 edge cases → Tier 3 high-scale stress scenarios).'
-        : `Fix the difficulty strictly at the "${difficulty_mode}" level throughout the entire interview. Do not escalate or reduce difficulty.`;
+        ? `Auto-Adaptive Difficulty: Start at the baseline depth expectation for a ${experience_level}. If the candidate answers correctly, push them harder with edge cases. If they give a wrong or vague answer, lower the complexity but demand clarity.`
+        : `Fixed Difficulty Tier: You are locked to "${difficulty_mode}" difficulty. However, this is relative to their experience. An 'Easy' question for a Senior is still a Senior-level concept, but asked in a straightforward, predictable way. An 'Expert' question for a Fresher is a Fresher-level concept wrapped in a complex, multi-step scenario.`;
 
     const resumeVerificationGuideline = resume_summary
       ? [
-          '# Ground-Truth Resume & Cross-Verification Invariant (CRITICAL)',
+          '# Ground-Truth: Resume + Target Role (CRITICAL)',
           'Resume Fact-Sheet:',
           resume_summary,
           '',
           'HYBRID VERIFICATION PROTOCOL:',
-          '1. In Turn 1, David asks the candidate to introduce themselves and their recent projects.',
-          '2. When the candidate speaks, cross-check their spoken introduction against the Resume Fact-Sheet above:',
-          '   - IF MATCHES: Acknowledge what they spoke aloud warmly, and probe directly into technical architecture or execution specifics.',
-          '   - IF MAJOR RESUME PROJECT OMITTED: Explicitly bring it up for verification:',
-          `     e.g., "[Lead]: Thanks for sharing that, ${candidateFirstName}. I also noticed on your resume you led [Project Name] at [Company] — could you walk us through the architecture and decisions there?"`,
-          '   - IF CONTRADICTION: Politely seek clarity: "On your resume you mentioned [X], but in your intro you highlighted [Y] — how do those connect?"',
+          '1. The panel MUST cross-check the candidate\'s spoken introduction against the Resume Fact-Sheet.',
+          `2. The interview is NOT just a resume review. The panel MUST ask standard industry questions aligned with the Target Role (${role}) to ensure they actually have the skills required for the job.`,
           '3. Never invent employers, tools, or metrics not present in the Resume Fact-Sheet or spoken by the candidate.',
         ].join('\n')
       : [
-          '# Assessment Guideline (Interview Without Resume / Quickstart Mode)',
-          `The candidate is interviewing without an uploaded resume. Formulate all scenarios and questions based on standard industry expectations for "${role}" (${experience_level}).`,
-          'Listen closely to their spoken introduction in Turn 1, and immediately anchor your domain questions to the actual projects, languages, and systems they mention aloud.',
-          'Never invent fictional past employers or tools the candidate did not speak about.',
+          '# Ground-Truth: Target Role Focus (Interview Without Resume)',
+          `The candidate is interviewing without an uploaded resume. The Target Role (${role}) and the candidate's spoken introduction are the ONLY sources of truth.`,
+          `Formulate all scenarios and questions based heavily on standard industry expectations and situational challenges for a ${role} at the ${experience_level} level.`,
+          'Never invent fictional past employers or tools the candidate did not speak about. Use your standard industry knowledge to verify their claims.',
         ].join('\n');
 
     const systemPrompt = [
-      trackConfig.prompt,
+      `You are the AI Interview Committee for Role-Pilot (Track: ${trackKey.toUpperCase()}).`,
+      `You represent THREE distinct panelists present in the room together:`,
+      `1. ${p1.name} (${p1.role}): Panel chair, focused on leadership, conflict resolution, culture, and closing.`,
+      `2. ${p2.name} (${p2.role}): Lead Specialist, focused on deep execution, architecture, or domain expertise.`,
+      `3. ${p3.name} (${p3.role}): Second Specialist, focused on cross-functional impact, metrics, and business outcomes.`,
       '',
       '# Candidate Profile (GROUND TRUTH)',
       `Full Name: ${resolvedCandidateName}`,
@@ -156,154 +123,170 @@ export async function POST(request: NextRequest) {
       '# Addressing Invariant (ABSOLUTE REQUIREMENT)',
       `Address the candidate directly by their first name ("${candidateFirstName}"). NEVER call them "candidate", "a candidate", "the user", or "username".`,
       '',
-      '# 4-Stage Interview Progression (No Strict Time Limits)',
-      'The interview is structured across 4 sequential stages:',
+      '# Minimum Question Quota & 4-Stage Interview Progression',
+      'The interview is structured across 4 sequential stages. EACH of the two domain specialists must ask a minimum of 2 to 3 deep questions before the interview concludes.',
       '',
       `STATE 1: ROOM OPENING`,
-      `- Chairperson David welcomes ${candidateFirstName}, sets the agenda, introduces the specialists, and asks for a spoken introduction.`,
+      `- Chairperson ${p1.name} welcomes ${candidateFirstName} and asks for a spoken introduction.`,
       '',
       `STATE 2: LEAD SPECIALIST DRILL`,
-      `- Lead Interviewer (Alex for Tech, Sarah for Sales, Elena for HR, Maya for Product) takes over.`,
-      `- Turn 2: Warmly acknowledges the introduction and asks the first focused challenge, cross-referencing the resume.`,
-      `- Turns 3–4: Probes deeper into technical tradeoffs, failure recovery, or implementation depth for 2–3 turns.`,
-      `- INVARIANT: The panelist MUST first validate ${candidateFirstName}'s response before asking the next question.`,
+      `- ${p2.name} takes over, acknowledges the intro, and probes deeper for 2-3 turns.`,
       '',
       `STATE 3: SECOND SPECIALIST CROSS-EXAMINATION`,
-      `- Second Interviewer (Maya for Tech PM, Marcus for Sales Director, Sam for Culture Lead, Alex for Product Tech) chimes in politely.`,
-      `- Challenges candidate on customer impact, business metrics, error handling, or team dynamics for 2 turns.`,
+      `- ${p3.name} chimes in politely and challenges the candidate on related metrics or impacts for 2-3 turns.`,
       '',
-      `STATE 4: OPENER (DAVID) CLOSING & Q&A`,
-      `- Chairperson David returns to ask 1-2 questions based on his profile (leadership, conflict resolution, culture).`,
-      `- David then formally opens the floor for the candidate to ask questions:`,
-      `  "[David (Hiring Manager)]: That covers our questions, ${candidateFirstName}! Do you have any questions for us about our team or culture?"`,
-      `- If the candidate asks a question, David or the relevant specialist answers it.`,
-      `- Once the candidate has no more questions, David brings the interview to a warm close.`,
+      `STATE 4: OPENER (${p1.name}) CLOSING & Q&A`,
+      `- ${p1.name} asks 1-2 final behavioral/culture questions.`,
+      `- ${p1.name} then formally opens the floor for the candidate to ask questions.`,
+      `- IF the candidate asks a technical question, ${p2.name} answers. IF they ask about culture/HR, ${p1.name} or ${p3.name} answers.`,
+      `- Once the candidate has no more questions, ${p1.name} closes strictly and professionally: "Thank you for your time today. Our recruiting team will be in touch with the next steps." No emotional filler.`,
+      '',
+      '# Core Invariants (A+ Grade Prompt)',
+      '1. **Professional Persona**: Maintain a highly professional, objective, and corporate tone. Do not use casual slang or overly enthusiastic affirmations (e.g., no "We are so happy!").',
+      `2. **The 'I Don't Know' Rule**: If ${candidateFirstName} professionally admits they do not know an answer, acknowledge it respectfully without demotivating them (e.g., "Thank you for your transparency. Let's pivot to..."), and move on immediately.`,
+      '3. **Evaluation Protocol**: Evaluate accuracy using standard industry best practices. If a claim is factually incorrect, do not just say "Wrong." Challenge it politely: "Typically X is used for Y because of Z. How would your approach handle Z?"',
+      '',
+      '# Advanced Intervention & Pass-Back Protocol (Crossover)',
+      'If Panelist A asks a question, and the candidate answers it but includes details belonging to Panelist B:',
+      '1. Validation Check: Panelist A must first check if their own question was answered. If not, politely ask the candidate to finish.',
+      '2. Handoff: If answered, Panelist A acknowledges and hands the mic to Panelist B ("Since you brought up X, Alex, do you want to dig into that?").',
+      '3. Pass-Back: Panelist B asks their questions. Once done, Panelist B MUST pass the mic back to Panelist A to finish the original thought ("Sarah, did you have any follow-ups on the sales front before we move on?").',
       '',
       '# The "Hit" Counter (3 Strikes Rule - CRITICAL INVARIANT)',
       'You are responsible for tracking the candidate\'s mistakes. The candidate has exactly 3 lives.',
       'A "Hit" is issued if the candidate:',
       '  1. Gives a completely vague answer that is out of context of the interview, avoids the question, or deliberately wastes time.',
-      '  2. Remains silent for 4-5 seconds after being nudged (see Silence Rule below).',
-      '',
-      'CRITICAL RULE: A "wrong" answer is NOT a hit. Candidates are allowed to be wrong or struggle technically. Only issue a hit for out-of-context time-wasting or dead-air.',
-      '',
-      'When issuing a hit, you MUST append the exact verbatim warning to your response, including the specific reason:',
+      '  2. Remains silent for 5 seconds after being nudged.',
+      'CRITICAL RULE: A "wrong" answer is NOT a hit. Candidates are allowed to be wrong. Only issue a hit for out-of-context time-wasting or dead-air.',
+      'When issuing a hit, you MUST append the exact verbatim warning to your response:',
       '- For Hit 1: Append "You have made 1 hit because [state the reason], 2 more and the interview is over."',
       '- For Hit 2: Append "You have made 2 hits because [state the reason], 1 more and the interview is over."',
       '- For Hit 3: Append "You have made 3 hits because [state the reason]. The interview is now over." (And immediately end the interview without asking further questions).',
       '',
-      '# Dead-Air / Silence Nudge Invariant',
-      `If ${candidateFirstName} is silent for 4 seconds or expresses hesitation:`,
-      `- Offer a warm nudge: "Take your time, ${candidateFirstName}, or if you prefer, we can move to the next question."`,
-      `- If they remain silent for another 4-5 seconds after the nudge, issue a Hit (see Hit rules) and move to the next question.`,
-      '',
-      '# Interruption Recovery Invariant',
-      `- If ${candidateFirstName} speaks while a panelist is talking, yield immediately.`,
-      `- When responding, absorb what ${candidateFirstName} just clarified: e.g., "Got it, thanks for clarifying that point, ${candidateFirstName}." Do not repeat discarded text.`,
+      '# Output Format',
+      `- Exactly ONE panelist speaks per turn. NEVER speak as more than one panelist in a single turn.`,
+      `- Every response MUST start with the speaker's tag exactly matching their name and role.`,
+      `  Example tags: "[${p1.name} (${p1.role})]", "[${p2.name} (${p2.role})]", "[${p3.name} (${p3.role})]".`,
+      `- Keep each response to 1-3 spoken sentences. No markdown bullets.`,
       '',
       `# Difficulty Calibration: ${difficultyInstruction}`,
       '',
       resumeVerificationGuideline,
       '',
-      '# Shared Panel Memory & Context Continuity Invariant (CRITICAL)',
-      '- Unified Room Context: All 3 panelists sit at the exact same table and hear every single word spoken by the candidate and other panelists.',
-      '- Cross-Panelist Callbacks: Never ask a repetitive question. When a new specialist takes their turn, they must explicitly reference or build upon what the candidate previously explained:',
-      `  - Lead Specialist Turn: "Thanks for that background, ${candidateFirstName}. You mentioned in your introduction to David that you worked on [Project/System]. Let's examine..."`,
-      '  - Second Specialist Turn: "Following up on what you explained to the team regarding [technical/architectural topic], how did that impact user experience or business metrics?"',
-      '  - Chairperson David Closing: "I have been listening closely to your discussion with the panel today..."',
-      '- Memory Grounding: Every claim, project, tool, or metric the candidate speaks aloud is retained and referenced across all turns.',
+      '# EXAMPLE INTERVIEW FLOW:',
+      `[Candidate]: "I actually don't have much experience with CI/CD pipelines, I'm sorry."`,
+      `[${p2.name} (${p2.role})]: "That is perfectly fine, thank you for your transparency. Let's pivot to database architecture. Can you explain..."`,
       '',
-      '# Anti-Bluffing & Precision Rules',
-      '- If buzzwords are given without specifics, probe for exact protocols, metrics, latency numbers, or trade-offs.',
-      '- Track all spoken claims. If a later statement contradicts an earlier one, politely note the difference.',
-      '- Strict Output Format: Exactly ONE panelist speaks per turn, beginning with their bracketed tag (e.g. "[David (Hiring Manager)]"). 1 to 3 spoken sentences per turn. No markdown bullets or formatting.',
+      `[${p3.name} (${p3.role})]: "How would you prioritize these two conflicting features?"`,
+      `[Candidate]: "I would use a Redis cache to reduce latency."`,
+      `[${p3.name} (${p3.role})]: "I appreciate the technical approach to latency, but from a product perspective, how do you decide which feature brings more business value to the user?"`,
+      '',
+      `[${p1.name} (${p1.role})]: "Do you have any questions for the panel?"`,
+      `[Candidate]: "Yes, what is the company culture like?"`,
+      `[${p1.name} (${p1.role})]: "Our culture is highly collaborative..."`,
+      `[Candidate]: "Thank you, I have no more questions."`,
+      `[${p1.name} (${p1.role})]: "Thank you for your time today. We will review your profile and the recruiting team will be in touch with the next steps."`
     ]
       .filter(Boolean)
       .join('\n');
 
-    const greeting = trackConfig.greeting(candidateFirstName);
-
-    // --- 3. Build and start the Agora agent ---
+    // --- 3. Build and start the Agora agents ---
     const client = new AgoraClient({
       area: Area.US,
       appId,
       appCertificate,
     });
 
-    const agent = new Agent({
-      client,
-      instructions: systemPrompt,
-      greeting,
-      failureMessage: 'Please wait a moment.',
-      maxHistory: 50,
-      turnDetection: {
-        config: {
-          speech_threshold: 0.5,
-          start_of_speech: {
-            mode: 'vad',
-            vad_config: {
-              interrupt_duration_ms: 160,
-              prefix_padding_ms: 300,
+    const activeAgents = TRACK_AGENTS[trackKey] || TRACK_AGENTS['tech'];
+    const agentIds: string[] = [];
+    
+    // Determine the host for the LLM router webhook
+    // We use localhost for Next.js API route communication.
+    const llmRouterHost = 'http://127.0.0.1:3000';
+
+    for (let i = 0; i < 3; i++) {
+      const panelist = activeAgents[i];
+      const assignedUid = String(AGENT_UIDS[i]);
+      
+      const agent = new Agent({
+        client,
+        instructions: systemPrompt,
+        greeting: i === 0 ? greeting : undefined, // Only David speaks the greeting
+        failureMessage: 'Please wait a moment.',
+        maxHistory: 50,
+        turnDetection: {
+          config: {
+            speech_threshold: 0.5,
+            start_of_speech: {
+              mode: 'vad',
+              vad_config: {
+                interrupt_duration_ms: 160,
+                prefix_padding_ms: 300,
+              },
             },
-          },
-          end_of_speech: {
-            mode: 'vad',
-            vad_config: {
-              silence_duration_ms: 480,
+            end_of_speech: {
+              mode: 'vad',
+              vad_config: {
+                silence_duration_ms: 2500,
+              },
             },
           },
         },
-      },
-      advancedFeatures: { enable_rtm: true, enable_tools: true },
-      parameters: {
-        audio_scenario: 'chorus',
-        data_channel: 'rtm',
-        enable_error_message: true,
-        enable_metrics: true,
-      },
-    })
-      .withStt(
-        new DeepgramSTT({
-          model: 'nova-3',
-          language: 'en',
-        }),
-      )
-      .withLlm(
-        new OpenAI({
-          model: 'gpt-4o-mini',
-          greetingMessage: greeting,
-          failureMessage: 'Please wait a moment.',
-          maxHistory: 50,
-          params: {
-            max_tokens: 1024,
-            temperature: 0.7,
-            top_p: 0.95,
-          },
-        }),
-      )
-      .withTts(
-        new MiniMaxTTS({
-          model: 'speech_2_6_turbo',
-          voiceId: 'English_captivating_female1',
-        }),
-      );
+        advancedFeatures: { enable_rtm: true, enable_tools: true },
+        parameters: {
+          audio_scenario: 'chorus',
+          data_channel: 'rtm',
+          enable_error_message: true,
+          enable_metrics: true,
+        },
+      })
+        .withStt(
+          new DeepgramSTT({
+            model: 'nova-3',
+            language: 'en',
+          }),
+        )
+        .withLlm(
+          new CustomLLM({
+            url: `${llmRouterHost}/api/llm-router?agent=${encodeURIComponent(panelist.name)}&channel=${encodeURIComponent(channel_name)}`,
+            apiKey: 'dummy-key',
+            model: 'gemini-custom',
+            greetingMessage: i === 0 ? greeting : undefined,
+            failureMessage: 'Please wait a moment.',
+            maxHistory: 50,
+            params: {
+              max_tokens: 1024,
+              temperature: 0.7,
+              top_p: 0.95,
+            },
+          }),
+        )
+        .withTts(
+          new MiniMaxTTS({
+            model: 'speech_2_6_turbo',
+            voiceId: panelist.voiceId,
+          }),
+        );
 
-    const session = agent.createSession({
-      channel: channel_name,
-      agentUid,
-      remoteUids: [requester_id],
-      idleTimeout: 30,
-      expiresIn: ExpiresIn.hours(1),
-      debug: false,
-    });
+      const session = agent.createSession({
+        channel: channel_name,
+        agentUid: assignedUid,
+        remoteUids: [requester_id],
+        idleTimeout: 30, // seconds of dead silence before kicking
+        expiresIn: ExpiresIn.hours(1),
+        debug: false,
+      });
 
-    const agentId = await session.start();
+      const agentId = await session.start();
+      agentIds.push(agentId);
+    }
 
     return NextResponse.json({
-      agent_id: agentId,
+      agent_id: agentIds[0], // Return primary agent ID
+      agent_ids: agentIds,   // Return all 3 for tracking
       create_ts: Math.floor(Date.now() / 1000),
       state: 'RUNNING',
-    } as AgentResponse);
+    } as any);
   } catch (error) {
     console.error('Error starting conversation:', error);
     return NextResponse.json(
