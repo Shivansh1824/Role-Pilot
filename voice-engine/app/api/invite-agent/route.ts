@@ -7,7 +7,7 @@ import {
   ExpiresIn,
   MiniMaxTTS,
   CustomLLM,
-  Gemini,
+  OpenAI,
 } from 'agora-agents';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 
@@ -16,25 +16,25 @@ const AGENT_UIDS = [1001, 1002, 1003];
 
 const TRACK_AGENTS: Record<string, { name: string; role: string; voiceId: string }[]> = {
   tech: [
-    { name: 'David', role: 'Hiring Manager', voiceId: 'English_calm_male1' },
-    { name: 'Alex', role: 'Tech Lead', voiceId: 'English_confident_male1' },
-    { name: 'Maya', role: 'Product Manager', voiceId: 'English_captivating_female1' }
+    { name: 'David', role: 'Hiring Manager', voiceId: 'English_Trustworth_Man' },
+    { name: 'Alex', role: 'Technical Lead', voiceId: 'English_Diligent_Man' },
+    { name: 'Maya', role: 'Product Manager', voiceId: 'English_captivating_female1' },
   ],
   sales: [
-    { name: 'David', role: 'Hiring Manager', voiceId: 'English_calm_male1' },
-    { name: 'Marcus', role: 'Sales Director', voiceId: 'English_confident_male1' },
-    { name: 'Sarah', role: 'VP of Sales', voiceId: 'English_captivating_female1' }
+    { name: 'David', role: 'Hiring Manager', voiceId: 'English_Trustworth_Man' },
+    { name: 'Marcus', role: 'Sales Director', voiceId: 'English_Diligent_Man' },
+    { name: 'Sarah', role: 'VP of Sales', voiceId: 'English_captivating_female1' },
   ],
   hr: [
-    { name: 'David', role: 'Hiring Manager', voiceId: 'English_calm_male1' },
-    { name: 'Samish', role: 'Culture Lead', voiceId: 'English_confident_male1' },
-    { name: 'Elena', role: 'HR Director', voiceId: 'English_captivating_female1' }
+    { name: 'David', role: 'Hiring Manager', voiceId: 'English_Trustworth_Man' },
+    { name: 'Samish', role: 'Culture Lead', voiceId: 'English_Diligent_Man' },
+    { name: 'Elena', role: 'HR Director', voiceId: 'English_captivating_female1' },
   ],
   product: [
-    { name: 'David', role: 'Hiring Manager', voiceId: 'English_calm_male1' },
-    { name: 'Alex', role: 'Tech Lead', voiceId: 'English_confident_male1' },
-    { name: 'Maya', role: 'Product Lead', voiceId: 'English_captivating_female1' }
-  ]
+    { name: 'David', role: 'Hiring Manager', voiceId: 'English_Trustworth_Man' },
+    { name: 'Alex', role: 'Technical Lead', voiceId: 'English_Diligent_Man' },
+    { name: 'Maya', role: 'Product Lead', voiceId: 'English_captivating_female1' },
+  ],
 };
 
 // Removed static TRACK_PROMPTS. The prompt is now dynamically generated using TRACK_AGENTS.
@@ -199,41 +199,112 @@ export async function POST(request: NextRequest) {
     });
 
     const agentIds: string[] = [];
-    const geminiKey = process.env.GEMINI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY_INTERVIEW || process.env.GEMINI_API_KEY;
     const publicTunnel = process.env.PUBLIC_URL || process.env.TUNNEL_URL;
 
-    for (let i = 0; i < 3; i++) {
-      const panelist = activeAgents[i];
-      const assignedUid = String(AGENT_UIDS[i]);
+    if (publicTunnel && publicTunnel.startsWith('http')) {
+      // Multi-agent routed setup when a public webhook tunnel is present
+      for (let i = 0; i < 3; i++) {
+        const panelist = activeAgents[i];
+        const assignedUid = String(AGENT_UIDS[i]);
 
-      // Use CustomLLM only if a public tunnel URL is provided (Agora Cloud blocks localhost/127.0.0.1)
-      const llmProvider = (publicTunnel && publicTunnel.startsWith('http'))
-        ? new CustomLLM({
-            url: `${publicTunnel}/api/llm-router?agent=${encodeURIComponent(panelist.name)}&channel=${encodeURIComponent(channel_name)}`,
-            apiKey: 'dummy-key',
-            model: 'gemini-custom',
-            greetingMessage: i === 0 ? greeting : undefined,
-            failureMessage: 'Please wait a moment.',
-            maxHistory: 50,
-            params: {
-              max_tokens: 1024,
-              temperature: 0.7,
-              top_p: 0.95,
-            },
-          })
-        : new Gemini({
-            apiKey: geminiKey || 'dummy',
-            model: 'gemini-3.6-flash',
-            greetingMessage: i === 0 ? greeting : undefined,
-            failureMessage: 'Please wait a moment.',
-            maxHistory: 50,
+        const llmProvider = new CustomLLM({
+          url: `${publicTunnel}/api/llm-router?agent=${encodeURIComponent(panelist.name)}&channel=${encodeURIComponent(channel_name)}`,
+          apiKey: 'dummy-key',
+          model: 'gemini-custom',
+          greetingMessage: i === 0 ? greeting : undefined,
+          failureMessage: 'Please wait a moment.',
+          maxHistory: 50,
+          params: {
+            max_tokens: 1024,
             temperature: 0.7,
-          });
-      
+            top_p: 0.95,
+          },
+        });
+
+        const agent = new Agent({
+          client,
+          instructions: systemPrompt,
+          greeting: i === 0 ? greeting : undefined,
+          failureMessage: 'Please wait a moment.',
+          maxHistory: 50,
+          turnDetection: {
+            config: {
+              speech_threshold: 0.5,
+              start_of_speech: {
+                mode: 'vad',
+                vad_config: {
+                  interrupt_duration_ms: 160,
+                  prefix_padding_ms: 300,
+                },
+              },
+              end_of_speech: {
+                mode: 'vad',
+                vad_config: {
+                  silence_duration_ms: 1500,
+                },
+              },
+            },
+          },
+          advancedFeatures: { enable_rtm: true, enable_tools: false },
+          parameters: {
+            audio_scenario: 'chorus',
+            data_channel: 'datastream',
+            enable_error_message: true,
+            enable_metrics: true,
+          },
+        })
+          .withStt(
+            new DeepgramSTT({
+              model: 'nova-3',
+              language: 'en',
+            }),
+          )
+          .withLlm(llmProvider)
+          .withTts(
+            new MiniMaxTTS({
+              model: 'speech_2_6_turbo',
+              voiceId: panelist.voiceId,
+            }),
+          );
+
+        const session = agent.createSession({
+          channel: channel_name,
+          agentUid: assignedUid,
+          remoteUids: requester_id ? [String(requester_id), '*'] : ['*'],
+          idleTimeout: 60,
+          expiresIn: ExpiresIn.hours(1),
+          debug: false,
+        });
+
+        const agentId = await session.start();
+        agentIds.push(agentId);
+
+        if (i === 0) {
+          try {
+            await session.say(greeting);
+          } catch (sayErr) {
+            console.warn('session.say error (non-fatal):', sayErr);
+          }
+        }
+      }
+    } else {
+      // Unified Committee session: single agent orchestrator representing all 3 panelists
+      // Uses speaker role tags [David], [Alex], [Maya] to drive turn-taking and UI cards
+      const llmProvider = new OpenAI({
+        apiKey: geminiKey || 'dummy',
+        model: 'gemini-3.1-flash-lite',
+        url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+        greetingMessage: greeting,
+        failureMessage: 'Please wait a moment.',
+        maxHistory: 50,
+        temperature: 0.7,
+      });
+
       const agent = new Agent({
         client,
         instructions: systemPrompt,
-        greeting: i === 0 ? greeting : undefined, // Only David speaks the greeting
+        greeting: greeting,
         failureMessage: 'Please wait a moment.',
         maxHistory: 50,
         turnDetection: {
@@ -254,10 +325,10 @@ export async function POST(request: NextRequest) {
             },
           },
         },
-        advancedFeatures: { enable_rtm: true, enable_tools: true },
+        advancedFeatures: { enable_rtm: true, enable_tools: false },
         parameters: {
           audio_scenario: 'chorus',
-          data_channel: 'rtm',
+          data_channel: 'datastream',
           enable_error_message: true,
           enable_metrics: true,
         },
@@ -272,29 +343,36 @@ export async function POST(request: NextRequest) {
         .withTts(
           new MiniMaxTTS({
             model: 'speech_2_6_turbo',
-            voiceId: panelist.voiceId,
+            voiceId: p1.voiceId, // David's validated Trustworthy Man voice
           }),
         );
 
       const session = agent.createSession({
         channel: channel_name,
-        agentUid: assignedUid,
-        remoteUids: [requester_id],
-        idleTimeout: 30, // seconds of dead silence before kicking
+        agentUid: '123456',
+        remoteUids: requester_id ? [String(requester_id), '*'] : ['*'],
+        idleTimeout: 60,
         expiresIn: ExpiresIn.hours(1),
         debug: false,
       });
 
       const agentId = await session.start();
       agentIds.push(agentId);
+
+      // Proactively speak the committee greeting so the candidate is addressed immediately upon joining
+      try {
+        await session.say(greeting);
+      } catch (sayErr) {
+        console.warn('session.say error (non-fatal, greetingMessage configured on LLM):', sayErr);
+      }
     }
 
     return NextResponse.json({
-      agent_id: agentIds[0], // Return primary agent ID
-      agent_ids: agentIds,   // Return all 3 for tracking
+      agent_id: agentIds[0],
+      agent_ids: agentIds,
       create_ts: Math.floor(Date.now() / 1000),
       state: 'RUNNING',
-    } as any);
+    });
   } catch (error) {
     console.error('Error starting conversation:', error);
     return NextResponse.json(

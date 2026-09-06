@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY_APP || process.env.GEMINI_API_KEY });
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,6 +47,9 @@ Instructions:
    - "ready" (if candidate confirms they are ready to enter the interview room)
 9. "ready_to_launch": boolean - true if the candidate has confirmed readiness or all essential fields (name, role, experience) are confirmed.
 10. SINGLE-TAKE RULE: Never clear or overwrite an already-confirmed field unless the candidate explicitly corrects it.
+11. COMPOUND EXTRACTION: If the user provides multiple answers in one statement (e.g. "Yes I am Shivansh, and I want to interview for a Software Engineer role with 3 years of experience"), extract "name", "target_role", and "experience_tier" all at once, and set "active_step" to "overview".
+12. TYPO & ASR TOLERANCE: If speech recognition produces phonetic typos (e.g. "sofware enginer", "dev ops", "shivan", "3 yrs midlevel"), normalize them to their clean canonical values (e.g. "Software Engineer", "mid-level").
+13. OFF-TOPIC FILTERING: If the user speaks off-topic chatter (e.g. weather, food, jokes, random words), ignore it and do NOT extract it as candidate name or role.
 
 You MUST output ONLY valid JSON in the exact following structure:
 {
@@ -62,7 +65,7 @@ You MUST output ONLY valid JSON in the exact following structure:
 }`;
 
     let responseText = '';
-    const modelsToTry = ['gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.7-flash', 'gemini-flash-latest'];
+    const modelsToTry = ['gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-3.6-flash'];
     let lastError = null;
 
     for (const modelName of modelsToTry) {

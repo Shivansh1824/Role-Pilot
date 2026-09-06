@@ -151,16 +151,22 @@ export default function LandingPage() {
             return null;
           }),
 
-        // 2b. Set up RTM
+        // 2b. Set up RTM (with graceful fallback to RTC if RTM is unavailable)
         (async () => {
-          const { default: AgoraRTM } = await import('agora-rtm');
-          const rtm: RTMClient = new AgoraRTM.RTM(
-            process.env.NEXT_PUBLIC_AGORA_APP_ID!,
-            responseData.uid,
-          );
-          await rtm.login({ token: responseData.token });
-          await rtm.subscribe(responseData.channel);
-          return rtm;
+          try {
+            const { default: AgoraRTM } = await import('agora-rtm');
+            const rtm: RTMClient = new AgoraRTM.RTM(
+              process.env.NEXT_PUBLIC_AGORA_APP_ID!,
+              responseData.uid,
+            );
+            const tokenToUse = responseData.rtmToken || responseData.token;
+            await rtm.login({ token: tokenToUse });
+            await rtm.subscribe(responseData.channel);
+            return rtm;
+          } catch (rtmErr) {
+            console.warn('[RTM] Optional RTM setup failed, proceeding with direct WebRTC audio session:', rtmErr);
+            return null;
+          }
         })(),
       ]);
 

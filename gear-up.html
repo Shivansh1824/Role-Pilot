@@ -3,375 +3,1388 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Voice Onboarding — Role-Pilot</title>
-  <meta name="description" content="Intelligent voice-driven onboarding with Nova. Personalized profile sync, dynamic panel matching, and difficulty calibration." />
+  <title>Voice Onboarding (Nova) — Role-Pilot</title>
+  <meta name="description" content="Adaptive voice-driven candidate calibration with Nova. Personalized profile sync, dynamic panel matching, and real-time difficulty calibration." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    (function() {
+      const currentTheme = localStorage.getItem('theme') || 'dark';
+      if (currentTheme === 'light') {
+        document.documentElement.classList.add('light-theme');
+      } else {
+        document.documentElement.classList.remove('light-theme');
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/theme.js"></script>
   <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.23.0.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
+    /* Cockpit Specific Architectural Styles syncing with style.css */
     :root {
-      --bg: #07090e;
-      --card-bg: rgba(255, 255, 255, 0.035);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --card-border-glow: rgba(0, 229, 255, 0.4);
-      --accent-cyan: #00e5ff;
-      --accent-purple: #9d4edd;
-      --accent-emerald: #10b981;
-      --accent-amber: #f59e0b;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
-      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --cockpit-panel-bg: rgba(11, 17, 33, 0.68);
+      --cockpit-border: rgba(255, 255, 255, 0.08);
+      --cockpit-border-hover: rgba(0, 229, 255, 0.35);
+      --card-surface: rgba(17, 24, 43, 0.6);
+      --card-surface-hover: rgba(26, 36, 62, 0.7);
+      --text-highlight: #ffffff;
+      --bubble-nova-bg: rgba(14, 21, 38, 0.85);
+      --bubble-nova-border: rgba(0, 229, 255, 0.22);
+      --bubble-user-bg: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(79, 70, 229, 0.25));
+      --bubble-user-border: rgba(147, 51, 234, 0.4);
+      --modal-elevated-bg: rgba(11, 16, 30, 0.95);
+      --orb-shadow-1: rgba(0, 229, 255, 0.38);
+      --orb-shadow-2: rgba(147, 51, 234, 0.25);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background-color: var(--bg);
-      color: var(--text-main);
+    :root.light-theme {
+      --cockpit-panel-bg: rgba(255, 255, 255, 0.78);
+      --cockpit-border: rgba(15, 23, 42, 0.1);
+      --cockpit-border-hover: rgba(14, 165, 233, 0.45);
+      --card-surface: rgba(248, 250, 252, 0.85);
+      --card-surface-hover: rgba(241, 245, 249, 1);
+      --text-highlight: #0f172a;
+      --bubble-nova-bg: rgba(255, 255, 255, 0.95);
+      --bubble-nova-border: rgba(14, 165, 233, 0.3);
+      --bubble-user-bg: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(79, 70, 229, 0.12));
+      --bubble-user-border: rgba(124, 58, 237, 0.3);
+      --modal-elevated-bg: rgba(255, 255, 255, 0.98);
+      --orb-shadow-1: rgba(14, 165, 233, 0.32);
+      --orb-shadow-2: rgba(124, 58, 237, 0.2);
+    }
+
+    /* Page container layout */
+    .cockpit-page {
       min-height: 100vh;
-      overflow-x: hidden;
       display: flex;
       flex-direction: column;
       position: relative;
     }
 
-    .bg-glow {
-      position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background:
-        radial-gradient(circle 600px at 50% 15%, rgba(0, 229, 255, 0.08), transparent 70%),
-        radial-gradient(circle 500px at 85% 85%, rgba(157, 78, 221, 0.06), transparent 70%),
-        radial-gradient(circle 500px at 15% 85%, rgba(16, 185, 129, 0.05), transparent 70%);
+    /* App Header refinement */
+    .app-header.dashboard-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
 
-    /* Top Navigation */
-    header {
-      position: relative; z-index: 10;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 36px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    .cockpit-main {
+      flex: 1;
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      padding: 1.75rem 2.5rem 3.5rem;
+      max-width: 1420px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Architectural Mission Header */
+    .cockpit-mission-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--glass-border);
+      gap: 1.5rem;
+    }
+
+    .mission-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .mission-badge-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .arch-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      background: rgba(0, 229, 255, 0.08);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+    }
+
+    :root.light-theme .arch-badge {
+      background: rgba(14, 165, 233, 0.1);
+      border-color: rgba(14, 165, 233, 0.3);
+      color: hsl(190, 95%, 36%);
+    }
+
+    .engine-spec-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.74rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+    }
+
+    :root.light-theme .engine-spec-badge {
+      background: rgba(15, 23, 42, 0.04);
+      border-color: rgba(15, 23, 42, 0.08);
+    }
+
+    .mission-title {
+      font-family: var(--font-display);
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text-highlight);
+      line-height: 1.2;
+    }
+
+    .mission-title span {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .mission-desc {
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      max-width: 680px;
+      line-height: 1.5;
+    }
+
+    .mission-telemetry {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .session-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--card-surface);
+      border: 1px solid var(--glass-border);
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
       backdrop-filter: blur(12px);
-    }
-    .logo {
-      display: flex; align-items: center; gap: 10px;
-      font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; font-weight: 700;
-      color: #fff; text-decoration: none;
-    }
-    .logo span { color: var(--accent-cyan); }
-    .nav-actions { display: flex; align-items: center; gap: 12px; }
-    .profile-pill {
-      display: flex; align-items: center; gap: 8px;
-      padding: 6px 14px; border-radius: 100px;
-      background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);
-      font-size: 0.85rem; color: var(--text-muted);
-    }
-    .profile-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-emerald); }
-    .ghost-link {
-      color: var(--text-muted); text-decoration: none; font-size: 0.88rem; font-weight: 500;
-      display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.06); transition: all 0.2s;
-    }
-    .ghost-link:hover { color: #fff; border-color: rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.03); }
-
-    /* Main Container */
-    main {
-      flex: 1; position: relative; z-index: 1;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 32px 24px 60px; max-width: 960px; margin: 0 auto; width: 100%;
+      transition: var(--transition);
     }
 
-    .title-pill {
-      font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em;
-      color: var(--accent-cyan); background: rgba(0, 229, 255, 0.08);
-      border: 1px solid rgba(0, 229, 255, 0.2); padding: 6px 14px; border-radius: 100px;
-      margin-bottom: 16px; display: inline-flex; align-items: center; gap: 6px;
+    .live-pulse-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: var(--transition);
     }
 
-    /* Nova Audio Stage */
+    .session-badge.active {
+      border-color: rgba(0, 229, 255, 0.4);
+      color: var(--text-highlight);
+      background: rgba(0, 229, 255, 0.08);
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+    }
+
+    .session-badge.active .live-pulse-dot {
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      animation: pulseLiveDot 1.6s infinite;
+    }
+
+    @keyframes pulseLiveDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Cockpit Main Grid */
+    .cockpit-grid {
+      display: grid;
+      grid-template-columns: 520px 1fr;
+      gap: 1.75rem;
+      align-items: start;
+      width: 100%;
+    }
+
+    @media (max-width: 1140px) {
+      .cockpit-grid {
+        grid-template-columns: 460px 1fr;
+        gap: 1.25rem;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .cockpit-mission-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .cockpit-grid {
+        grid-template-columns: 1fr;
+      }
+      .cockpit-main {
+        padding: 1.25rem 1.25rem 3rem;
+      }
+    }
+
+    /* ─── LEFT PANEL: CONVERSATION FLOW STREAM ────────────────────────── */
+    .chat-flow-panel {
+      background: var(--cockpit-panel-bg);
+      border: 1px solid var(--cockpit-border);
+      border-radius: var(--radius-outer);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: var(--shadow-layered);
+      display: flex;
+      flex-direction: column;
+      height: 720px;
+      overflow: hidden;
+      position: relative;
+      transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .chat-panel-header {
+      padding: 1.1rem 1.35rem;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    :root.light-theme .chat-panel-header {
+      background: rgba(15, 23, 42, 0.02);
+    }
+
+    .chat-panel-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-highlight);
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      letter-spacing: -0.02em;
+    }
+
+    .voice-sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(0, 229, 255, 0.08);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+    }
+
+    /* ─── LIVE CONVERSATION STREAM (GOOGLE GEMINI STYLE) ─────────────── */
+    .chat-stream-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.4rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 229, 255, 0.25) transparent;
+    }
+
+    .chat-stream-container::-webkit-scrollbar {
+      width: 5px;
+    }
+    .chat-stream-container::-webkit-scrollbar-thumb {
+      background: rgba(0, 229, 255, 0.25);
+      border-radius: 4px;
+    }
+    .chat-stream-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-empty-hint {
+      margin: auto;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      max-width: 320px;
+    }
+
+    .chat-empty-hint i {
+      font-size: 2.2rem;
+      color: var(--accent);
+      opacity: 0.7;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+
+    /* Chat Rows - Left (Interviewer Nova) & Right (Candidate You) */
+    .chat-row {
+      display: flex;
+      gap: 0.75rem;
+      max-width: 88%;
+      animation: chatSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes chatSlideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-row.nova {
+      align-self: flex-start;
+      margin-right: auto;
+    }
+
+    .chat-row.user {
+      align-self: flex-end;
+      margin-left: auto;
+      flex-direction: row-reverse;
+    }
+
+    .chat-row.system {
+      align-self: center;
+      max-width: 100%;
+      margin: 0.25rem auto;
+    }
+
+    .chat-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.82rem;
+    }
+
+    .chat-row.nova .chat-avatar {
+      background: radial-gradient(circle at 35% 35%, var(--accent), var(--primary));
+      color: #fff;
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.35);
+    }
+
+    .chat-row.user .chat-avatar {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+
+    .chat-bubble-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .chat-row.user .chat-bubble-wrap {
+      align-items: flex-end;
+    }
+
+    .bubble-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+    }
+
+    .chat-row.nova .bubble-speaker {
+      color: var(--accent);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .chat-row.user .bubble-speaker {
+      color: var(--primary);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .bubble-time {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+    }
+
+    .chat-bubble {
+      padding: 0.8rem 1.05rem;
+      font-size: 0.89rem;
+      line-height: 1.55;
+      border-radius: var(--radius-inner);
+      backdrop-filter: blur(8px);
+      word-break: break-word;
+    }
+
+    .chat-row.nova .chat-bubble {
+      background: var(--bubble-nova-bg);
+      border: 1px solid var(--bubble-nova-border);
+      border-top-left-radius: 4px;
+      color: var(--text-primary);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+    }
+
+    .chat-row.user .chat-bubble {
+      background: var(--bubble-user-bg);
+      border: 1px solid var(--bubble-user-border);
+      border-top-right-radius: 4px;
+      color: var(--text-highlight);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+    }
+
+    .system-badge-pill {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 999px;
+      padding: 0.4rem 1rem;
+      font-size: 0.76rem;
+      color: var(--success);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      font-weight: 500;
+    }
+
+    /* Live Audio Status Bar */
+    .chat-status-bar {
+      padding: 0.65rem 1.25rem;
+      background: rgba(0, 0, 0, 0.28);
+      border-top: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    :root.light-theme .chat-status-bar {
+      background: rgba(15, 23, 42, 0.03);
+    }
+
+    .speaker-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .wave-bars {
+      display: inline-flex;
+      align-items: center;
+      gap: 2.5px;
+      height: 14px;
+    }
+
+    .wave-bar {
+      width: 2.5px;
+      height: 4px;
+      background: var(--text-muted);
+      border-radius: 2px;
+      transition: height 0.2s ease;
+    }
+
+    .wave-bars.speaking .wave-bar {
+      background: var(--accent);
+      animation: liveEqualizer 0.6s ease-in-out infinite alternate;
+    }
+
+    .wave-bars.speaking .wave-bar:nth-child(2) { animation-delay: 0.15s; }
+    .wave-bars.speaking .wave-bar:nth-child(3) { animation-delay: 0.3s; }
+    .wave-bars.speaking .wave-bar:nth-child(4) { animation-delay: 0.45s; }
+
+    @keyframes liveEqualizer {
+      0% { height: 4px; }
+      100% { height: 13px; }
+    }
+
+    /* Quick Replies Tray */
+    .quick-replies-tray {
+      padding: 0.75rem 1.1rem;
+      background: rgba(255, 255, 255, 0.015);
+      border-top: 1px solid var(--glass-border);
+      display: flex;
+      gap: 0.6rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .quick-replies-tray::-webkit-scrollbar { display: none; }
+
+    .quick-chip {
+      padding: 0.45rem 0.85rem;
+      border-radius: 999px;
+      background: var(--card-surface);
+      border: 1px solid var(--glass-border);
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .quick-chip:hover {
+      border-color: var(--accent);
+      background: rgba(0, 229, 255, 0.1);
+      color: var(--text-highlight);
+      transform: translateY(-2px);
+    }
+
+    .quick-chip:active {
+      transform: scale(0.98);
+    }
+
+    .quick-chip i {
+      font-size: 0.75rem;
+      color: var(--accent);
+    }
+
+    /* ─── RIGHT PANEL: VOICE STAGE & HUD ─────────────────────────────── */
+    .voice-stage-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
     .voice-stage {
-      display: flex; flex-direction: column; align-items: center; margin: 8px 0 28px;
-      text-align: center; width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0.5rem 0 1.75rem;
+      text-align: center;
+      width: 100%;
     }
+
+    /* Acoustic Orb Stage */
     .orb-container {
-      position: relative; width: 130px; height: 130px;
-      display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+      position: relative;
+      width: 136px;
+      height: 136px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
     }
+
     .orb-halo {
-      position: absolute; inset: -18px; border-radius: 50%;
-      border: 1px solid rgba(0, 229, 255, 0.2); animation: pulseHalo 3s ease-in-out infinite;
+      position: absolute;
+      inset: -18px;
+      border-radius: 50%;
+      border: 1px dashed rgba(0, 229, 255, 0.3);
+      animation: rotateHalo 12s linear infinite;
     }
+
     .orb-halo.secondary {
-      inset: -36px; border-color: rgba(157, 78, 221, 0.15); animation: pulseHalo 3s ease-in-out infinite 1s;
+      inset: -36px;
+      border: 1px solid rgba(147, 51, 234, 0.2);
+      animation: pulseHalo 3.5s ease-in-out infinite;
     }
+
+    @keyframes rotateHalo {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
     @keyframes pulseHalo {
-      0%, 100% { transform: scale(1); opacity: 0.5; }
-      50% { transform: scale(1.08); opacity: 1; }
+      0%, 100% { transform: scale(1); opacity: 0.45; }
+      50% { transform: scale(1.08); opacity: 0.9; }
     }
+
     .nova-orb {
-      width: 110px; height: 110px; border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #00e5ff, #7928ca 70%, #1e1b4b);
-      box-shadow: 0 0 50px rgba(0, 229, 255, 0.35), 0 0 100px rgba(121, 40, 202, 0.2);
-      display: flex; align-items: center; justify-content: center;
-      position: relative; z-index: 2; transition: all 0.3s var(--ease);
+      width: 114px;
+      height: 114px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 32%, #00e5ff, #7928ca 70%, #1e1b4b);
+      box-shadow: 0 0 50px var(--orb-shadow-1), 0 0 90px var(--orb-shadow-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
     }
+
+    .nova-orb:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 65px var(--orb-shadow-1), 0 0 110px var(--orb-shadow-2);
+    }
+
     .nova-orb.speaking {
-      animation: orbSpeaking 0.8s ease-in-out infinite alternate;
-      box-shadow: 0 0 70px rgba(0, 229, 255, 0.6), 0 0 120px rgba(121, 40, 202, 0.4);
+      animation: orbPulseSpeaking 0.8s ease-in-out infinite alternate;
+      box-shadow: 0 0 75px rgba(0, 229, 255, 0.65), 0 0 130px rgba(121, 40, 202, 0.45);
     }
-    @keyframes orbSpeaking { 0% { transform: scale(1); } 100% { transform: scale(1.09); } }
-    .nova-orb i { font-size: 2rem; color: #fff; }
+
+    @keyframes orbPulseSpeaking {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.1); }
+    }
+
+    .nova-orb i {
+      font-size: 2.2rem;
+      color: #fff;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+    }
 
     .status-capsule {
-      display: inline-flex; align-items: center; gap: 8px;
-      font-size: 0.85rem; font-weight: 500; color: var(--text-muted);
-      background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 6px 16px; border-radius: 100px; margin-bottom: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--card-surface);
+      border: 1px solid var(--glass-border);
+      padding: 0.45rem 1.1rem;
+      border-radius: 999px;
+      margin-bottom: 1.1rem;
+      backdrop-filter: blur(8px);
     }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); transition: background 0.3s; }
-    .status-capsule.listening .status-dot { background: var(--accent-emerald); box-shadow: 0 0 8px var(--accent-emerald); }
-    .status-capsule.speaking .status-dot  { background: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-cyan); }
-    .status-capsule.thinking .status-dot  { background: var(--accent-purple); box-shadow: 0 0 8px var(--accent-purple); }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: background 0.3s;
+    }
+
+    .status-capsule.listening .status-dot {
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+    }
+
+    .status-capsule.speaking .status-dot {
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .status-capsule.thinking .status-dot {
+      background: var(--primary);
+      box-shadow: 0 0 10px var(--primary);
+    }
 
     .dialogue-card {
-      width: 100%; max-width: 640px; min-height: 60px;
-      background: rgba(255, 255, 255, 0.025); border: 1px solid var(--card-border);
-      border-radius: 16px; padding: 14px 20px; font-size: 0.95rem; line-height: 1.6;
-      color: var(--text-main); backdrop-filter: blur(8px); text-align: center;
+      width: 100%;
+      max-width: 660px;
+      min-height: 70px;
+      background: var(--card-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-inner);
+      padding: 1rem 1.35rem;
+      font-size: 0.94rem;
+      line-height: 1.6;
+      color: var(--text-primary);
+      backdrop-filter: blur(12px);
+      text-align: center;
+      box-shadow: var(--shadow-layered);
+      transition: var(--transition);
     }
+
     .dialogue-speaker {
-      font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
-      color: var(--accent-cyan); margin-bottom: 4px; display: block;
+      font-family: var(--font-display);
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 0.3rem;
+      display: block;
     }
+
+    .start-banner {
+      cursor: pointer;
+      margin-top: 1.1rem;
+      padding: 0.75rem 1.65rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 0.94rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: 0 8px 25px rgba(0, 229, 255, 0.35);
+      transition: var(--transition);
+    }
+
+    .start-banner:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(0, 229, 255, 0.5);
+    }
+
+    .start-banner:active {
+      transform: scale(0.98);
+    }
+
     .mic-button {
-      width: 48px; height: 48px; border-radius: 50%;
-      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border);
-      color: #fff; font-size: 1rem; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; margin-top: 14px;
-      transition: all 0.2s;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--card-surface);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      font-size: 1.05rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1rem;
+      transition: var(--transition);
     }
-    .mic-button:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--accent-cyan); }
-    .mic-button.muted { color: #f43f5e; border-color: rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.08); }
 
-    /* HUD Overview Bar */
+    .mic-button:hover {
+      background: var(--card-surface-hover);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .mic-button.muted {
+      color: var(--error);
+      border-color: rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Cockpit Requirements HUD */
     .hud-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;
-      width: 100%; max-width: 780px; margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 0.85rem;
+      width: 100%;
+      max-width: 820px;
+      margin-top: 1.75rem;
     }
-    .req-card {
-      background: var(--card-bg); border: 1px solid var(--card-border);
-      border-radius: 14px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px;
-      transition: all 0.3s var(--ease);
-    }
-    .req-card.active { border-color: var(--accent-cyan); box-shadow: 0 0 20px rgba(0, 229, 255, 0.15); }
-    .req-card.captured { border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.03); }
-    .req-label {
-      font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
-      color: var(--text-dim); display: flex; align-items: center; justify-content: space-between;
-    }
-    .req-value {
-      font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; font-weight: 600; color: #fff;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .req-value.empty { font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 400; color: var(--text-dim); font-style: italic; }
 
-    /* ─── DYNAMIC POPUPS / MODAL CARDS ─────────────────────────────────── */
-    .popup-overlay {
-      display: none; position: fixed; inset: 0; z-index: 100;
-      background: rgba(4, 7, 16, 0.75); backdrop-filter: blur(10px);
-      align-items: center; justify-content: center; padding: 20px;
+    .req-card {
+      background: var(--card-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 0.95rem 1.15rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      transition: var(--transition);
+      backdrop-filter: blur(10px);
     }
-    .popup-overlay.show { display: flex; animation: fadeIn 0.25s var(--ease); }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .req-card:hover {
+      border-color: var(--glass-border-hover);
+      transform: translateY(-2px);
+    }
+
+    .req-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.18);
+    }
+
+    .req-card.captured {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .req-label {
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .req-card.captured .req-label i {
+      color: var(--success);
+    }
+
+    .req-value {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-highlight);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .req-value.empty {
+      font-family: var(--font-body);
+      font-size: 0.84rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ─── POPUPS / MODALS (THEMED) ────────────────────────────────────── */
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1100;
+      background: var(--overlay-color);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+
+    .popup-overlay.show {
+      display: flex;
+      animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
 
     .popup-card {
-      background: #0d111a; border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 20px; padding: 28px; width: 100%; max-width: 580px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 229, 255, 0.1);
-      animation: slideUp 0.3s var(--ease); position: relative;
+      background: var(--modal-elevated-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-outer);
+      padding: 2rem;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 229, 255, 0.08);
+      animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
     }
-    @keyframes slideUp { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-    .popup-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    @keyframes modalSlideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .popup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.85rem;
+    }
+
     .popup-title {
-      font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; font-weight: 700; color: #fff;
-      display: flex; align-items: center; gap: 8px;
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-highlight);
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      letter-spacing: -0.02em;
     }
-    .popup-subtitle { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px; }
+
+    .popup-subtitle {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 1.25rem;
+    }
+
     .voice-listening-tag {
-      font-size: 0.75rem; color: var(--accent-cyan); background: rgba(0, 229, 255, 0.08);
-      border: 1px solid rgba(0, 229, 255, 0.2); padding: 4px 10px; border-radius: 100px;
-      display: flex; align-items: center; gap: 6px;
+      font-size: 0.74rem;
+      color: var(--accent);
+      background: rgba(0, 229, 255, 0.08);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-weight: 600;
     }
 
-    /* Role options */
     .profile-role-highlight {
-      background: rgba(0, 229, 255, 0.06); border: 1px solid rgba(0, 229, 255, 0.25);
-      border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;
-      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(0, 229, 255, 0.06);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      border-radius: 12px;
+      padding: 0.85rem 1.1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      margin-bottom: 1.1rem;
+    }
+
     .role-chip {
-      background: var(--card-bg); border: 1px solid var(--card-border);
-      border-radius: 10px; padding: 10px 14px; font-size: 0.85rem; font-weight: 500;
-      color: var(--text-main); cursor: pointer; transition: all 0.2s;
-      display: flex; align-items: center; justify-content: space-between;
+      background: var(--card-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
+
     .role-chip:hover, .role-chip.selected {
-      border-color: var(--accent-cyan); background: rgba(0, 229, 255, 0.08); color: #fff;
+      border-color: var(--accent);
+      background: rgba(0, 229, 255, 0.09);
+      color: var(--text-highlight);
+      transform: translateY(-2px);
     }
-    .role-chip .track-tag { font-size: 0.68rem; color: var(--text-dim); text-transform: uppercase; font-weight: 600; }
+
+    .role-chip .track-tag {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
     .panel-feedback {
-      padding: 10px 14px; border-radius: 10px; font-size: 0.82rem; margin-bottom: 16px;
-      display: none; align-items: center; gap: 8px;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 1.1rem;
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
     }
+
     .panel-feedback.matched {
-      display: flex; background: rgba(16, 185, 129, 0.08);
-      border: 1px solid rgba(16, 185, 129, 0.25); color: var(--accent-emerald);
+      display: flex;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: var(--success);
     }
+
     .panel-feedback.unsupported {
-      display: flex; background: rgba(245, 158, 11, 0.08);
-      border: 1px solid rgba(245, 158, 11, 0.25); color: var(--accent-amber);
+      display: flex;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #f59e0b;
     }
 
-    /* Experience Tiers */
-    .exp-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .exp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 1.25rem;
+    }
+
     .exp-tier-card {
-      background: var(--card-bg); border: 1px solid var(--card-border);
-      border-radius: 12px; padding: 12px 16px; cursor: pointer;
-      display: flex; align-items: center; justify-content: space-between; transition: all 0.2s;
+      background: var(--card-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 0.85rem 1.15rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: var(--transition);
     }
+
     .exp-tier-card:hover, .exp-tier-card.selected {
-      border-color: var(--accent-cyan); background: rgba(0, 229, 255, 0.08);
+      border-color: var(--accent);
+      background: rgba(0, 229, 255, 0.09);
+      transform: translateY(-2px);
     }
-    .exp-tier-left { display: flex; flex-direction: column; gap: 2px; }
-    .exp-tier-title { font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; font-weight: 700; color: #fff; }
-    .exp-tier-desc { font-size: 0.78rem; color: var(--text-dim); }
-    .exp-tier-years { font-size: 0.8rem; font-weight: 600; color: var(--accent-cyan); }
 
-    /* Overview Popup Elements */
-    .overview-section { margin-bottom: 18px; }
+    .exp-tier-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .exp-tier-title {
+      font-family: var(--font-display);
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text-highlight);
+    }
+
+    .exp-tier-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .exp-tier-years {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .overview-section { margin-bottom: 1.1rem; }
     .section-subtitle {
-      font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
-      color: var(--text-dim); margin-bottom: 8px; display: block;
+      font-family: var(--font-display);
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      display: block;
     }
-    .saved-resume-chip {
-      display: flex; align-items: center; justify-content: space-between;
-      background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border);
-      border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; cursor: pointer;
-    }
-    .saved-resume-chip.selected { border-color: var(--accent-cyan); background: rgba(0, 229, 255, 0.08); }
-    .resume-actions-row { display: flex; gap: 8px; margin-top: 6px; }
-    .upload-mini-btn {
-      flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 500;
-      border: 1px dashed rgba(255, 255, 255, 0.2); background: transparent; color: var(--text-muted);
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .upload-mini-btn:hover { border-color: var(--accent-cyan); color: #fff; }
 
-    /* Difficulty Calibration Card */
-    .difficulty-card {
-      background: rgba(157, 78, 221, 0.06); border: 1px solid rgba(157, 78, 221, 0.2);
-      border-radius: 12px; padding: 12px 16px; margin-bottom: 18px;
+    .saved-resume-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      transition: var(--transition);
     }
-    .diff-title { font-size: 0.85rem; font-weight: 600; color: #fff; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
-    .diff-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+
+    .saved-resume-chip.selected {
+      border-color: var(--accent);
+      background: rgba(0, 229, 255, 0.08);
+    }
+
+    .resume-actions-row { display: flex; gap: 0.6rem; margin-top: 0.5rem; }
+    .upload-mini-btn {
+      flex: 1;
+      padding: 0.65rem 1rem;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      border: 1px dashed var(--glass-border-hover);
+      background: var(--card-surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: var(--transition);
+    }
+
+    .upload-mini-btn:hover {
+      border-color: var(--accent);
+      color: var(--text-highlight);
+      background: rgba(0, 229, 255, 0.06);
+    }
+
+    .difficulty-card {
+      background: rgba(124, 58, 237, 0.08);
+      border: 1px solid rgba(124, 58, 237, 0.25);
+      border-radius: 12px;
+      padding: 0.95rem 1.15rem;
+      margin-bottom: 1.15rem;
+    }
+
+    .diff-title {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-highlight);
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .diff-desc {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
 
     .summary-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-      background: rgba(255, 255, 255, 0.02); border: 1px solid var(--card-border);
-      border-radius: 12px; padding: 12px; margin-bottom: 20px; font-size: 0.82rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      background: var(--card-surface);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 0.95rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.85rem;
     }
-    .summary-item strong { color: var(--text-dim); display: block; font-size: 0.72rem; text-transform: uppercase; }
+
+    .summary-item strong {
+      color: var(--text-muted);
+      display: block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .summary-item span {
+      color: var(--text-highlight);
+      font-weight: 600;
+      font-family: var(--font-display);
+    }
 
     .launch-btn-primary {
-      width: 100%; padding: 15px; border-radius: 12px;
-      background: linear-gradient(135deg, #00e5ff, #7928ca);
-      color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700;
-      border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      box-shadow: 0 8px 30px rgba(0, 229, 255, 0.35); transition: all 0.2s;
+      width: 100%;
+      padding: 1rem;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+      box-shadow: 0 8px 30px rgba(0, 229, 255, 0.35);
+      transition: var(--transition);
     }
-    .launch-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0, 229, 255, 0.5); }
+
+    .launch-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 229, 255, 0.5);
+    }
+
+    .launch-btn-primary:active {
+      transform: scale(0.98);
+    }
+
     .confirm-secondary-btn {
-      width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--card-border);
-      background: transparent; color: var(--text-muted); font-size: 0.85rem; cursor: pointer; margin-top: 8px;
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.86rem;
+      cursor: pointer;
+      margin-top: 0.65rem;
+      transition: var(--transition);
     }
-    .confirm-secondary-btn:hover { color: #fff; border-color: rgba(255, 255, 255, 0.2); }
+
+    .confirm-secondary-btn:hover {
+      color: var(--text-highlight);
+      border-color: var(--glass-border-hover);
+      background: var(--card-surface);
+    }
   </style>
 </head>
-<body>
-  <div class="bg-glow" aria-hidden="true"></div>
+<body class="dashboard-page cockpit-page">
+  <!-- Layered Background Cross-Fade System matching real app -->
+  <div class="bg-layers">
+    <div class="bg-layer dark-bg"></div>
+    <div class="bg-layer light-bg"></div>
+  </div>
+  <div class="landing-overlay"></div>
 
-  <!-- Top Navigation -->
-  <header>
-    <a href="dashboard.html" class="logo">
-      <i class="fa-solid fa-compass" style="color:var(--accent-cyan)"></i>
-      Role<span>Pilot</span>
-    </a>
-    <div class="nav-actions">
-      <div class="profile-pill" id="profile-status">
-        <span class="profile-dot"></span>
-        <span id="profile-label">Checking Supabase…</span>
+  <!-- Global App Header with Theme Toggle -->
+  <header class="app-header dashboard-header">
+    <div class="header-left">
+      <a href="dashboard.html" class="logo-wrapper">
+        <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="var(--primary)" />
+              <stop offset="100%" stop-color="var(--accent)" />
+            </linearGradient>
+          </defs>
+          <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+          <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+          <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+          <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+          <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+          <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+        </svg>
+        <span class="logo-text">Role<span>Pilot</span></span>
+      </a>
+    </div>
+
+    <div class="header-center">
+      <nav class="header-nav">
+        <ul class="dashboard-nav-tabs">
+          <li><a href="dashboard.html" class="nav-tab-link">Dashboard</a></li>
+          <li><a href="gear-up.html" class="nav-tab-link active"><i class="fa-solid fa-microphone-lines" style="color: var(--accent); margin-right: 6px;"></i> Voice Onboarding</a></li>
+          <li><a href="ats-tailor.html" class="nav-tab-link">ATS Tailor</a></li>
+          <li><a href="dashboard.html" class="nav-tab-link">Leaderboard</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="header-actions header-user-actions">
+      <!-- Live Supabase Connection Pill (Clean, without personal name) -->
+      <div class="profile-pill" id="profile-status" style="display:inline-flex; align-items:center; gap:8px; padding:6px 14px; border-radius:100px; background:var(--panel-bg); border:1px solid var(--glass-border); font-size:0.82rem; color:var(--text-secondary);">
+        <span class="profile-dot" style="width:8px; height:8px; border-radius:50%; background:var(--success);"></span>
+        <span id="profile-label">Voice Engine Active</span>
       </div>
-      <a href="dashboard.html" class="ghost-link"><i class="fa-solid fa-house"></i> Dashboard</a>
+
+      <!-- Real App Theme Toggle (☀️ / 🌙) -->
+      <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
+
+      <a href="dashboard.html" class="btn-secondary-outline" style="padding: 7px 14px; font-size: 0.84rem; text-decoration: none; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-weight: 500;">
+        <i class="fa-solid fa-gauge-high"></i> <span>Dashboard</span>
+      </a>
+
+      <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Toggle Menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
     </div>
   </header>
 
-  <!-- Main Stage -->
-  <main>
-    <div class="title-pill"><i class="fa-solid fa-waveform-lines"></i> Adaptive Voice Onboarding</div>
-
-    <section class="voice-stage">
-      <div class="orb-container">
-        <div class="orb-halo"></div>
-        <div class="orb-halo secondary"></div>
-        <div class="nova-orb" id="nova-orb" onclick="startVoiceSession()" style="cursor:pointer;" title="Click to start voice conversation"><i class="fa-solid fa-microphone-lines"></i></div>
+  <!-- Main Cockpit Layout -->
+  <main class="cockpit-main">
+    <!-- Architectural Mission Header -->
+    <section class="cockpit-mission-header">
+      <div class="mission-meta">
+        <div class="mission-badge-group">
+          <span class="arch-badge"><i class="fa-solid fa-microchip"></i> ECHO-SPHERE NOVA-3 ARCHITECTURE</span>
+          <span class="engine-spec-badge"><i class="fa-solid fa-bolt"></i> 160ms VAD • Gemini 2.5 • MiniMax HD</span>
+        </div>
+        <h1 class="mission-title">Adaptive Voice <span>Onboarding Cockpit</span></h1>
+        <p class="mission-desc">Autonomous conversational setup with Nova. Voice-driven profile synchronization, panel track routing, and systematic difficulty calibration.</p>
       </div>
 
-      <div class="status-capsule" id="status-capsule">
-        <span class="status-dot"></span>
-        <span id="status-text">Ready to Connect</span>
+      <div class="mission-telemetry">
+        <div class="session-badge" id="session-badge">
+          <span class="live-pulse-dot"></span>
+          <span id="session-badge-text">Nova Standby</span>
+        </div>
       </div>
-
-      <div class="dialogue-card" id="dialogue-card">
-        <span class="dialogue-speaker" id="dialogue-speaker">Nova</span>
-        <span id="dialogue-text">Click "Start Voice Conversation" below to begin your onboarding.</span>
-      </div>
-
-      <div class="start-banner" id="start-banner" onclick="startVoiceSession()" style="cursor:pointer; margin-top:14px; padding:10px 22px; border-radius:100px; background:linear-gradient(135deg, rgba(0,229,255,0.2), rgba(157,78,221,0.2)); border:1px solid rgba(0,229,255,0.4); color:#fff; font-family:'Space Grotesk',sans-serif; font-size:0.9rem; font-weight:700; display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 20px rgba(0,229,255,0.25); animation:pulseHalo 2s infinite alternate;">
-        <i class="fa-solid fa-play"></i> Start Voice Conversation
-      </div>
-
-      <div id="autoplay-banner" style="display:none; cursor:pointer; margin-top:10px; padding:8px 18px; border-radius:100px; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); color:#f59e0b; font-size:0.82rem; font-weight:600; align-items:center; gap:6px;" onclick="resumeAudio()">
-        <i class="fa-solid fa-volume-high"></i> Click to unmute Nova audio
-      </div>
-
-      <button class="mic-button" id="mic-toggle" title="Toggle Microphone" aria-label="Toggle Microphone" style="display:none;">
-        <i class="fa-solid fa-microphone" id="mic-icon"></i>
-      </button>
     </section>
 
-    <!-- Cockpit Requirements HUD -->
-    <div class="hud-grid">
-      <div class="req-card" id="hud-name">
-        <div class="req-label"><span>Candidate</span><i class="fa-solid fa-circle-check" id="chk-name"></i></div>
-        <div class="req-value empty" id="val-name">Awaiting…</div>
-      </div>
-      <div class="req-card" id="hud-role">
-        <div class="req-label"><span>Target Role</span><i class="fa-solid fa-circle-check" id="chk-role"></i></div>
-        <div class="req-value empty" id="val-role">Awaiting…</div>
-      </div>
-      <div class="req-card" id="hud-exp">
-        <div class="req-label"><span>Experience</span><i class="fa-solid fa-circle-check" id="chk-exp"></i></div>
-        <div class="req-value empty" id="val-exp">Awaiting…</div>
-      </div>
-      <div class="req-card" id="hud-panel">
-        <div class="req-label"><span>Interview Panel</span><i class="fa-solid fa-circle-check" id="chk-panel"></i></div>
-        <div class="req-value empty" id="val-panel">Matching…</div>
-      </div>
+    <!-- Cockpit Grid (Split Panel System) -->
+    <div class="cockpit-grid">
+      <!-- LEFT PANEL: COMPLETE LIVE CONVERSATION STREAM & PROGRESS -->
+      <section class="chat-flow-panel" aria-label="Conversation Flow">
+        <div class="chat-panel-header">
+          <div class="chat-panel-title">
+            <i class="fa-solid fa-comments" style="color:var(--accent)"></i>
+            <span>Flight Transcript</span>
+          </div>
+          <div class="voice-sync-badge">
+            <span class="live-pulse-dot" style="background:var(--accent); width:6px; height:6px;"></span>
+            <span>Live Voice Sync</span>
+          </div>
+        </div>
+
+        <!-- Full-Height Live Conversation Stream (Google Gemini Style) -->
+        <div class="chat-stream-container" id="chat-stream-container">
+          <div class="chat-empty-hint" id="chat-empty-hint">
+            <i class="fa-solid fa-sparkles" style="color:var(--accent); font-size:2.2rem; margin-bottom:12px; display:block;"></i>
+            <p>Live conversation transcript between Nova and you will stream here in real time.</p>
+          </div>
+        </div>
+
+        <!-- Real-Time Speaker Status Bar with Equalizer -->
+        <div class="chat-status-bar" id="chat-status-bar">
+          <div class="speaker-indicator" id="speaker-indicator">
+            <div class="wave-bars" id="wave-bars-container">
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+            </div>
+            <span id="speaker-status-label">Nova is ready to talk</span>
+          </div>
+          <span style="font-size:0.72rem; color:var(--text-muted);"><i class="fa-solid fa-shield-halved"></i> 160ms Low Latency</span>
+        </div>
+
+        <!-- Dynamic Quick Action Chips Tray -->
+        <div class="quick-replies-tray" id="quick-replies-tray">
+          <!-- Injected dynamically based on active step -->
+        </div>
+      </section>
+
+      <!-- RIGHT PANEL: VOICE STAGE & TELEMETRY HUD -->
+      <section class="voice-stage-panel" aria-label="Voice Stage and Requirements">
+        <div class="voice-stage">
+          <!-- Orbital Acoustic Visualizer Stage -->
+          <div class="orb-container">
+            <div class="orb-halo"></div>
+            <div class="orb-halo secondary"></div>
+            <div class="nova-orb" id="nova-orb" onclick="startVoiceSession()" title="Click to start voice conversation">
+              <i class="fa-solid fa-microphone-lines"></i>
+            </div>
+          </div>
+
+          <!-- Status Capsule -->
+          <div class="status-capsule" id="status-capsule">
+            <span class="status-dot"></span>
+            <span id="status-text">Ready to Connect</span>
+          </div>
+
+          <!-- Live Speech Display Visor (Appears when voice session starts) -->
+          <div class="dialogue-card" id="dialogue-card" style="display: none;">
+            <span class="dialogue-speaker" id="dialogue-speaker">Nova</span>
+            <span id="dialogue-text"></span>
+          </div>
+
+          <!-- Start Voice Session Button -->
+          <div class="start-banner" id="start-banner" onclick="startVoiceSession()">
+            <i class="fa-solid fa-play"></i> Start Voice Conversation
+          </div>
+
+          <!-- Audio Autoplay Banner if Browser Suspends Audio -->
+          <div id="autoplay-banner" style="display:none; cursor:pointer; margin-top:10px; padding:8px 18px; border-radius:100px; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); color:#f59e0b; font-size:0.82rem; font-weight:600; align-items:center; gap:6px;" onclick="resumeAudio()">
+            <i class="fa-solid fa-volume-high"></i> Click to unmute Nova audio
+          </div>
+
+          <!-- Microphone Toggle -->
+          <button class="mic-button" id="mic-toggle" title="Toggle Microphone" aria-label="Toggle Microphone" style="display:none;">
+            <i class="fa-solid fa-microphone" id="mic-icon"></i>
+          </button>
+        </div>
+
+        <!-- Cockpit Avionics Requirements HUD Grid -->
+        <div class="hud-grid">
+          <div class="req-card" id="hud-name">
+            <div class="req-label"><span>Candidate</span><i class="fa-solid fa-circle-check" id="chk-name"></i></div>
+            <div class="req-value empty" id="val-name">Awaiting…</div>
+          </div>
+          <div class="req-card" id="hud-role">
+            <div class="req-label"><span>Target Role</span><i class="fa-solid fa-circle-check" id="chk-role"></i></div>
+            <div class="req-value empty" id="val-role">Awaiting…</div>
+          </div>
+          <div class="req-card" id="hud-exp">
+            <div class="req-label"><span>Experience</span><i class="fa-solid fa-circle-check" id="chk-exp"></i></div>
+            <div class="req-value empty" id="val-exp">Awaiting…</div>
+          </div>
+          <div class="req-card" id="hud-panel">
+            <div class="req-label"><span>Interview Panel</span><i class="fa-solid fa-circle-check" id="chk-panel"></i></div>
+            <div class="req-value empty" id="val-panel">Matching…</div>
+          </div>
+        </div>
+      </section>
     </div>
   </main>
 
@@ -379,17 +1392,17 @@
   <div class="popup-overlay" id="role-popup">
     <div class="popup-card">
       <div class="popup-header">
-        <div class="popup-title"><i class="fa-solid fa-briefcase" style="color:var(--accent-cyan)"></i> Target Role</div>
+        <div class="popup-title"><i class="fa-solid fa-briefcase" style="color:var(--accent)"></i> Target Role</div>
         <div class="voice-listening-tag"><i class="fa-solid fa-waveform"></i> Voice Synced</div>
       </div>
       <p class="popup-subtitle">Speak your target role to Nova, or select a role below. Our AI classifier automatically matches it to the best interview panel.</p>
 
       <div class="profile-role-highlight" id="profile-role-box" style="display:none;">
         <div>
-          <div style="font-size:0.72rem; text-transform:uppercase; color:var(--text-dim); font-weight:600;">From Your Profile</div>
-          <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; color:#fff;" id="profile-role-text">—</div>
+          <div style="font-size:0.72rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">From Your Profile</div>
+          <div style="font-family:var(--font-display); font-weight:700; color:var(--text-highlight); font-size:1.05rem;" id="profile-role-text">—</div>
         </div>
-        <button class="ghost-link" onclick="confirmProfileRole()"><i class="fa-solid fa-check"></i> Keep Role</button>
+        <button class="btn-secondary-outline" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;" onclick="confirmProfileRole()"><i class="fa-solid fa-check"></i> Keep Role</button>
       </div>
 
       <div class="role-grid">
@@ -426,7 +1439,7 @@
   <div class="popup-overlay" id="exp-popup">
     <div class="popup-card">
       <div class="popup-header">
-        <div class="popup-title"><i class="fa-solid fa-layer-group" style="color:var(--accent-purple)"></i> Experience Level</div>
+        <div class="popup-title"><i class="fa-solid fa-layer-group" style="color:var(--primary)"></i> Experience Level</div>
         <div class="voice-listening-tag"><i class="fa-solid fa-waveform"></i> Voice Synced</div>
       </div>
       <p class="popup-subtitle">Select or state your experience level. Questions and depth will be systematically calibrated to this tier.</p>
@@ -477,7 +1490,7 @@
   <div class="popup-overlay" id="overview-popup">
     <div class="popup-card">
       <div class="popup-header">
-        <div class="popup-title"><i class="fa-solid fa-flag-checkered" style="color:var(--accent-emerald)"></i> Interview Overview</div>
+        <div class="popup-title"><i class="fa-solid fa-flag-checkered" style="color:var(--success)"></i> Interview Overview</div>
         <div class="voice-listening-tag"><i class="fa-solid fa-sparkles"></i> Final Setup</div>
       </div>
 
@@ -494,12 +1507,12 @@
             <i class="fa-solid fa-bolt"></i> Quick Start (No Resume)
           </button>
         </div>
-        <div id="ocr-status-tag" style="display:none; font-size:0.75rem; color:var(--accent-cyan); margin-top:6px;"></div>
+        <div id="ocr-status-tag" style="display:none; font-size:0.75rem; color:var(--accent); margin-top:6px;"></div>
       </div>
 
       <!-- Section B: Difficulty Calibration -->
       <div class="difficulty-card">
-        <div class="diff-title"><i class="fa-solid fa-brain-circuit" style="color:var(--accent-purple)"></i> Difficulty: <span id="diff-mode-label">Auto-Adaptive AI</span></div>
+        <div class="diff-title"><i class="fa-solid fa-brain" style="color:var(--primary)"></i> Difficulty: <span id="diff-mode-label">Auto-Adaptive AI</span></div>
         <div class="diff-desc" id="diff-desc">Our AI panel dynamically adapts question complexity based on your answers and experience tier. Impress the interviewers with depth to trigger advanced edge cases, or receive fundamentals if an answer needs clarity.</div>
       </div>
 
@@ -561,7 +1574,243 @@
       if (el) el.classList.remove('show');
     };
 
-    // ─── UI CONTROLS ──────────────────────────────────────────────────────
+    // ─── UI & CHAT STREAM CONTROLS ────────────────────────────────────────
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Normalizes punctuation spacing from Agora ASR / TTS
+    function normalizeTranscriptSpacing(text) {
+      if (!text) return '';
+      return text
+        .replace(/([.!?])([A-Za-z])/g, '$1 $2')
+        .replace(/,([A-Za-z])/g, ', $1')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    }
+
+    const chatHistory = [];
+
+    function addOrUpdateChatMessage(sender, text, turnId = null) {
+      if (!text || !text.trim()) return;
+      const clean = text.trim();
+
+      // Safety guard: Never display raw transport chunk headers or base64
+      if (clean.includes('|') && (clean.match(/\|/g) || []).length >= 2) {
+        return;
+      }
+
+      // If turnId provided, search existing message with same turnId and sender
+      if (turnId !== null && turnId !== undefined) {
+        const existing = chatHistory.find(m => m.turnId === String(turnId) && m.sender === sender);
+        if (existing) {
+          existing.text = clean;
+          renderChatMessages();
+          return;
+        }
+      }
+
+      // Deduplicate with immediate last message if same sender
+      const lastMsg = chatHistory[chatHistory.length - 1];
+      if (lastMsg && lastMsg.sender === sender) {
+        if (lastMsg.text === clean) return;
+        if (clean.startsWith(lastMsg.text) || lastMsg.text.startsWith(clean)) {
+          lastMsg.text = clean.length >= lastMsg.text.length ? clean : lastMsg.text;
+          if (turnId !== null && turnId !== undefined) lastMsg.turnId = String(turnId);
+          renderChatMessages();
+          return;
+        }
+      }
+
+      const msg = {
+        id: 'msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+        turnId: turnId !== null && turnId !== undefined ? String(turnId) : null,
+        sender: sender, // 'nova' | 'user' | 'system'
+        text: clean,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      chatHistory.push(msg);
+      renderChatMessages();
+    }
+
+    function renderChatMessages() {
+      const container = document.getElementById('chat-stream-container');
+      if (!container) return;
+
+      if (chatHistory.length === 0) {
+        container.innerHTML = `
+          <div class="chat-empty-hint" id="chat-empty-hint">
+            <i class="fa-solid fa-headset"></i>
+            <p>Your full conversation stream will appear here in real-time as Nova speaks and you respond.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const userInitial = (state.name || state.profileName || 'U').charAt(0).toUpperCase();
+
+      container.innerHTML = chatHistory.map(m => {
+        if (m.sender === 'system') {
+          return `
+            <div class="chat-row system">
+              <div class="system-badge-pill">
+                <i class="fa-solid fa-circle-check" style="color:var(--accent-emerald)"></i>
+                <span>${escapeHtml(m.text)}</span>
+              </div>
+            </div>
+          `;
+        }
+
+        if (m.sender === 'nova') {
+          return `
+            <div class="chat-row nova" id="${m.id}">
+              <div class="chat-avatar"><i class="fa-solid fa-sparkles"></i></div>
+              <div class="chat-bubble-wrap">
+                <div class="bubble-meta">
+                  <span class="bubble-speaker">Nova</span>
+                  <span class="bubble-time">${m.time}</span>
+                </div>
+                <div class="chat-bubble">${escapeHtml(m.text)}</div>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="chat-row user" id="${m.id}">
+            <div class="chat-avatar"><i class="fa-solid fa-user"></i></div>
+            <div class="chat-bubble-wrap">
+              <div class="bubble-meta">
+                <span class="bubble-speaker">You</span>
+                <span class="bubble-time">${m.time}</span>
+              </div>
+              <div class="chat-bubble">${escapeHtml(m.text)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function setSpeakerIndicator(label, isSpeaking = false, isListening = false) {
+      const statusLabel = document.getElementById('speaker-status-label');
+      const waveBars = document.getElementById('wave-bars-container');
+      if (statusLabel) statusLabel.textContent = label;
+      if (waveBars) {
+        waveBars.className = isSpeaking ? 'wave-bars speaking' : 'wave-bars';
+      }
+    }
+
+    function updateGuidanceAndProgress() {
+      // Determine active step
+      let stepKey = 'name';
+      if (state.name || state.profileName) {
+        if (!state.role) stepKey = 'role';
+        else if (!state.experienceTier) stepKey = 'experience';
+        else stepKey = 'overview';
+      }
+      if (state.activeStep && ['name', 'role', 'experience', 'overview', 'ready'].includes(state.activeStep)) {
+        if (state.activeStep === 'role' && !state.role) stepKey = 'role';
+        else if (state.activeStep === 'experience' && !state.experienceTier) stepKey = 'experience';
+        else if (state.activeStep === 'overview' || state.activeStep === 'ready') stepKey = 'overview';
+      }
+
+      const tray = document.getElementById('quick-replies-tray');
+      if (!tray) return;
+
+      // Keep quick-reply tray empty until user starts conversation
+      if (!state.agentId && !agoraClient) {
+        tray.innerHTML = '';
+        return;
+      }
+
+      if (stepKey === 'name') {
+        tray.innerHTML = `
+          <button class="quick-chip" onclick="handleQuickAction('Yes, ready to gear up!', 'confirm-name')">
+            <i class="fa-solid fa-check"></i> Yes, ready to gear up!
+          </button>
+          <button class="quick-chip" onclick="handleQuickAction('This is for someone else', 'other-name')">
+            <i class="fa-solid fa-user-pen"></i> Someone else
+          </button>
+        `;
+      } else if (stepKey === 'role') {
+        tray.innerHTML = `
+          <button class="quick-chip" onclick="handleQuickAction('Software Engineer', 'role')">
+            <i class="fa-solid fa-code"></i> Software Engineer
+          </button>
+          <button class="quick-chip" onclick="handleQuickAction('Full Stack Developer', 'role')">
+            <i class="fa-solid fa-layer-group"></i> Full Stack Dev
+          </button>
+          <button class="quick-chip" onclick="handleQuickAction('Product Manager', 'role')">
+            <i class="fa-solid fa-chart-line"></i> Product Manager
+          </button>
+          <button class="quick-chip" onclick="handleQuickAction('Cloud Architect', 'role')">
+            <i class="fa-solid fa-cloud"></i> Cloud Architect
+          </button>
+          <button class="quick-chip" onclick="showPopup('role-popup')">
+            <i class="fa-solid fa-list"></i> More Roles…
+          </button>
+        `;
+      } else if (stepKey === 'experience') {
+        tray.innerHTML = `
+          <button class="quick-chip" onclick="handleQuickAction('1-year fresher', 'experience')">
+            <i class="fa-solid fa-seedling"></i> 1-Year Fresher
+          </button>
+          <button class="quick-chip" onclick="handleQuickAction('fresher', 'experience')">
+            <i class="fa-solid fa-user-graduate"></i> Fresher / Junior
+          </button>
+          <button class="quick-chip" onclick="handleQuickAction('mid-level', 'experience')">
+            <i class="fa-solid fa-briefcase"></i> Mid-Level (3-5 yrs)
+          </button>
+          <button class="quick-chip" onclick="handleQuickAction('senior', 'experience')">
+            <i class="fa-solid fa-award"></i> Senior (5-9 yrs)
+          </button>
+          <button class="quick-chip" onclick="showPopup('exp-popup')">
+            <i class="fa-solid fa-layer-group"></i> View All Tiers…
+          </button>
+        `;
+      } else {
+        tray.innerHTML = `
+          <button class="quick-chip" onclick="handleQuickAction('I am ready to begin!', 'launch')">
+            <i class="fa-solid fa-rocket" style="color:var(--accent-emerald)"></i> I'm ready to begin!
+          </button>
+          <button class="quick-chip" onclick="showPopup('overview-popup')">
+            <i class="fa-solid fa-sliders"></i> View Setup Overview
+          </button>
+        `;
+      }
+    }
+
+    window.handleQuickAction = function(text, actionType = null) {
+      addOrUpdateChatMessage('user', text);
+      showDialogue('You', text);
+      transcriptBuffer.push(`User: ${text}`);
+
+      if (actionType === 'confirm-name') {
+        state.name = state.profileName || 'Candidate';
+        document.getElementById('val-name').textContent = state.name;
+        document.getElementById('val-name').classList.remove('empty');
+        document.getElementById('hud-name').classList.add('captured');
+        addOrUpdateChatMessage('system', `✓ Identity confirmed as ${state.name}`);
+        state.activeStep = 'role';
+        updateGuidanceAndProgress();
+        showPopup('role-popup');
+        scheduleStateParse();
+      } else if (actionType === 'role') {
+        confirmRole(text);
+      } else if (actionType === 'experience') {
+        confirmExperience(text);
+      } else if (actionType === 'launch') {
+        enterPanelRoom();
+      } else {
+        scheduleStateParse();
+      }
+    };
+
     function updateStatus(type, text) {
       const capsule = document.getElementById('status-capsule');
       capsule.className = `status-capsule ${type}`;
@@ -569,12 +1818,23 @@
     }
     function setNovaSpeaking(speaking) {
       document.getElementById('nova-orb').classList.toggle('speaking', speaking);
-      if (speaking) updateStatus('speaking', 'Nova is speaking…');
-      else updateStatus('listening', 'Listening to you…');
+      if (speaking) {
+        updateStatus('speaking', 'Nova is speaking…');
+        setSpeakerIndicator('Nova is speaking…', true, false);
+      } else {
+        updateStatus('listening', 'Listening to you…');
+        setSpeakerIndicator('Listening to your voice…', false, true);
+      }
     }
     function showDialogue(speaker, text) {
-      document.getElementById('dialogue-speaker').textContent = speaker;
-      document.getElementById('dialogue-text').textContent = text;
+      const card = document.getElementById('dialogue-card');
+      if (card && card.style.display === 'none') {
+        card.style.display = 'block';
+      }
+      const spk = document.getElementById('dialogue-speaker');
+      if (spk) spk.textContent = speaker;
+      const txt = document.getElementById('dialogue-text');
+      if (txt) txt.textContent = text;
     }
 
     // ─── SUPABASE PROFILE HANDSHAKE ───────────────────────────────────────
@@ -585,16 +1845,17 @@
         if (session?.user) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('full_name, target_role, experience_level')
+            .select('full_name, username, target_role, experience_level')
             .eq('id', session.user.id)
             .maybeSingle();
 
-          const fullName = profile?.full_name || session.user.user_metadata?.full_name || 'Candidate';
+          const fullName = profile?.full_name || profile?.username || session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Candidate';
           state.profileName = fullName;
           state.profileRole = profile?.target_role || null;
           state.profileExperience = profile?.experience_level || null;
 
-          document.getElementById('profile-label').textContent = fullName;
+          // Keep header clean without personal name per user instruction
+          document.getElementById('profile-label').textContent = 'Voice Engine Active';
 
           // Fetch saved resumes
           const { data: resumes } = await supabase
@@ -609,11 +1870,11 @@
           }
           renderSavedResumes();
         } else {
-          document.getElementById('profile-label').textContent = 'Guest Mode';
+          document.getElementById('profile-label').textContent = 'Voice Engine Active';
         }
       } catch (err) {
         console.warn('Supabase context check:', err);
-        document.getElementById('profile-label').textContent = 'Guest Mode';
+        document.getElementById('profile-label').textContent = 'Voice Engine Active';
       }
     }
 
@@ -658,6 +1919,158 @@
         console.warn('resumeAudio error:', err);
       }
     };
+
+    // ─── AGORA OFFICIAL CHUNKED STREAM MESSAGE ASSEMBLER ───────────────────
+    class AgoraChunkedAssembler {
+      constructor(ttlMs = 30000, maxCacheSize = 1000) {
+        this.cache = new Map();
+        this.timestamps = new Map();
+        this.ttlMs = ttlMs;
+        this.maxCacheSize = maxCacheSize;
+      }
+
+      assemble(raw) {
+        this.evictStale();
+        if (typeof raw !== 'string') return null;
+        const parts = raw.split('|');
+        if (parts.length !== 4) return null;
+
+        const [msgId, partIdxStr, partSumStr, partData] = parts;
+        const rawPartIdx = parseInt(partIdxStr, 10);
+        const partSum = partSumStr === '???' ? -1 : parseInt(partSumStr, 10);
+
+        if (isNaN(rawPartIdx) || (partSum !== -1 && isNaN(partSum))) return null;
+        if (partSum !== -1 && partSum <= 0) return null;
+        if (rawPartIdx < 1) return null;
+
+        const partIdx = rawPartIdx - 1;
+        if (partSum !== -1 && partIdx >= partSum) return null;
+
+        if (!this.cache.has(msgId) && this.cache.size >= this.maxCacheSize) {
+          const oldestKey = this.timestamps.keys().next().value;
+          if (oldestKey) {
+            this.cache.delete(oldestKey);
+            this.timestamps.delete(oldestKey);
+          }
+        }
+
+        if (!this.cache.has(msgId)) {
+          this.cache.set(msgId, []);
+          this.timestamps.set(msgId, Date.now());
+        }
+
+        const cached = this.cache.get(msgId);
+        if (!cached.some(c => c.partIdx === partIdx)) {
+          cached.push({ partIdx, partSum, content: partData });
+          cached.sort((a, b) => a.partIdx - b.partIdx);
+        }
+
+        if (partSum !== -1 && cached.length === partSum) {
+          const base64 = cached.map(c => c.content).join('');
+          this.cache.delete(msgId);
+          this.timestamps.delete(msgId);
+          try {
+            const decoded = atob(base64);
+            return JSON.parse(decoded);
+          } catch (e) {
+            console.warn('[AgoraChunkedAssembler] Decode error:', e);
+            return null;
+          }
+        }
+        return null;
+      }
+
+      evictStale() {
+        const now = Date.now();
+        for (const [msgId, ts] of this.timestamps) {
+          if (now - ts > this.ttlMs) {
+            this.cache.delete(msgId);
+            this.timestamps.delete(msgId);
+          }
+        }
+      }
+
+      clear() {
+        this.cache.clear();
+        this.timestamps.clear();
+      }
+    }
+
+    const chunkAssembler = new AgoraChunkedAssembler();
+    let agoraUserSttActive = false;
+
+    function handleAgoraTranscriptMessage(uid, message) {
+      if (!message || typeof message !== 'object') return;
+      console.log('[Agora Live Transcript Event]:', message);
+
+      const obj = message.object || '';
+      const isUser = obj === 'user.transcription' ||
+                     message.role === 'user' ||
+                     message.sender === 'user';
+
+      const isAssistant = !isUser && (
+        obj === 'assistant.transcription' ||
+        message.role === 'assistant' ||
+        message.sender === 'assistant' ||
+        String(uid) === '9000'
+      );
+
+      if (obj === 'message.interrupt') {
+        console.log('[Agora] Agent interrupted by candidate');
+        setNovaSpeaking(false);
+        setSpeakerIndicator('Listening to your voice…', false, true);
+        return;
+      }
+
+      // Extract clean text from text field or words array
+      let text = '';
+      if (typeof message.text === 'string' && message.text.trim()) {
+        text = message.text.trim();
+      } else if (Array.isArray(message.words) && message.words.length > 0) {
+        text = message.words
+          .map(w => (typeof w === 'string' ? w : (w.word || '')))
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+      } else if (typeof message.delta === 'string' && message.delta.trim()) {
+        text = message.delta.trim();
+      }
+
+      // Safety guard: NEVER display pipe transport fragments or base64 artifacts
+      if (!text || (text.includes('|') && (text.match(/\|/g) || []).length >= 2)) {
+        return;
+      }
+
+      text = normalizeTranscriptSpacing(text);
+      if (!text) return;
+
+      const turnId = message.turn_id !== undefined && message.turn_id !== null
+        ? String(message.turn_id)
+        : (isAssistant ? 'nova-turn' : 'user-turn');
+
+      const isEnd = message.turn_status === 1 || message.final === true;
+
+      if (isAssistant) {
+        setNovaSpeaking(true);
+        showDialogue('Nova', text);
+        addOrUpdateChatMessage('nova', text, turnId);
+        if (isEnd) {
+          setTimeout(() => {
+            if (!remoteAudioTrack?.isPlaying) setNovaSpeaking(false);
+          }, 800);
+        }
+      } else if (isUser) {
+        agoraUserSttActive = true;
+        setNovaSpeaking(false);
+        setSpeakerIndicator('Listening to your voice…', false, true);
+        showDialogue('You', text);
+        addOrUpdateChatMessage('user', text, turnId);
+        if (isEnd) {
+          transcriptBuffer.push(`User: ${text}`);
+          scheduleStateParse();
+        }
+      }
+    }
 
     // ─── AGORA INITIALIZATION ─────────────────────────────────────────────
     async function startVoiceSession() {
@@ -710,6 +2123,32 @@
           }
         });
 
+        // Agora RTC Data Stream listener for real-time Cloud Agent transcripts
+        agoraClient.on('stream-message', (uid, stream) => {
+          try {
+            const raw = new TextDecoder('utf-8').decode(stream);
+
+            // 1. Pipe-delimited Agora chunked message (3 pipes)
+            if ((raw.match(/\|/g) || []).length === 3) {
+              const assembled = chunkAssembler.assemble(raw);
+              if (assembled) {
+                handleAgoraTranscriptMessage(uid, assembled);
+              }
+              return;
+            }
+
+            // 2. Direct JSON payload
+            try {
+              const parsed = JSON.parse(raw);
+              handleAgoraTranscriptMessage(uid, parsed);
+            } catch (_) {
+              // Ignore raw transport fragments that are not valid JSON
+            }
+          } catch (err) {
+            console.warn('[Agora Stream Message Parse Error]:', err);
+          }
+        });
+
         agoraClient.on('user-unpublished', (user, mediaType) => {
           if (mediaType === 'audio') {
             console.log('[Agora] Remote audio unpublished');
@@ -720,10 +2159,15 @@
         agoraClient.enableAudioVolumeIndicator();
         agoraClient.on('volume-indicator', (volumes) => {
           const agentVol = volumes.find(v => String(v.uid) === '9000');
+          const userVol = volumes.find(v => String(v.uid) !== '9000' && v.level > 3);
           if (agentVol && agentVol.level > 4) {
             setNovaSpeaking(true);
+          } else if (userVol && userVol.level > 4) {
+            setNovaSpeaking(false);
+            setSpeakerIndicator('Listening to your voice…', false, true);
           } else if (!agentVol || agentVol.level <= 1) {
             setNovaSpeaking(false);
+            setSpeakerIndicator('Nova is ready', false, false);
           }
         });
 
@@ -767,13 +2211,16 @@
         state.agentId = spawnData.agent_id;
         console.log('[Agora] Nova agent online with ID:', state.agentId);
 
-        updateStatus('listening', 'Listening to you…');
+        updateStatus('listening', 'Nova is speaking…');
+        const badge = document.getElementById('session-badge');
+        if (badge) badge.classList.add('active');
+        const badgeText = document.getElementById('session-badge-text');
+        if (badgeText) badgeText.textContent = 'Live Voice Sync';
+
         const micBtn = document.getElementById('mic-toggle');
         if (micBtn) micBtn.style.display = 'flex';
-        const initialGreeting = state.profileName
-          ? `Hi ${state.profileName.split(' ')[0]}! I'm Nova, your AI onboarding assistant. You're going to have a panel interview, so I'm here to onboard you for that. Are you ready to gear up, or is this interview for someone else?`
-          : "Hello! I'm Nova, your AI onboarding assistant. You are going to have a panel interview, so I need to onboard you for that. What is your name?";
-        showDialogue('Nova', initialGreeting);
+        showDialogue('Nova', 'Connecting live voice stream…');
+        updateGuidanceAndProgress();
 
         initSpeechRecognition();
       } catch (err) {
@@ -796,11 +2243,14 @@
         speechRec.lang = 'en-US';
 
         speechRec.onresult = (e) => {
+          // If Agora Deepgram Nova-3 Cloud STT is active, skip local fallback to prevent duplication
+          if (agoraUserSttActive) return;
           for (let i = e.resultIndex; i < e.results.length; i++) {
             if (e.results[i].isFinal) {
               const text = e.results[i][0].transcript.trim();
               if (text) {
                 showDialogue('You', text);
+                addOrUpdateChatMessage('user', text);
                 transcriptBuffer.push(`User: ${text}`);
                 scheduleStateParse();
               }
@@ -853,9 +2303,20 @@
         document.getElementById('val-name').textContent = parsed.name;
         document.getElementById('val-name').classList.remove('empty');
         document.getElementById('hud-name').classList.add('captured');
+        addOrUpdateChatMessage('system', `✓ Identity confirmed as ${parsed.name}`);
       }
 
-      // 2. Active Step Progression & Popups
+      // 2. Target Role & Track
+      if (parsed.target_role && !state.role) {
+        confirmRole(parsed.target_role, parsed.resolved_track);
+      }
+
+      // 3. Experience Tier
+      if (parsed.experience_tier && !state.experienceTier) {
+        confirmExperience(parsed.experience_tier);
+      }
+
+      // 4. Active Step Progression & Popups
       if (parsed.active_step) {
         state.activeStep = parsed.active_step;
         if (parsed.active_step === 'role' && !state.role) {
@@ -871,15 +2332,7 @@
         }
       }
 
-      // 3. Target Role & Track
-      if (parsed.target_role && !state.role) {
-        confirmRole(parsed.target_role, parsed.resolved_track);
-      }
-
-      // 4. Experience Tier
-      if (parsed.experience_tier && !state.experienceTier) {
-        confirmExperience(parsed.experience_tier);
-      }
+      updateGuidanceAndProgress();
     }
 
     // ─── ROLE & TRACK CONFIRMATION ────────────────────────────────────────
@@ -913,7 +2366,13 @@
           document.getElementById('val-panel').textContent = `${track.toUpperCase()} Panel`;
           document.getElementById('val-panel').classList.remove('empty');
           document.getElementById('hud-panel').classList.add('captured');
-          setTimeout(() => closePopup('role-popup'), 1200);
+          addOrUpdateChatMessage('system', `✓ Target Role: ${roleName} matched to ${track.toUpperCase()} Panel`);
+          state.activeStep = 'experience';
+          updateGuidanceAndProgress();
+          setTimeout(() => {
+            closePopup('role-popup');
+            if (!state.experienceTier) showPopup('exp-popup');
+          }, 1200);
         } else {
           feedback.className = 'panel-feedback unsupported';
           icon.className = 'fa-solid fa-triangle-exclamation';
@@ -933,7 +2392,15 @@
       const card = document.getElementById(`exp-${tier.replace(/\s+/g, '-')}`);
       if (card) card.classList.add('selected');
 
-      setTimeout(() => closePopup('exp-popup'), 1000);
+      addOrUpdateChatMessage('system', `✓ Experience level calibrated to ${tier.toUpperCase()}`);
+      state.activeStep = 'overview';
+      updateGuidanceAndProgress();
+
+      setTimeout(() => {
+        closePopup('exp-popup');
+        showPopup('overview-popup');
+        updateOverviewSummary();
+      }, 1000);
     };
 
     // ─── OVERVIEW SUMMARY UPDATE ──────────────────────────────────────────
@@ -1041,13 +2508,27 @@
     document.getElementById('start-banner')?.addEventListener('click', startVoiceSession);
     document.getElementById('nova-orb')?.addEventListener('click', startVoiceSession);
 
+    // Mobile Hamburger Menu Toggle
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const appHeader = document.querySelector('.app-header');
+    if (mobileMenuBtn && appHeader) {
+      mobileMenuBtn.addEventListener('click', () => {
+        appHeader.classList.toggle('mobile-nav-active');
+        const icon = mobileMenuBtn.querySelector('i');
+        if (icon) {
+          if (appHeader.classList.contains('mobile-nav-active')) {
+            icon.className = 'fa-solid fa-xmark';
+          } else {
+            icon.className = 'fa-solid fa-bars';
+          }
+        }
+      });
+    }
+
     async function initPage() {
       await loadSupabaseContext();
-      if (state.profileName) {
-        showDialogue('Nova', `Hi ${state.profileName.split(' ')[0]}! Click "Start Voice Conversation" below when you are ready to begin.`);
-      } else {
-        showDialogue('Nova', 'Click "Start Voice Conversation" below to begin your voice onboarding.');
-      }
+      updateGuidanceAndProgress();
+      renderChatMessages();
     }
 
     if (document.readyState === 'loading') {

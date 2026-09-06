@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY_INTERVIEW || process.env.GEMINI_API_KEY });
 
 // Global state for deduplication across the 3 concurrent agent requests
 // In Next.js dev, use globalThis to preserve across hot reloads.

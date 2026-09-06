@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RtcTokenBuilder, RtcRole } from 'agora-token';
+import { RtcTokenBuilder, RtcRole, RtmTokenBuilder } from 'agora-token';
 
 const EXPIRATION_TIME_IN_SECONDS = 3600;
 
@@ -43,21 +43,31 @@ export async function GET(request: NextRequest) {
       expiry,
     );
 
-    // Also build a combined RTC+RTM token with string account for RTM / toolkit compatibility
-    const combinedToken = RtcTokenBuilder.buildTokenWithRtm(
-      APP_ID,
-      APP_CERTIFICATE,
-      channelName,
-      uid.toString(),
-      RtcRole.PUBLISHER,
-      expiry,
-      expiry,
-    );
+    // Build dedicated RTM token for client-side RTM login
+    let rtmToken: string = '';
+    try {
+      rtmToken = RtmTokenBuilder.buildToken(
+        APP_ID,
+        APP_CERTIFICATE,
+        uid.toString(),
+        expiry,
+      );
+    } catch (_) {
+      rtmToken = RtcTokenBuilder.buildTokenWithRtm(
+        APP_ID,
+        APP_CERTIFICATE,
+        channelName,
+        uid.toString(),
+        RtcRole.PUBLISHER,
+        expiry,
+        expiry,
+      );
+    }
 
     return NextResponse.json({
       token: rtcToken,
       rtcToken,
-      rtmToken: combinedToken,
+      rtmToken,
       uid: uid.toString(),
       channel: channelName,
     });
