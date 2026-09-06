@@ -2,59 +2,20 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap');
 
-:root {
+:root, :root.light-theme {
     /* Fonts pairing */
     --font-display: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
 
-    /* Color Palette - Default Dark Mode (Deep Tech Aero Theme) */
-    --bg-color: hsl(222, 47%, 4%);
-    --landing-bg: url('../images/rolepilot_bg.png');
-    --panel-bg: rgba(10, 16, 32, 0.45);
-    
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-border-hover: rgba(255, 255, 255, 0.16);
-    --glass-inner-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-    --shadow-layered: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 20px 40px -10px rgba(0, 0, 0, 0.4);
-    
-    --primary: hsl(263, 75%, 60%);
-    --primary-hover: hsl(263, 75%, 68%);
-    --accent: hsl(190, 95%, 45%);
-    --accent-hover: hsl(190, 95%, 55%);
-    
-    --text-primary: hsl(210, 40%, 98%);
-    --text-secondary: hsl(215, 20%, 78%);
-    --text-muted: hsl(215, 14%, 55%);
-    
-    --success: hsl(142, 70%, 45%);
-    --error: hsl(0, 84%, 60%);
-    
-    /* Effects and Spacing */
-    --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    --transition-slow: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    --radius-outer: 24px;
-    --radius-inner: 16px;
-    --glass-blur: blur(24px) saturate(220%);
-    
-    /* Layout Overlays */
-    --overlay-color: rgba(9, 13, 22, 0.78);
-
-    /* Modal Specific colors */
-    --modal-bg: rgba(10, 16, 32, 0.92);
-    --modal-row-bg: rgba(255, 255, 255, 0.03);
-    --modal-text-original: hsl(215, 14%, 60%);
-}
-
-/* Light Theme Variables */
-:root.light-theme {
+    /* Permanent Light Theme Design Tokens (Clean, Airy & High Contrast) */
     --bg-color: hsl(215, 30%, 96%);
     --landing-bg: url('../images/rolepilot_bg_light.png');
-    --panel-bg: rgba(255, 255, 255, 0.45);
+    --panel-bg: rgba(255, 255, 255, 0.75);
     
     --glass-border: rgba(15, 23, 42, 0.08);
-    --glass-border-hover: rgba(15, 23, 42, 0.15);
-    --glass-inner-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.65);
-    --shadow-layered: 0 4px 6px -1px rgba(15, 23, 42, 0.02), 0 20px 40px -10px rgba(15, 23, 42, 0.08);
+    --glass-border-hover: rgba(15, 23, 42, 0.16);
+    --glass-inner-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+    --shadow-layered: 0 4px 6px -1px rgba(15, 23, 42, 0.03), 0 20px 40px -10px rgba(15, 23, 42, 0.07);
     
     --primary: hsl(263, 75%, 54%);
     --primary-hover: hsl(263, 75%, 45%);
@@ -68,11 +29,19 @@
     --success: hsl(142, 75%, 35%);
     --error: hsl(0, 84%, 55%);
     
-    --overlay-color: rgba(240, 244, 248, 0.6);
+    /* Effects and Spacing */
+    --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-slow: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    --radius-outer: 24px;
+    --radius-inner: 16px;
+    --glass-blur: blur(24px) saturate(180%);
+    
+    /* Layout Overlays */
+    --overlay-color: rgba(240, 244, 248, 0.75);
 
     /* Modal Specific colors */
-    --modal-bg: rgba(255, 255, 255, 0.96);
-    --modal-row-bg: rgba(15, 23, 42, 0.04);
+    --modal-bg: rgba(255, 255, 255, 0.98);
+    --modal-row-bg: rgba(15, 23, 42, 0.03);
     --modal-text-original: hsl(215, 16%, 45%);
 }
 
@@ -5842,4 +5811,368 @@ body.page-exit {
 }
 .bargein-box.legacy .bargein-value { color: #f87171; }
 .bargein-box.rolepilot .bargein-value { color: #34d399; }
+
+/* ==========================================================================
+   Refined Interview Scorecards & Transcript Architecture (Uncluttered & Light)
+   ========================================================================== */
+
+.scorecards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 14px;
+}
+
+.scorecard-card-row {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04), 0 10px 24px -6px rgba(15, 23, 42, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.scorecard-card-row:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 16px 32px -8px rgba(15, 23, 42, 0.08);
+    border-color: rgba(124, 58, 237, 0.25);
+}
+
+.scorecard-meta-block {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    min-width: 0;
+}
+
+.scorecard-track-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(124, 58, 237, 0.08);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.scorecard-info-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.scorecard-title-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.scorecard-title-line h4 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.scorecard-date-badge {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.scorecard-panelists-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+}
+
+.panelist-mini-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.scorecard-score-block {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+}
+
+.scorecard-numeric-badge {
+    text-align: right;
+}
+
+.scorecard-big-number {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: var(--font-display);
+    color: var(--primary);
+    line-height: 1;
+}
+
+.scorecard-verdict-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--success);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+}
+
+/* Modal Overlay & Dialog */
+.scorecard-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.scorecard-modal-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.scorecard-modal-dialog {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 820px;
+    max-height: 88vh;
+    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(20px) scale(0.98);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scorecard-modal-backdrop.active .scorecard-modal-dialog {
+    transform: translateY(0) scale(1);
+}
+
+.modal-header-strip {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(248, 250, 252, 0.85);
+}
+
+.modal-header-title-group h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.modal-header-title-group p {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.modal-close-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    background: #ffffff;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.modal-close-btn:hover {
+    background: rgba(15, 23, 42, 0.05);
+    color: var(--text-primary);
+    transform: rotate(90deg);
+}
+
+.modal-tab-bar {
+    display: flex;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    padding: 0 2rem;
+    background: #ffffff;
+    gap: 24px;
+}
+
+.modal-tab-btn {
+    background: none;
+    border: none;
+    padding: 14px 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    font-family: var(--font-body);
+}
+
+.modal-tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.modal-scrollable-body {
+    padding: 2rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: #ffffff;
+}
+
+/* Panelist Review Cards in Modal */
+.panelist-eval-block {
+    background: rgba(248, 250, 252, 0.9);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.panelist-eval-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.panelist-eval-name {
+    font-weight: 700;
+    font-size: 0.98rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.eval-quote-box {
+    background: #ffffff;
+    border-left: 3px solid var(--primary);
+    padding: 10px 14px;
+    border-radius: 0 10px 10px 0;
+    font-size: 0.86rem;
+    font-style: italic;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Transcript dialogue stream inside modal */
+.transcript-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.transcript-message-bubble {
+    padding: 12px 16px;
+    border-radius: 14px;
+    max-width: 90%;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.transcript-message-bubble.panelist {
+    background: rgba(124, 58, 237, 0.05);
+    border: 1px solid rgba(124, 58, 237, 0.12);
+    align-self: flex-start;
+}
+
+.transcript-message-bubble.candidate {
+    background: rgba(6, 182, 212, 0.08);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    align-self: flex-end;
+}
+
+.transcript-bubble-meta {
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+}
+
+.transcript-message-bubble.panelist .transcript-bubble-meta {
+    color: var(--primary);
+}
+
+.transcript-message-bubble.candidate .transcript-bubble-meta {
+    color: var(--accent);
+}
+
+/* Fast-Launch Track Selectors in Right Panel */
+.track-fast-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--glass-border);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    margin-bottom: 10px;
+}
+
+.track-fast-selector:hover {
+    background: #ffffff;
+    border-color: rgba(124, 58, 237, 0.25);
+    transform: translateX(3px);
+}
+
+.track-fast-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.track-fast-left i {
+    color: var(--primary);
+    font-size: 1rem;
+}
+
 

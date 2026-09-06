@@ -8,12 +8,10 @@
     <!-- Inline Theme Script -->
     <script>
       (function() {
-          const currentTheme = localStorage.getItem('theme') || 'dark';
-          if (currentTheme === 'light') {
-              document.documentElement.classList.add('light-theme');
-          } else {
-              document.documentElement.classList.remove('light-theme');
-          }
+          document.documentElement.classList.add('light-theme');
+          try {
+              localStorage.setItem('theme', 'light');
+          } catch (e) {}
       })();
     </script>
     <!-- Theme Manager Script -->
@@ -102,7 +100,6 @@
         </div>
 
         <div class="header-actions">
-            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
             <a href="login.html" id="header-signin-btn" class="btn-secondary-outline">Sign In</a>
             <a href="gear-up.html" class="btn btn-header header-signup-desktop"><i class="fa-solid fa-microphone-lines" style="margin-right: 6px;"></i> Launch Voice Panel</a>
             <button class="mobile-menu-toggle" aria-label="Toggle Mobile Menu">

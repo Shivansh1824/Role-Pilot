@@ -10,12 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script>
     (function() {
-      const currentTheme = localStorage.getItem('theme') || 'dark';
-      if (currentTheme === 'light') {
-        document.documentElement.classList.add('light-theme');
-      } else {
-        document.documentElement.classList.remove('light-theme');
-      }
+      document.documentElement.classList.add('light-theme');
+      try {
+        localStorage.setItem('theme', 'light');
+      } catch (e) {}
     })();
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -1290,9 +1288,6 @@
         <span class="profile-dot" style="width:8px; height:8px; border-radius:50%; background:var(--success);"></span>
         <span id="profile-label">Voice Engine Active</span>
       </div>
-
-      <!-- Real App Theme Toggle (☀️ / 🌙) -->
-      <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
 
       <a href="dashboard.html" class="btn-secondary-outline" style="padding: 7px 14px; font-size: 0.84rem; text-decoration: none; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-weight: 500;">
         <i class="fa-solid fa-gauge-high"></i> <span>Dashboard</span>

@@ -8,12 +8,10 @@
     <!-- Inline Theme Script (Crucial: Place immediately in <head> to prevent FOUC / flickering) -->
     <script>
       (function() {
-          const currentTheme = localStorage.getItem('theme') || 'dark';
-          if (currentTheme === 'light') {
-              document.documentElement.classList.add('light-theme');
-          } else {
-              document.documentElement.classList.remove('light-theme');
-          }
+          document.documentElement.classList.add('light-theme');
+          try {
+              localStorage.setItem('theme', 'light');
+          } catch (e) {}
       })();
     </script>
     <!-- Theme Manager Script (for DOM toggles) -->
@@ -55,7 +53,6 @@
         <div class="header-center"></div>
         <div class="header-actions">
             <a href="index.html" class="back-home-btn"><i class="fa-solid fa-arrow-left"></i> <span>Back to Home</span></a>
-            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
         </div>
     </header>
 

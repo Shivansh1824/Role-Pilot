@@ -9,12 +9,10 @@
     <!-- Inline Theme Script (Crucial: Place immediately in <head> to prevent FOUC / flickering) -->
     <script>
       (function() {
-          const currentTheme = localStorage.getItem('theme') || 'dark';
-          if (currentTheme === 'light') {
-              document.documentElement.classList.add('light-theme');
-          } else {
-              document.documentElement.classList.remove('light-theme');
-          }
+          document.documentElement.classList.add('light-theme');
+          try {
+              localStorage.setItem('theme', 'light');
+          } catch (e) {}
       })();
     </script>
     <!-- Theme Manager Script (for DOM toggles) -->
@@ -69,7 +67,6 @@
         </div>
 
         <div class="header-actions">
-            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
             <a href="login.html" id="header-signin-btn" class="btn-secondary-outline">Sign In</a>
             <a href="gear-up.html" class="btn btn-header header-signup-desktop">Launch Panel</a>
             <button class="mobile-menu-toggle" aria-label="Toggle Mobile Menu">

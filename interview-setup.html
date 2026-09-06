@@ -10,12 +10,10 @@
   <link rel="stylesheet" href="css/style.css" />
   <script>
     (function() {
-      const currentTheme = localStorage.getItem('theme') || 'dark';
-      if (currentTheme === 'light') {
-        document.documentElement.classList.add('light-theme');
-      } else {
-        document.documentElement.classList.remove('light-theme');
-      }
+      document.documentElement.classList.add('light-theme');
+      try {
+        localStorage.setItem('theme', 'light');
+      } catch (e) {}
     })();
   </script>
   <script src="js/theme.js"></script>
@@ -544,7 +542,6 @@
       <span class="logo-text-header">Role<span>Pilot</span></span>
     </a>
     <div style="display: flex; align-items: center; gap: 12px;">
-      <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
       <a href="gear-up.html" class="back-btn" style="color: var(--accent); border-color: rgba(0, 210, 220, 0.35);">
         <i class="fa-solid fa-microphone"></i> Voice Onboarding (Nova)
       </a>

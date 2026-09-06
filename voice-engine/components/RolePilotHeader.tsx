@@ -17,57 +17,20 @@ export function RolePilotHeader({
   isInCall = false,
   onEndInterview,
 }: RolePilotHeaderProps) {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Synchronize theme with localStorage and document classes on mount
+  // Strictly lock light theme across the application
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedTheme = (localStorage.getItem('theme') as 'dark' | 'light') || 'dark';
-      setTheme(savedTheme);
-      applyTheme(savedTheme);
-
-      const handleStorage = (e: StorageEvent) => {
-        if (e.key === 'theme' && (e.newValue === 'light' || e.newValue === 'dark')) {
-          setTheme(e.newValue);
-          applyTheme(e.newValue);
-        }
-      };
-
-      const handleThemeChanged = (e: any) => {
-        if (e.detail?.theme) {
-          setTheme(e.detail.theme);
-          applyTheme(e.detail.theme);
-        }
-      };
-
-      window.addEventListener('storage', handleStorage);
-      document.addEventListener('themeChanged', handleThemeChanged);
-      return () => {
-        window.removeEventListener('storage', handleStorage);
-        document.removeEventListener('themeChanged', handleThemeChanged);
-      };
+      const root = document.documentElement;
+      root.classList.add('light-theme');
+      root.classList.remove('dark');
+      try {
+        localStorage.setItem('theme', 'light');
+      } catch (e) {}
     }
   }, []);
 
-  const applyTheme = (targetTheme: 'dark' | 'light') => {
-    const root = document.documentElement;
-    if (targetTheme === 'light') {
-      root.classList.add('light-theme');
-      root.classList.remove('dark');
-    } else {
-      root.classList.add('dark');
-      root.classList.remove('light-theme');
-    }
-  };
-
-  const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(nextTheme);
-    applyTheme(nextTheme);
-    localStorage.setItem('theme', nextTheme);
-    document.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: nextTheme } }));
-  };
 
   return (
     <header className="sticky top-0 z-40 flex h-16 w-full shrink-0 items-center justify-between border-b border-border/70 bg-card/60 px-4 md:px-7 backdrop-blur-xl transition-colors duration-300">
@@ -142,17 +105,6 @@ export function RolePilotHeader({
           </span>
         </div>
 
-        {/* Theme Toggle Button (☀️ / 🌙) */}
-        <button
-          id="theme-toggle"
-          type="button"
-          onClick={toggleTheme}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card/60 text-sm transition-transform duration-200 hover:scale-110 active:scale-95 hover:bg-card hover:border-border shadow-sm"
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        >
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
 
         {/* Return to Dashboard */}
         <a
