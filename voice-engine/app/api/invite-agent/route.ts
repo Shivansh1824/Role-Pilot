@@ -3,10 +3,10 @@ import {
   AgoraClient,
   Agent,
   Area,
+  CustomLLM,
   DeepgramSTT,
   ExpiresIn,
   MiniMaxTTS,
-  OpenAI,
 } from 'agora-agents';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 
@@ -223,16 +223,28 @@ export async function POST(request: NextRequest) {
       appCertificate,
     });
 
-    const geminiKey = process.env.GEMINI_API_KEY_INTERVIEW || process.env.GEMINI_API_KEY;
+    const hostHeader = request.headers.get('host');
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const requestHost = hostHeader && !hostHeader.includes('localhost') && !hostHeader.includes('127.0.0.1')
+      ? `${protocol}://${hostHeader}`
+      : null;
 
-    const llmProvider = new OpenAI({
-      apiKey: geminiKey || 'dummy',
+    const publicHost = process.env.PUBLIC_URL ||
+                       process.env.TUNNEL_URL ||
+                       requestHost ||
+                       (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
+                       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                       'https://voice-engine-kappa.vercel.app';
+
+    // Dedicated custom brain for the Interview Panel using Gemini 3.1 Flash Lite
+    const llmProvider = new CustomLLM({
+      url: `${publicHost}/api/interview-agent-llm`,
+      apiKey: 'dummy-key',
       model: 'gemini-3.1-flash-lite',
-      url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
       greetingMessage: greeting,
       failureMessage: 'Please wait a moment.',
       maxHistory: 50,
-      temperature: 0.7,
+      params: { max_tokens: 512, temperature: 0.7, top_p: 0.95 },
     });
 
     const agent = new Agent({
