@@ -40,15 +40,28 @@ export class ErrorBoundary extends React.Component<
         // Last-resort recovery UI for client-only conversation failures.
         <div className="flex flex-col items-center justify-center min-h-[320px] p-8 text-center">
           <div className="max-w-md">
-            <h2 className="text-lg font-semibold text-destructive mb-4">
+            <h2 className="text-lg font-semibold text-destructive mb-3">
               Something went wrong
             </h2>
-            <p className="text-muted-foreground text-sm mb-6">
+            <p className="text-muted-foreground text-sm mb-4">
               An error occurred while loading the conversation. Please try refreshing the page.
             </p>
-            <Button onClick={() => window.location.reload()}>
-              Refresh Page
-            </Button>
+            {this.state.error && (
+              <p className="text-xs text-muted-foreground/80 font-mono bg-destructive/10 border border-destructive/20 rounded-lg p-2.5 mb-6 text-left overflow-auto max-h-32 whitespace-pre-wrap break-words">
+                {this.state.error.message || String(this.state.error)}
+              </p>
+            )}
+            <div className="flex items-center justify-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => this.setState({ hasError: false, error: undefined })}
+              >
+                Try Again
+              </Button>
+              <Button onClick={() => window.location.reload()}>
+                Refresh Page
+              </Button>
+            </div>
           </div>
         </div>
       );

@@ -319,44 +319,32 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="card-verdict-tag" style="background: ${item.verdictBg}; color: ${item.verdictColor};">
                             <i class="fa-solid fa-circle-check"></i> ${item.verdict}
                         </span>
-                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; font-weight: 600;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; font-weight: 600;">
                             ${item.consensus}
                         </div>
                     </div>
                 </div>
 
-                <!-- Panelists Roster Row -->
+                <!-- Overlapping Avatar Stack & Committee -->
                 <div class="card-panelists-roster">
-                    <span class="roster-label">Committee Evaluators</span>
-                    <div class="roster-chips">
-                        ${item.panelistsRoster.map(p => `
-                            <span class="roster-panelist-chip">
-                                <span class="roster-avatar-circle" style="background: ${p.color};">${p.initials}</span>
-                                <span>${p.name} <span style="color: var(--text-muted); font-size: 0.7rem;">(${p.role})</span></span>
-                            </span>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <!-- Rubric Mini Progress Meters -->
-                <div class="card-rubric-meters">
-                    ${item.rubricMini.map(r => `
-                        <div class="submetric-item">
-                            <div class="submetric-labels">
-                                <span>${r.label}</span>
-                                <span style="font-weight: 700;">${r.val}%</span>
-                            </div>
-                            <div class="submetric-track-bar">
-                                <div class="submetric-fill-bar" style="width: ${r.val}%; background: ${r.color};"></div>
-                            </div>
+                    <div class="avatar-stack-container">
+                        <div class="avatar-stack-circles">
+                            ${item.panelistsRoster.map(p => `
+                                <div class="avatar-stack-circle" style="background: ${p.color};" title="${p.name} (${p.role})">
+                                    ${p.initials}
+                                </div>
+                            `).join('')}
                         </div>
-                    `).join('')}
+                    </div>
+                    <div class="avatar-stack-names">
+                        <strong>Committee:</strong> ${item.panelistsRoster.map(p => `${p.name} <span style="color: var(--text-muted); font-size: 0.75rem;">(${p.role})</span>`).join(', ')}
+                    </div>
                 </div>
 
                 <!-- Highlight Executive Quote -->
                 <div class="card-quote-box">
                     <i class="fa-solid fa-quote-left" style="opacity: 0.4; margin-right: 4px;"></i> "${item.highlightQuote}"
-                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; font-weight: 600; text-align: right;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; font-weight: 600; text-align: right;">
                         &mdash; ${item.quoteAuthor}
                     </div>
                 </div>

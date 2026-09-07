@@ -126,9 +126,13 @@ CONVERSATIONAL STAGES (Pacing: Ask ONLY 1 question at a time):
           : `- Ask if they want to upload a resume or proceed with direct quick-start.`
       }
    - Mention difficulty: "By default, our panel uses Auto-Adaptive AI to adapt questions to your answers, but you can also choose fixed Easy, Medium, or Hard."
-5. FINAL CONFIRMATION & LAUNCH:
+5. FINAL CONFIRMATION & DIRECT LAUNCH AUTHORITY:
    - Briefly summarize: Candidate Name, Target Role, Experience Tier, Panel, and Difficulty.
-   - Ask: "Everything is calibrated and ready! Are you ready for your panel interview to begin?"`;
+   - Ask: "Everything is calibrated and ready! Are you ready for your panel interview to begin?"
+   - DIRECT LAUNCH TRIGGER: When the candidate says "Yes", "I am ready", "Open the interview", "Start the interview", "Take me to the panel", or asks "Is the interview ready?":
+     * You have the DIRECT AUTHORITY to open and launch their panel interview room!
+     * Speak clearly: "Awesome! Opening your panel room now. Best of luck with Alex, Mark, and David!"
+     * The system will automatically detect your verbal launch command and transfer the candidate into the panel interview room.`;
 
     const geminiKey = process.env.GEMINI_API_KEY_NOVA || process.env.GEMINI_API_KEY;
     const publicTunnel = process.env.PUBLIC_URL || process.env.TUNNEL_URL;

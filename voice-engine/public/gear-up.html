@@ -1274,10 +1274,9 @@
     <div class="header-center">
       <nav class="header-nav">
         <ul class="dashboard-nav-tabs">
-          <li><a href="dashboard.html" class="nav-tab-link">Dashboard</a></li>
-          <li><a href="gear-up.html" class="nav-tab-link active"><i class="fa-solid fa-microphone-lines" style="color: var(--accent); margin-right: 6px;"></i> Voice Onboarding</a></li>
-          <li><a href="ats-tailor.html" class="nav-tab-link">ATS Tailor</a></li>
-          <li><a href="dashboard.html" class="nav-tab-link">Leaderboard</a></li>
+          <li><a href="dashboard.html" class="nav-tab-link"><i class="fa-solid fa-chart-pie" style="margin-right: 6px;"></i> Dashboard</a></li>
+          <li><a href="gear-up.html" class="nav-tab-link active"><i class="fa-solid fa-play" style="color: var(--primary); margin-right: 6px;"></i> Start Your Interview</a></li>
+          <li><a href="dashboard.html#scorecards-section" class="nav-tab-link"><i class="fa-solid fa-clipboard-check" style="color: var(--primary); margin-right: 6px;"></i> Scorecards & History</a></li>
         </ul>
       </nav>
     </div>
@@ -1389,7 +1388,7 @@
 
           <!-- Start Voice Session Button -->
           <div class="start-banner" id="start-banner" onclick="startVoiceSession()">
-            <i class="fa-solid fa-play"></i> Start Voice Conversation
+            <i class="fa-solid fa-play"></i> Start Your Interview
           </div>
 
           <!-- Audio Autoplay Banner if Browser Suspends Audio -->
@@ -2085,6 +2084,29 @@
 
     const chunkAssembler = new AgoraChunkedAssembler();
     let agoraUserSttActive = false;
+    let hasLaunchedRoom = false;
+
+    function autoLaunchPanelRoom(reason = '', delayMs = 2400) {
+      if (hasLaunchedRoom) return;
+      hasLaunchedRoom = true;
+      console.log('[Nova Direct Launch] Triggering panel room launch. Reason:', reason);
+
+      updateStatus('speaking', '🚀 Opening your interview panel room…');
+      setSpeakerIndicator('Transferring you to the interview panel…', true, false);
+      addOrUpdateChatMessage('system', '🚀 Opening your Panel Interview Room…');
+
+      const launchBtn = document.getElementById('final-launch-btn');
+      if (launchBtn) {
+        launchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Entering Panel Room…';
+        launchBtn.style.pointerEvents = 'none';
+      }
+
+      // Allow Nova's spoken confirmation to finish before navigation
+      setTimeout(() => {
+        enterPanelRoom();
+      }, delayMs);
+    }
+    window.autoLaunchPanelRoom = autoLaunchPanelRoom;
 
     function handleAgoraTranscriptMessage(uid, message) {
       if (!message || typeof message !== 'object') return;
@@ -2141,6 +2163,21 @@
         setNovaSpeaking(true);
         showDialogue('Nova', text);
         addOrUpdateChatMessage('nova', text, turnId);
+
+        // NOVA DIRECT LAUNCH SPOKEN TRIGGER
+        const lowerNova = text.toLowerCase();
+        if (
+          lowerNova.includes('opening your panel room') ||
+          lowerNova.includes('opening the panel room') ||
+          lowerNova.includes('opening your interview') ||
+          lowerNova.includes('launching your panel room') ||
+          lowerNova.includes('transferring you to the panel') ||
+          lowerNova.includes('transferring you to the interview') ||
+          lowerNova.includes('entering the panel room')
+        ) {
+          autoLaunchPanelRoom('Nova verbal launch: ' + text, 2400);
+        }
+
         if (isEnd) {
           setTimeout(() => {
             if (!remoteAudioTrack?.isPlaying) setNovaSpeaking(false);
@@ -2152,6 +2189,28 @@
         setSpeakerIndicator('Listening to your voice…', false, true);
         showDialogue('You', text);
         addOrUpdateChatMessage('user', text, turnId);
+
+        // CANDIDATE VOICE LAUNCH QUERY DETECTION ("is the interview ready?", "open the interview", etc.)
+        const lowerUser = text.toLowerCase();
+        const isLaunchQuery =
+          lowerUser.includes('is the interview ready') ||
+          lowerUser.includes('is it ready') ||
+          lowerUser.includes('is interview ready') ||
+          lowerUser.includes('open the interview') ||
+          lowerUser.includes('open interview') ||
+          lowerUser.includes('open the panel') ||
+          lowerUser.includes('open panel room') ||
+          lowerUser.includes('start the interview') ||
+          lowerUser.includes('start interview') ||
+          lowerUser.includes('take me to the panel') ||
+          lowerUser.includes('take me to the interview') ||
+          lowerUser.includes('launch the interview') ||
+          lowerUser.includes('launch panel');
+
+        if (isLaunchQuery) {
+          autoLaunchPanelRoom('Candidate query: ' + text, 1800);
+        }
+
         if (isEnd) {
           transcriptBuffer.push(`User: ${text}`);
           scheduleStateParse();
@@ -2338,6 +2397,27 @@
               if (text) {
                 showDialogue('You', text);
                 addOrUpdateChatMessage('user', text);
+
+                const lowerUser = text.toLowerCase();
+                const isLaunchQuery =
+                  lowerUser.includes('is the interview ready') ||
+                  lowerUser.includes('is it ready') ||
+                  lowerUser.includes('is interview ready') ||
+                  lowerUser.includes('open the interview') ||
+                  lowerUser.includes('open interview') ||
+                  lowerUser.includes('open the panel') ||
+                  lowerUser.includes('open panel room') ||
+                  lowerUser.includes('start the interview') ||
+                  lowerUser.includes('start interview') ||
+                  lowerUser.includes('take me to the panel') ||
+                  lowerUser.includes('take me to the interview') ||
+                  lowerUser.includes('launch the interview') ||
+                  lowerUser.includes('launch panel');
+
+                if (isLaunchQuery) {
+                  autoLaunchPanelRoom('Candidate query (speechRec): ' + text, 1800);
+                }
+
                 transcriptBuffer.push(`User: ${text}`);
                 scheduleStateParse();
               }
@@ -2411,11 +2491,17 @@
         } else if (parsed.active_step === 'experience' && !state.experienceTier) {
           closePopup('role-popup');
           showPopup('exp-popup');
-        } else if (parsed.active_step === 'overview' || parsed.active_step === 'ready') {
+        } else if (parsed.active_step === 'overview') {
           closePopup('role-popup');
           closePopup('exp-popup');
           showPopup('overview-popup');
           updateOverviewSummary();
+        } else if (parsed.active_step === 'ready' || parsed.ready_to_launch) {
+          closePopup('role-popup');
+          closePopup('exp-popup');
+          showPopup('overview-popup');
+          updateOverviewSummary();
+          autoLaunchPanelRoom('AI State parser confirmed readiness', 2800);
         }
       }
 
@@ -2560,8 +2646,10 @@
     // ─── LAUNCH PANEL ROOM ───────────────────────────────────────────────
     window.enterPanelRoom = function() {
       const btn = document.getElementById('final-launch-btn');
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparing Panel Room…';
-      btn.style.pointerEvents = 'none';
+      if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparing Panel Room…';
+        btn.style.pointerEvents = 'none';
+      }
 
       if (state.agentId) {
         fetch(`${BACKEND_URL}/api/stop-conversation`, {
@@ -2615,6 +2703,29 @@
 
     async function initPage() {
       await loadSupabaseContext();
+      
+      // Parse track parameter if provided from dashboard
+      const params = new URLSearchParams(window.location.search);
+      const urlTrack = params.get('track');
+      if (urlTrack) {
+        state.track = urlTrack;
+        const trackNames = {
+          'fullstack': 'Full-Stack & Systems Panel (David Chen, Alex Rivera, Marcus Vance)',
+          'tech': 'Engineering Panel (Alex Rivera, David Chen)',
+          'product': 'Product Architecture Panel (Mark Davis, Marcus Vance)',
+          'cloud': 'Enterprise Cloud & Infra Panel (David Chen, Marcus Vance)',
+          'leadership': 'Leadership & Behavioral Panel (Alex Rivera, Mark Davis)'
+        };
+        const panelText = trackNames[urlTrack] || `${urlTrack.toUpperCase()} Panel`;
+        const valPanel = document.getElementById('val-panel');
+        if (valPanel) {
+          valPanel.textContent = panelText;
+          valPanel.classList.remove('empty');
+        }
+        const chkPanel = document.getElementById('chk-panel');
+        if (chkPanel) chkPanel.classList.add('valid');
+      }
+
       updateGuidanceAndProgress();
       renderChatMessages();
     }

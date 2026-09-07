@@ -315,7 +315,7 @@ export default function LandingPage() {
               difficulty={setupConfig.difficulty}
               candidateName={setupConfig.candidate}
             />
-          ) : agoraData && rtmClient ? (
+          ) : agoraData ? (
             <>
               {agentJoinError && (
                 <div className="m-3 p-3 bg-destructive/10 border border-destructive/25 rounded-2xl text-destructive text-xs max-w-md mx-auto">

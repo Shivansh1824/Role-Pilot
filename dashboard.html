@@ -47,10 +47,9 @@
         <div class="header-center">
             <nav class="header-nav">
                 <ul class="dashboard-nav-tabs">
-                    <li><a href="dashboard.html" class="nav-tab-link active">Dashboard</a></li>
-                    <li><a href="gear-up.html" class="nav-tab-link"><i class="fa-solid fa-microphone-lines" style="color: var(--primary); margin-right: 5px;"></i> Voice Warm-Up</a></li>
-                    <li><a href="interview-setup.html" class="nav-tab-link"><i class="fa-solid fa-users-viewfinder" style="color: var(--primary); margin-right: 5px;"></i> Multi-Role Panels</a></li>
-                    <li><a href="#scorecards-section" class="nav-tab-link"><i class="fa-solid fa-clipboard-check" style="color: var(--primary); margin-right: 5px;"></i> Scorecards & History</a></li>
+                    <li><a href="dashboard.html" class="nav-tab-link active"><i class="fa-solid fa-chart-pie" style="margin-right: 6px;"></i> Dashboard</a></li>
+                    <li><a href="gear-up.html" class="nav-tab-link"><i class="fa-solid fa-play" style="color: var(--primary); margin-right: 6px;"></i> Start Your Interview</a></li>
+                    <li><a href="#scorecards-section" class="nav-tab-link"><i class="fa-solid fa-clipboard-check" style="color: var(--primary); margin-right: 6px;"></i> Scorecards & History</a></li>
                 </ul>
             </nav>
         </div>
@@ -65,7 +64,7 @@
                 <div class="profile-trigger" id="profile-trigger">SR</div>
                 <div class="dropdown-menu" id="profile-dropdown">
                     <a href="#" class="dropdown-item"><i class="fa-solid fa-user-gear"></i> Profile Settings</a>
-                    <a href="interview-setup.html" class="dropdown-item"><i class="fa-solid fa-sliders"></i> Interview Config</a>
+                    <a href="gear-up.html" class="dropdown-item"><i class="fa-solid fa-play"></i> Start Your Interview</a>
                     <div style="height: 1px; background: var(--glass-border); margin: 4px 0;"></div>
                     <a href="#" class="dropdown-item" id="logout-btn" style="color: var(--error);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
                 </div>
@@ -86,12 +85,13 @@
                 <p id="greeting-subtitle">Target Role: Senior Full-Stack Engineer • Adaptive Multi-Role Committee Active</p>
             </div>
             <div class="hero-actions">
-                <a href="gear-up.html" class="btn btn-primary-gradient"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right: 6px;"></i> Voice Gear Up (Nova)</a>
-                <a href="interview-setup.html" class="btn btn-secondary-outline"><i class="fa-solid fa-sliders" style="margin-right: 6px;"></i> Launch Panel</a>
+                <a href="gear-up.html" class="btn btn-primary-gradient" style="display: inline-flex; align-items: center; gap: 10px; padding: 0 28px; height: 50px; font-size: 1.05rem; font-weight: 700; border-radius: 14px; text-decoration: none; box-shadow: 0 8px 24px -4px rgba(124, 58, 237, 0.35);">
+                    <i class="fa-solid fa-play"></i> Start Your Interview
+                </a>
             </div>
         </section>
 
-        <!-- North Star Performance Matrix (Informative & Benchmark-Driven) -->
+        <!-- North Star Performance Matrix (Clean, Airy & Benchmark-Driven) -->
         <section class="metrics-grid">
             <!-- Metric 1: Overall Readiness Score -->
             <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #7c3aed, #6366f1);">
@@ -105,10 +105,7 @@
                 </div>
                 
                 <div class="metric-title-group">
-                    <span class="metric-title-label">
-                        Overall Readiness Score
-                        <i class="fa-solid fa-circle-info" style="font-size: 0.85rem; color: var(--text-muted);" title="Weighted composite score across all multi-role panelists"></i>
-                    </span>
+                    <span class="metric-title-label">Overall Readiness Score</span>
                 </div>
 
                 <div class="metric-score-row">
@@ -121,38 +118,12 @@
                     </span>
                 </div>
 
-                <div class="metric-info-explain">
-                    <strong>What is this?</strong> Composite readiness index aggregating all 3 panelist evaluations (Tech Lead 40%, Hiring Mgr 35%, Bar Raiser 25%). Scores above 85% signal immediate final-loop readiness.
-                </div>
+                <p class="metric-info-explain">
+                    Weighted composite readiness across technical architecture, behavioral precision, and voice telemetry.
+                </p>
 
-                <div class="submetric-progress-group">
-                    <div class="submetric-item">
-                        <div class="submetric-labels">
-                            <span>Tech Lead Consensus</span>
-                            <span>93%</span>
-                        </div>
-                        <div class="submetric-track-bar">
-                            <div class="submetric-fill-bar" style="width: 93%; background: #7c3aed;"></div>
-                        </div>
-                    </div>
-                    <div class="submetric-item">
-                        <div class="submetric-labels">
-                            <span>Hiring Manager Alignment</span>
-                            <span>90%</span>
-                        </div>
-                        <div class="submetric-track-bar">
-                            <div class="submetric-fill-bar" style="width: 90%; background: #8b5cf6;"></div>
-                        </div>
-                    </div>
-                    <div class="submetric-item">
-                        <div class="submetric-labels">
-                            <span>Bar Raiser Verdict</span>
-                            <span>88%</span>
-                        </div>
-                        <div class="submetric-track-bar">
-                            <div class="submetric-fill-bar" style="width: 88%; background: #a78bfa;"></div>
-                        </div>
-                    </div>
+                <div class="submetric-track-bar">
+                    <div class="submetric-fill-bar" style="width: 88%; background: #7c3aed;"></div>
                 </div>
             </div>
 
@@ -168,10 +139,7 @@
                 </div>
 
                 <div class="metric-title-group">
-                    <span class="metric-title-label">
-                        STAR Behavioral Structure
-                        <i class="fa-solid fa-circle-info" style="font-size: 0.85rem; color: var(--text-muted);" title="Situation, Task, Action, Result storytelling structure"></i>
-                    </span>
+                    <span class="metric-title-label">STAR Behavioral Structure</span>
                 </div>
 
                 <div class="metric-score-row">
@@ -183,38 +151,12 @@
                     </span>
                 </div>
 
-                <div class="metric-info-explain">
-                    <strong>What is this?</strong> Measures strict adherence to Situation-Task-Action-Result format. Confirms clear personal ownership (Action) and quantified business ROI (Result) with &lt;2% filler words.
-                </div>
+                <p class="metric-info-explain">
+                    Adherence to Situation-Task-Action-Result format with clear personal ownership and quantified ROI.
+                </p>
 
-                <div class="submetric-progress-group">
-                    <div class="submetric-item">
-                        <div class="submetric-labels">
-                            <span>Situation & Task Framing</span>
-                            <span>94%</span>
-                        </div>
-                        <div class="submetric-track-bar">
-                            <div class="submetric-fill-bar" style="width: 94%; background: #06b6d4;"></div>
-                        </div>
-                    </div>
-                    <div class="submetric-item">
-                        <div class="submetric-labels">
-                            <span>Action Specificity & Ownership</span>
-                            <span>95%</span>
-                        </div>
-                        <div class="submetric-track-bar">
-                            <div class="submetric-fill-bar" style="width: 95%; background: #0284c7;"></div>
-                        </div>
-                    </div>
-                    <div class="submetric-item">
-                        <div class="submetric-labels">
-                            <span>Quantified Business ROI</span>
-                            <span>89%</span>
-                        </div>
-                        <div class="submetric-track-bar">
-                            <div class="submetric-fill-bar" style="width: 89%; background: #38bdf8;"></div>
-                        </div>
-                    </div>
+                <div class="submetric-track-bar">
+                    <div class="submetric-fill-bar" style="width: 92%; background: #06b6d4;"></div>
                 </div>
             </div>
 
@@ -230,10 +172,7 @@
                 </div>
 
                 <div class="metric-title-group">
-                    <span class="metric-title-label">
-                        Technical Architecture Depth
-                        <i class="fa-solid fa-circle-info" style="font-size: 0.85rem; color: var(--text-muted);" title="Distributed scalability, trade-off defense, and fault tolerance"></i>
-                    </span>
+                    <span class="metric-title-label">Technical Architecture Depth</span>
                 </div>
 
                 <div class="metric-score-row">
@@ -245,38 +184,12 @@
                     </span>
                 </div>
 
-                <div class="metric-info-explain">
-                    <strong>What is this?</strong> Assesses distributed system scalability reasoning, trade-off justification (CAP theorem, caching, rate limiting), and composure under edge-case stress pushback.
-                </div>
+                <p class="metric-info-explain">
+                    Distributed system scalability, failure mode trade-off justification, and edge-case composure.
+                </p>
 
-                <div class="submetric-progress-group">
-                    <div class="submetric-item">
-                        <div class="submetric-labels">
-                            <span>Scalability & Concurrency</span>
-                            <span>94%</span>
-                        </div>
-                        <div class="submetric-track-bar">
-                            <div class="submetric-fill-bar" style="width: 94%; background: #10b981;"></div>
-                        </div>
-                    </div>
-                    <div class="submetric-item">
-                        <div class="submetric-labels">
-                            <span>Trade-Off Articulation</span>
-                            <span>90%</span>
-                        </div>
-                        <div class="submetric-track-bar">
-                            <div class="submetric-fill-bar" style="width: 90%; background: #059669;"></div>
-                        </div>
-                    </div>
-                    <div class="submetric-item">
-                        <div class="submetric-labels">
-                            <span>Failure Mode Resilience</span>
-                            <span>89%</span>
-                        </div>
-                        <div class="submetric-track-bar">
-                            <div class="submetric-fill-bar" style="width: 89%; background: #34d399;"></div>
-                        </div>
-                    </div>
+                <div class="submetric-track-bar">
+                    <div class="submetric-fill-bar" style="width: 91%; background: #10b981;"></div>
                 </div>
             </div>
 
@@ -292,10 +205,7 @@
                 </div>
 
                 <div class="metric-title-group">
-                    <span class="metric-title-label">
-                        Agora Real-Time Voice Flow
-                        <i class="fa-solid fa-circle-info" style="font-size: 0.85rem; color: var(--text-muted);" title="Conversational pacing, latency, and barge-in handling on Agora SD-RTN"></i>
-                    </span>
+                    <span class="metric-title-label">Agora Real-Time Voice Flow</span>
                 </div>
 
                 <div class="metric-score-row">
@@ -308,94 +218,72 @@
                     </span>
                 </div>
 
-                <div class="metric-info-explain">
-                    <strong>What is this?</strong> Real-time voice telemetry over Agora SD-RTN. Measures sub-250ms conversational latency, thoughtful pause control, and graceful barge-in recovery during interruptions.
-                </div>
+                <p class="metric-info-explain">
+                    Sub-250ms conversational latency over Agora SD-RTN with graceful barge-in recovery.
+                </p>
 
-                <div class="submetric-progress-group">
-                    <div class="submetric-item">
-                        <div class="submetric-labels">
-                            <span>Turn-Taking Response (185ms)</span>
-                            <span>96%</span>
-                        </div>
-                        <div class="submetric-track-bar">
-                            <div class="submetric-fill-bar" style="width: 96%; background: #f59e0b;"></div>
-                        </div>
-                    </div>
-                    <div class="submetric-item">
-                        <div class="submetric-labels">
-                            <span>Barge-in / Interruption Recovery</span>
-                            <span>94%</span>
-                        </div>
-                        <div class="submetric-track-bar">
-                            <div class="submetric-fill-bar" style="width: 94%; background: #ea580c;"></div>
-                        </div>
-                    </div>
-                    <div class="submetric-item">
-                        <div class="submetric-labels">
-                            <span>Cadence & Vocal Steadiness</span>
-                            <span>93%</span>
-                        </div>
-                        <div class="submetric-track-bar">
-                            <div class="submetric-fill-bar" style="width: 93%; background: #fbbf24;"></div>
-                        </div>
-                    </div>
+                <div class="submetric-track-bar">
+                    <div class="submetric-fill-bar" style="width: 94%; background: #f59e0b;"></div>
                 </div>
             </div>
         </section>
 
-        <!-- Main Two-Column Work Layout -->
-        <section class="dashboard-work-area">
-            
-            <!-- Left Column: Scorecards & History (Visual Card System) -->
-            <div class="panel-section" id="scorecards-section">
-                <div class="glass-panel" style="padding: 1.75rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 12px;">
-                        <div>
-                            <h2 class="panel-title" style="font-size: 1.25rem;"><i class="fa-solid fa-clipboard-check" style="color: var(--primary);"></i> Committee Scorecard Deck</h2>
-                            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 4px;">Interactive multi-agent evaluation cards. Select any session to review panelist rubrics, cited performance quotes, and complete voice conversation transcripts.</p>
-                        </div>
-                    </div>
+        <!-- Committee Scorecard Deck (Full-Width 2-Column Spacious Grid) -->
+        <section class="dashboard-deck-section" id="scorecards-section">
+            <div class="scorecards-header-bar">
+                <div class="scorecards-title-block">
+                    <h2><i class="fa-solid fa-clipboard-check" style="color: var(--primary);"></i> Committee Scorecard Deck</h2>
+                    <p>Interactive multi-agent evaluation cards. Select any session to review panelist rubrics, cited performance quotes, and transcripts.</p>
+                </div>
 
-                    <!-- Category Filter Bar -->
-                    <div class="scorecards-filter-bar">
-                        <button class="scorecard-filter-btn active" data-filter="all"><i class="fa-solid fa-border-all"></i> All Panels (4)</button>
-                        <button class="scorecard-filter-btn" data-filter="systems"><i class="fa-solid fa-laptop-code"></i> Engineering (2)</button>
-                        <button class="scorecard-filter-btn" data-filter="product"><i class="fa-solid fa-cubes"></i> Product (1)</button>
-                        <button class="scorecard-filter-btn" data-filter="leadership"><i class="fa-solid fa-people-group"></i> Leadership (1)</button>
-                    </div>
-
-                    <!-- Dynamic Card Grid Container -->
-                    <div class="scorecard-cards-grid" id="scorecards-grid">
-                        <!-- Rendered by js/dashboard.js -->
-                    </div>
+                <!-- Category Filter Bar -->
+                <div class="scorecards-filter-bar">
+                    <button class="scorecard-filter-btn active" data-filter="all"><i class="fa-solid fa-border-all"></i> All Panels (4)</button>
+                    <button class="scorecard-filter-btn" data-filter="systems"><i class="fa-solid fa-laptop-code"></i> Engineering (2)</button>
+                    <button class="scorecard-filter-btn" data-filter="product"><i class="fa-solid fa-cubes"></i> Product (1)</button>
+                    <button class="scorecard-filter-btn" data-filter="leadership"><i class="fa-solid fa-people-group"></i> Leadership (1)</button>
                 </div>
             </div>
 
-            <!-- Right Column: Nova Warm-Up & Track Launchers -->
-            <div class="panel-section">
-                <!-- Nova Voice Calibration Card -->
-                <div class="glass-panel" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(245, 247, 250, 0.9)); border: 1px solid rgba(124, 58, 237, 0.15);">
+            <!-- Dynamic 2-Column Cards Grid Container -->
+            <div class="scorecard-cards-grid" id="scorecards-grid">
+                <!-- Rendered dynamically by js/dashboard.js -->
+            </div>
+        </section>
+
+        <!-- Bottom Launchpad Deck (Start Your Interview & Select Track) -->
+        <section class="launchpad-deck">
+            <!-- Start Your Interview Card -->
+            <div class="glass-panel" style="background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 20px; padding: 2rem; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03); display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                        <h2 class="panel-title" style="font-size: 1.1rem;"><i class="fa-solid fa-microphone-sparkles" style="color: var(--primary);"></i> Nova Voice Calibration</h2>
-                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--success); background: rgba(16, 185, 129, 0.12); padding: 3px 8px; border-radius: 20px;">Ready to Calibrate</span>
+                        <h2 class="panel-title" style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-play" style="color: var(--primary);"></i> Start Your Interview
+                        </h2>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--success); background: rgba(16, 185, 129, 0.12); padding: 4px 10px; border-radius: 20px;">
+                            <i class="fa-solid fa-circle-check"></i> Live Voice Ready
+                        </span>
                     </div>
                     
-                    <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1.25rem;">
-                        Nova guides you through audio level checks, microphone clarity calibration, and a quick 3-minute STAR articulation drill before stepping into live multi-role rooms.
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.55; margin-bottom: 1.5rem;">
+                        Launch directly into voice preparation. Calibrate audio levels with Nova, confirm your target role, and enter the live multi-role committee room.
                     </p>
-
-                    <a href="gear-up.html" class="btn btn-primary-gradient" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; padding: 12px 0;">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Launch 3-Min Voice Warm-Up
-                    </a>
                 </div>
 
-                <!-- Interview Panels Direct Launcher -->
-                <div class="glass-panel">
-                    <h2 class="panel-title" style="font-size: 1.1rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-users-viewfinder" style="color: var(--accent);"></i> Available Interview Tracks</h2>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">Launch directly into an Agora multi-agent committee session:</p>
-                    
-                    <a href="interview-setup.html?track=fullstack" class="track-fast-selector">
+                <a href="gear-up.html" class="btn btn-primary-gradient" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; padding: 14px 0; font-weight: 700; font-size: 0.95rem;">
+                    <i class="fa-solid fa-play"></i> Start Your Interview
+                </a>
+            </div>
+
+            <!-- Available Interview Tracks Card -->
+            <div class="glass-panel" style="background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 20px; padding: 2rem; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03);">
+                <h2 class="panel-title" style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-users-viewfinder" style="color: var(--accent);"></i> Available Interview Tracks
+                </h2>
+                <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;">Select a committee track to start your interview:</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <a href="gear-up.html?track=fullstack" class="track-fast-selector">
                         <div class="track-fast-left">
                             <i class="fa-solid fa-laptop-code"></i>
                             <div>
@@ -406,7 +294,7 @@
                         <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
                     </a>
 
-                    <a href="interview-setup.html?track=product" class="track-fast-selector">
+                    <a href="gear-up.html?track=product" class="track-fast-selector">
                         <div class="track-fast-left">
                             <i class="fa-solid fa-cubes"></i>
                             <div>
@@ -417,7 +305,7 @@
                         <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
                     </a>
 
-                    <a href="interview-setup.html?track=cloud" class="track-fast-selector">
+                    <a href="gear-up.html?track=cloud" class="track-fast-selector">
                         <div class="track-fast-left">
                             <i class="fa-solid fa-cloud-bolt"></i>
                             <div>
@@ -428,7 +316,7 @@
                         <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
                     </a>
 
-                    <a href="interview-setup.html?track=leadership" class="track-fast-selector">
+                    <a href="gear-up.html?track=leadership" class="track-fast-selector">
                         <div class="track-fast-left">
                             <i class="fa-solid fa-people-group"></i>
                             <div>
@@ -440,7 +328,6 @@
                     </a>
                 </div>
             </div>
-
         </section>
     </main>
 

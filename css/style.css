@@ -183,7 +183,10 @@ h1, h2, h3, h4 {
 
 :root.light-theme .app-header {
     border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
 }
 
 .logo-wrapper {
@@ -4361,10 +4364,10 @@ body.page-exit {
     max-width: 1400px;
     width: 100%;
     margin: 0 auto;
-    padding: 2rem 3rem;
+    padding: 2.75rem 3rem 4rem;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 2.5rem;
     position: relative;
     z-index: 2;
 }
@@ -5813,23 +5816,35 @@ body.page-exit {
 .bargein-box.rolepilot .bargein-value { color: #34d399; }
 
 /* ==========================================================================
-   Enhanced Informative Metrics & Visual Scorecard Card System (Light & Premium)
+   Clean & Modern Dashboard Architecture (De-cluttered, Airy, Linear/Stripe Aesthetics)
    ========================================================================== */
 
-/* Informative Metric Cards Layout */
+/* 4-Metric Telemetry Grid (Clean, Airy & Informative) */
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.5rem;
-    margin-bottom: 2.25rem;
+    margin-bottom: 2.5rem;
+}
+
+@media (max-width: 1150px) {
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .metric-card-glass {
     background: #ffffff;
     border: 1px solid rgba(15, 23, 42, 0.08);
     border-radius: 20px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+    padding: 1.75rem;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03), 0 1px 3px rgba(15, 23, 42, 0.02);
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -5839,9 +5854,9 @@ body.page-exit {
 }
 
 .metric-card-glass:hover {
-    transform: translateY(-4px);
+    transform: translateY(-3px);
     border-color: rgba(124, 58, 237, 0.25);
-    box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+    box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
 }
 
 .metric-card-glass::before {
@@ -5858,17 +5873,16 @@ body.page-exit {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
 }
 
 .metric-icon-badge {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
 }
 
 .metric-benchmark-tag {
@@ -5876,26 +5890,19 @@ body.page-exit {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    padding: 3px 9px;
+    padding: 4px 10px;
     border-radius: 20px;
     display: inline-flex;
     align-items: center;
     gap: 5px;
 }
 
-.metric-title-group {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
 .metric-title-label {
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 .metric-score-row {
@@ -5906,7 +5913,7 @@ body.page-exit {
 }
 
 .metric-main-val {
-    font-size: 2.2rem;
+    font-size: 2.4rem;
     font-family: var(--font-display);
     font-weight: 800;
     color: var(--text-primary);
@@ -5922,51 +5929,20 @@ body.page-exit {
     letter-spacing: 0.03em;
 }
 
-/* Informative Definition Box */
 .metric-info-explain {
-    background: rgba(248, 250, 252, 0.95);
-    border: 1px solid rgba(15, 23, 42, 0.06);
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     color: var(--text-secondary);
-    line-height: 1.48;
-}
-
-.metric-info-explain strong {
-    color: var(--text-primary);
-    font-weight: 700;
-}
-
-/* Visual Sub-metrics Breakdown */
-.submetric-progress-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-top: 6px;
-    border-top: 1px solid rgba(15, 23, 42, 0.06);
-}
-
-.submetric-item {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.submetric-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.74rem;
-    color: var(--text-secondary);
-    font-weight: 600;
+    line-height: 1.45;
+    margin: 0;
 }
 
 .submetric-track-bar {
     width: 100%;
-    height: 5px;
+    height: 6px;
     background: rgba(15, 23, 42, 0.06);
     border-radius: 999px;
     overflow: hidden;
+    margin-top: 4px;
 }
 
 .submetric-fill-bar {
@@ -5976,23 +5952,59 @@ body.page-exit {
 }
 
 /* ==========================================================================
-   Visual Scorecard Card System (Interactive Grid & Rich Cards)
+   Full-Width Committee Scorecards Section (Airy & Spacious 2-Column Deck)
    ========================================================================== */
 
-/* Filter Bar */
+.dashboard-deck-section {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 24px;
+    padding: 2.25rem 2.5rem;
+    box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.scorecards-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.scorecards-title-block h2 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.scorecards-title-block p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 4px 0 0 0;
+}
+
 .scorecards-filter-bar {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    margin: 1rem 0 1.5rem 0;
 }
 
 .scorecard-filter-btn {
     background: rgba(15, 23, 42, 0.04);
     border: 1px solid rgba(15, 23, 42, 0.08);
     border-radius: 999px;
-    padding: 6px 14px;
+    padding: 7px 16px;
     font-size: 0.82rem;
     font-weight: 600;
     color: var(--text-secondary);
@@ -6014,37 +6026,37 @@ body.page-exit {
     box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
 }
 
-/* 2-Column Responsive Card Grid */
+/* 2-Column Spacious Grid */
 .scorecard-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 960px) {
     .scorecard-cards-grid {
         grid-template-columns: 1fr;
     }
 }
 
-/* Individual Visual Card */
+/* Individual Scorecard Visual Card */
 .scorecard-visual-card {
-    background: #ffffff;
-    border: 1px solid rgba(15, 23, 42, 0.09);
+    background: rgba(248, 250, 252, 0.6);
+    border: 1px solid rgba(15, 23, 42, 0.08);
     border-radius: 20px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+    padding: 1.75rem 2rem;
     display: flex;
     flex-direction: column;
-    gap: 1.1rem;
+    gap: 1.25rem;
     position: relative;
     overflow: hidden;
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
 }
 
 .scorecard-visual-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.1), 0 6px 16px -2px rgba(15, 23, 42, 0.04);
+    background: #ffffff;
+    transform: translateY(-3px);
+    box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.09), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
     border-color: rgba(124, 58, 237, 0.25);
 }
 
@@ -6069,7 +6081,7 @@ body.page-exit {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
+    padding: 5px 12px;
     border-radius: 999px;
     font-size: 0.76rem;
     font-weight: 700;
@@ -6077,7 +6089,7 @@ body.page-exit {
 }
 
 .card-date-duration {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
     font-weight: 500;
     display: flex;
@@ -6085,39 +6097,26 @@ body.page-exit {
     gap: 6px;
 }
 
-.card-title-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
 .card-title-group h3 {
     margin: 0;
-    font-size: 1.12rem;
+    font-size: 1.22rem;
     font-weight: 800;
     color: var(--text-primary);
     line-height: 1.35;
 }
 
-/* Score Hero Block inside Card */
 .card-score-banner {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 14px;
+    padding: 12px 18px;
     border-radius: 14px;
-    background: rgba(248, 250, 252, 0.85);
+    background: #ffffff;
     border: 1px solid rgba(15, 23, 42, 0.06);
 }
 
-.card-score-num-box {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-}
-
 .card-score-big {
-    font-size: 1.85rem;
+    font-size: 2rem;
     font-family: var(--font-display);
     font-weight: 800;
     color: var(--primary);
@@ -6125,99 +6124,84 @@ body.page-exit {
 }
 
 .card-score-denom {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--text-muted);
     font-weight: 600;
 }
 
 .card-verdict-tag {
-    font-size: 0.74rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    padding: 4px 10px;
+    padding: 4px 12px;
     border-radius: 10px;
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
 
-/* Panelists Roster Row */
+/* Overlapping Avatar Stack */
 .card-panelists-roster {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    align-items: center;
+    gap: 12px;
 }
 
-.roster-label {
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    font-weight: 700;
-    color: var(--text-muted);
-    letter-spacing: 0.04em;
-}
-
-.roster-chips {
+.avatar-stack-container {
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
 }
 
-.roster-panelist-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #ffffff;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 0.76rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.roster-avatar-circle {
-    width: 20px;
-    height: 20px;
+.avatar-stack-circle {
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    background: var(--primary);
     color: #ffffff;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
+    border: 2px solid #ffffff;
+    margin-left: -8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Visual Rubric Progress Meters */
-.card-rubric-meters {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 8px 0;
-    border-top: 1px solid rgba(15, 23, 42, 0.06);
-    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+.avatar-stack-circle:first-child {
+    margin-left: 0;
+}
+
+.avatar-stack-names {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.avatar-stack-names strong {
+    color: var(--text-primary);
 }
 
 /* Executive Quote Box */
 .card-quote-box {
-    background: rgba(248, 250, 252, 0.95);
+    background: #ffffff;
     border-left: 3px solid var(--primary);
-    padding: 10px 12px;
-    border-radius: 0 10px 10px 0;
-    font-size: 0.82rem;
+    padding: 12px 16px;
+    border-radius: 0 12px 12px 0;
+    font-size: 0.84rem;
     font-style: italic;
     color: var(--text-secondary);
-    line-height: 1.45;
+    line-height: 1.5;
+    border: 1px solid rgba(15, 23, 42, 0.05);
+    border-left: 3px solid var(--primary);
 }
 
-/* Full Width Action CTA */
+/* Action CTA */
 .view-scorecard-card-btn {
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 11px 0;
-    font-size: 0.88rem;
+    padding: 12px 0;
+    font-size: 0.9rem;
     font-weight: 700;
     border-radius: 12px;
     cursor: pointer;
@@ -6229,6 +6213,23 @@ body.page-exit {
 .view-scorecard-card-btn:hover {
     transform: translateY(-1px);
 }
+
+/* ==========================================================================
+   Bottom Launchpad Grid (Nova Prep & Available Panels)
+   ========================================================================== */
+
+.launchpad-deck {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+@media (max-width: 960px) {
+    .launchpad-deck {
+        grid-template-columns: 1fr;
+    }
+}
+
 
 
 /* Modal Overlay & Dialog */

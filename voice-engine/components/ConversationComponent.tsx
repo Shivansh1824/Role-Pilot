@@ -368,8 +368,8 @@ export default function ConversationComponent({
   // so the transcript panel renders user messages on the correct side.
   // Also normalize punctuation spacing for display when upstream text arrives compacted.
   const transcript = useMemo(() => {
-    return normalizeTranscript(rawTranscript, String(client.uid));
-  }, [rawTranscript, client.uid]);
+    return normalizeTranscript(rawTranscript, String(client?.uid ?? ''));
+  }, [rawTranscript, client?.uid]);
 
   // Completed (END + INTERRUPTED) messages shown as history.
   // INTERRUPTED must be included — if the agent's first turn is cut off,
@@ -381,8 +381,11 @@ export default function ConversationComponent({
     return getCurrentInProgressMessage(transcript);
   }, [transcript]);
 
-  // Publish local mic once the track exists; usePublish waits for RTC connection.
-  usePublish([localMicrophoneTrack]);
+  // Publish local mic once the track exists AND the RTC connection is confirmed.
+  usePublish(
+    localMicrophoneTrack ? [localMicrophoneTrack] : [],
+    Boolean(localMicrophoneTrack && joinSuccess),
+  );
 
   useClientEvent(client, 'user-joined', (user) => {
     if (isAgentUid(user.uid, client?.uid) || user.uid.toString() === agentUID) setIsAgentConnected(true);

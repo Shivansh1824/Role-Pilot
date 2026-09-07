@@ -32,7 +32,7 @@ export interface AgoraRenewalTokens {
 
 export interface ConversationComponentProps {
   agoraData: AgoraTokenData;
-  rtmClient: RTMClient;
+  rtmClient: RTMClient | null;
   track?: string;
   candidateName?: string;
   onTokenWillExpire: (uid: string) => Promise<AgoraRenewalTokens>;
