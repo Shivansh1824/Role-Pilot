@@ -17,21 +17,37 @@ export async function POST(request: NextRequest) {
       parts: [{ text: m.content }]
     }));
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: geminiContents,
-      config: {
-        systemInstruction: systemMessage,
-        temperature: 0.6,
-      }
-    });
+    let outputText = '';
+    const modelsToTry = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash'];
+    let lastError = null;
 
-    const outputText = response.text || '';
+    for (const modelName of modelsToTry) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: geminiContents,
+          config: {
+            systemInstruction: systemMessage,
+            temperature: 0.6,
+          }
+        });
+        outputText = response.text || '';
+        if (outputText) break;
+      } catch (err) {
+        lastError = err;
+        console.warn(`[Setup Agent LLM] ${modelName} failed, trying fallback...`, err);
+      }
+    }
+
+    if (!outputText && lastError) {
+      throw lastError;
+    }
+
     return NextResponse.json({
       id: `chatcmpl-${Date.now()}`,
       object: 'chat.completion',
       created: Math.floor(Date.now() / 1000),
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.6-flash',
       choices: [
         {
           index: 0,

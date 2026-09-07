@@ -1616,10 +1616,18 @@
     let transcriptBuffer = [];
     let parseDebounce = null;
 
+    let currentOpenModal = null;
+    let dismissedModalsForStep = {};
+
     // ─── POPUP UTILS (SYNCHRONIZED & FLUID TRANSITIONS) ───────────────────
     function showPopup(id) {
       const target = document.getElementById(id);
       if (!target) return;
+
+      if (target.classList.contains('show')) {
+        currentOpenModal = id;
+        return;
+      }
 
       const currentlyOpen = Array.from(document.querySelectorAll('.popup-overlay.show')).filter(p => p.id !== id);
 
@@ -1628,9 +1636,11 @@
         currentlyOpen.forEach(p => p.classList.remove('show'));
         setTimeout(() => {
           target.classList.add('show');
+          currentOpenModal = id;
         }, 160);
       } else {
         target.classList.add('show');
+        currentOpenModal = id;
       }
     }
     window.showPopup = showPopup;
@@ -1639,10 +1649,46 @@
       if (id) {
         const el = document.getElementById(id);
         if (el) el.classList.remove('show');
+        if (currentOpenModal === id) currentOpenModal = null;
+        if (state.activeStep) {
+          dismissedModalsForStep[state.activeStep + '_' + id] = true;
+        }
       } else {
-        document.querySelectorAll('.popup-overlay.show').forEach(p => p.classList.remove('show'));
+        document.querySelectorAll('.popup-overlay.show').forEach(p => {
+          p.classList.remove('show');
+          if (state.activeStep) {
+            dismissedModalsForStep[state.activeStep + '_' + p.id] = true;
+          }
+        });
+        currentOpenModal = null;
       }
     };
+
+    function syncModalState(targetModal) {
+      if (!targetModal || targetModal === 'none' || targetModal === 'close_all') {
+        if (currentOpenModal) {
+          window.closePopup(currentOpenModal);
+        }
+        return;
+      }
+
+      // If user manually dismissed this modal during the current step, do not force-reopen it
+      if (dismissedModalsForStep[state.activeStep + '_' + targetModal]) {
+        return;
+      }
+
+      const el = document.getElementById(targetModal);
+      if (el && el.classList.contains('show')) {
+        currentOpenModal = targetModal;
+        return;
+      }
+
+      if (targetModal === 'overview-popup') {
+        updateOverviewSummary();
+      }
+      showPopup(targetModal);
+    }
+    window.syncModalState = syncModalState;
 
     // Backdrop click-to-dismiss for all popups
     document.querySelectorAll('.popup-overlay').forEach(overlay => {
@@ -2164,11 +2210,11 @@
         showDialogue('Nova', text);
         addOrUpdateChatMessage('nova', text, turnId);
 
-        // ── ALL DETECTION RUNS ONLY WHEN NOVA'S TURN IS COMPLETE ──
+        // ── NOVA COMPLETED TURN ──
         if (isEnd) {
           const lowerNova = text.toLowerCase();
 
-          // 1. NOVA DIRECT LAUNCH SPOKEN TRIGGER
+          // Verbal launch command trigger from Nova
           if (
             lowerNova.includes('opening your panel room') ||
             lowerNova.includes('opening the panel room') ||
@@ -2179,79 +2225,6 @@
             lowerNova.includes('entering the panel room')
           ) {
             autoLaunchPanelRoom('Nova verbal launch: ' + text, 2400);
-          }
-
-          // 2. NOVA CONFIRMS ROLE ("locked in for your Tech Panel") -> close role popup
-          if (
-            lowerNova.includes('locked in for') ||
-            lowerNova.includes('locked in as') ||
-            lowerNova.includes('matched to') ||
-            lowerNova.includes('is locked in')
-          ) {
-            // Nova confirmed a role - close role popup if open
-            closePopup('role-popup');
-          }
-
-          // 3. NOVA ASKS FOR EXPERIENCE TIER -> open Experience modal
-          if (!state.experienceTier && (
-            lowerNova.includes('experience level') ||
-            lowerNova.includes('experience tier') ||
-            lowerNova.includes('how many years') ||
-            lowerNova.includes('fresher, junior') ||
-            lowerNova.includes('what tier') ||
-            lowerNova.includes('years of experience') ||
-            lowerNova.includes('are you a fresher') ||
-            lowerNova.includes('experience do you have')
-          )) {
-            state.activeStep = 'experience';
-            updateGuidanceAndProgress();
-            closePopup('role-popup');
-            showPopup('exp-popup');
-          }
-
-          // 4. NOVA ASKS FOR TARGET ROLE -> open Role modal
-          // Only if Nova is specifically asking about roles (not just mentioning "role" in passing)
-          if (!state.role && (
-            lowerNova.includes('what job role') ||
-            lowerNova.includes('what role are you') ||
-            lowerNova.includes('which role') ||
-            lowerNova.includes('what position') ||
-            lowerNova.includes('stick with that') ||
-            lowerNova.includes('stick with this') ||
-            lowerNova.includes('would you like to stick') ||
-            lowerNova.includes('switch to another role') ||
-            lowerNova.includes('interview for a different role')
-          )) {
-            state.activeStep = 'role';
-            updateGuidanceAndProgress();
-            showPopup('role-popup');
-          }
-
-          // 5. NOVA CONFIRMS READINESS / OVERVIEW -> Open Overview modal
-          if (
-            lowerNova.includes('everything is calibrated') ||
-            lowerNova.includes('calibrated and ready') ||
-            lowerNova.includes('ready for your panel interview') ||
-            lowerNova.includes('ready to begin') ||
-            lowerNova.includes('ready for your interview') ||
-            lowerNova.includes('are you ready')
-          ) {
-            state.activeStep = 'overview';
-            updateGuidanceAndProgress();
-            closePopup('role-popup');
-            closePopup('exp-popup');
-            showPopup('overview-popup');
-            updateOverviewSummary();
-          }
-
-          // 6. NOVA ASKS ABOUT RESUME -> close experience popup
-          if (
-            lowerNova.includes('handle your resume') ||
-            lowerNova.includes('saved resume') ||
-            lowerNova.includes('upload a resume') ||
-            lowerNova.includes('quick-start without')
-          ) {
-            closePopup('exp-popup');
           }
 
           transcriptBuffer.push(`Nova: ${text}`);
@@ -2267,11 +2240,11 @@
         showDialogue('You', text);
         addOrUpdateChatMessage('user', text, turnId);
 
-        // ── ALL DETECTION RUNS ONLY WHEN USER'S TURN IS COMPLETE ──
+        // ── USER COMPLETED TURN ──
         if (isEnd) {
           const lowerUser = text.toLowerCase();
 
-          // 1. CANDIDATE VOICE LAUNCH QUERY DETECTION
+          // Candidate verbal query to launch into panel
           const isLaunchQuery =
             lowerUser.includes('is the interview ready') ||
             lowerUser.includes('is it ready') ||
@@ -2289,77 +2262,6 @@
 
           if (isLaunchQuery) {
             autoLaunchPanelRoom('Candidate query: ' + text, 1800);
-          }
-
-          // 2. CANDIDATE CONFIRMS IDENTITY
-          if (!state.name && (
-            lowerUser.includes('ready to gear up') ||
-            lowerUser.includes("i'm ready") ||
-            lowerUser.includes('i am ready') ||
-            lowerUser.includes("that's me") ||
-            lowerUser === 'yes' ||
-            lowerUser === 'yeah' ||
-            lowerUser === 'yep'
-          )) {
-            state.name = state.profileName || 'Candidate';
-            const nameEl = document.getElementById('val-name');
-            if (nameEl) {
-              nameEl.textContent = state.name;
-              nameEl.classList.remove('empty');
-            }
-            const hudName = document.getElementById('hud-name');
-            if (hudName) hudName.classList.add('captured');
-            addOrUpdateChatMessage('system', `✓ Identity confirmed as ${state.name}`);
-          }
-
-          // 3. CANDIDATE CONFIRMS PROFILE ROLE ("stick with that", "same role", etc.)
-          if (!state.role && (
-            lowerUser.includes('stick with') ||
-            lowerUser.includes('sticking with') ||
-            lowerUser.includes('same role') ||
-            lowerUser.includes('keep that') ||
-            lowerUser.includes('keep this') ||
-            lowerUser.includes('continue with that')
-          )) {
-            confirmRole(state.profileRole || 'Software Engineer');
-          }
-
-          // 4. CANDIDATE STATES A TARGET ROLE
-          if (!state.role) {
-            if (lowerUser.includes('software engineer') || lowerUser.includes('software developer')) {
-              confirmRole('Software Engineer');
-            } else if (lowerUser.includes('full stack') || lowerUser.includes('fullstack')) {
-              confirmRole('Full Stack Developer');
-            } else if (lowerUser.includes('frontend') || lowerUser.includes('front end')) {
-              confirmRole('Frontend Developer');
-            } else if (lowerUser.includes('backend') || lowerUser.includes('back end')) {
-              confirmRole('Backend Developer');
-            } else if (lowerUser.includes('mobile developer') || lowerUser.includes('mobile dev')) {
-              confirmRole('Mobile Developer');
-            } else if (lowerUser.includes('android developer') || lowerUser.includes('ios developer')) {
-              confirmRole('Mobile Developer');
-            } else if (lowerUser.includes('cloud') || lowerUser.includes('devops') || lowerUser.includes('architect')) {
-              confirmRole('Cloud Architect');
-            } else if (lowerUser.includes('product manager')) {
-              confirmRole('Product Manager');
-            } else if (lowerUser.includes('data engineer') || lowerUser.includes('machine learning') || lowerUser.includes('ai engineer')) {
-              confirmRole('Data Engineer');
-            }
-          }
-
-          // 5. CANDIDATE STATES EXPERIENCE TIER
-          if (!state.experienceTier) {
-            if (lowerUser.includes('1 year') || lowerUser.includes('one year') || lowerUser.includes('1-year') || lowerUser.includes('0-1')) {
-              confirmExperience('1-year fresher');
-            } else if (lowerUser.includes('fresher') || lowerUser.includes('junior') || lowerUser.includes('entry level') || lowerUser.includes('graduate')) {
-              confirmExperience('fresher');
-            } else if (lowerUser.includes('mid level') || lowerUser.includes('mid-level') || lowerUser.includes('3 year') || lowerUser.includes('4 year') || lowerUser.includes('5 year')) {
-              confirmExperience('mid-level');
-            } else if (lowerUser.includes('senior') || lowerUser.includes('6 year') || lowerUser.includes('7 year') || lowerUser.includes('8 year')) {
-              confirmExperience('senior');
-            } else if (lowerUser.includes('lead') || lowerUser.includes('staff') || lowerUser.includes('principal') || lowerUser.includes('10 year')) {
-              confirmExperience('lead');
-            }
           }
 
           transcriptBuffer.push(`User: ${text}`);
@@ -2633,15 +2535,19 @@
         confirmExperience(parsed.experience_tier);
       }
 
-      // 4. Active Step Progression (state only, no popups)
-      // Popups are managed exclusively by Nova's completed speech turns
+      // 4. Active Step & Modal Sync driven by Gemini
       if (parsed.active_step) {
         state.activeStep = parsed.active_step;
+      }
 
-        // Only auto-launch if parser says ready
-        if (parsed.active_step === 'ready' || parsed.ready_to_launch) {
-          autoLaunchPanelRoom('AI State parser confirmed readiness', 2800);
-        }
+      // Synchronize visual popup with Gemini's active modal decision
+      if (parsed.modal_to_display) {
+        syncModalState(parsed.modal_to_display);
+      }
+
+      // Only auto-launch if parser says ready
+      if (parsed.active_step === 'ready' || parsed.ready_to_launch) {
+        autoLaunchPanelRoom('AI State parser confirmed readiness', 2800);
       }
 
       updateGuidanceAndProgress();
