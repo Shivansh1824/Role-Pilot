@@ -1586,12 +1586,30 @@
   <script type="module">
     import { getSupabaseClient } from './js/supabase-client.js';
 
-    // Dynamic origin resolution: unified deployment uses relative paths, local split dev uses port 3000
-    const BACKEND_URL       = (window.location.port === '3000' || !window.location.port) ? '' : 'http://localhost:3000';
-    const SETUP_AGENT_API   = `${BACKEND_URL}/api/invite-setup-agent`;
-    const PARSE_STATE_API   = `${BACKEND_URL}/api/parse-onboarding-state`;
-    const RESOLVE_TRACK_API = `${BACKEND_URL}/api/resolve-track`;
-    const OCR_API           = `${BACKEND_URL}/api/ocr-resume`;
+    // Dynamic origin resolution: unified deployment uses relative paths, local dev uses port 3000, with auto-failover to live Vercel backend
+    const isVercel = window.location.hostname.includes('vercel.app');
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const PRIMARY_BACKEND = isVercel ? '' : (isLocal && window.location.port === '3000' ? '' : 'http://localhost:3000');
+    const FALLBACK_BACKEND = 'https://voice-engine-kappa.vercel.app';
+
+    async function apiFetch(endpoint, options = {}) {
+      const primaryUrl = `${PRIMARY_BACKEND}${endpoint}`;
+      try {
+        const res = await fetch(primaryUrl, options);
+        if (res.ok) return res;
+        if (!isVercel) {
+          console.warn(`[API Failover] Primary ${primaryUrl} returned ${res.status}, retrying via Vercel fallback...`);
+          return await fetch(`${FALLBACK_BACKEND}${endpoint}`, options);
+        }
+        return res;
+      } catch (err) {
+        if (!isVercel) {
+          console.warn(`[API Failover] Primary ${primaryUrl} unreachable, retrying via Vercel fallback...`, err);
+          return await fetch(`${FALLBACK_BACKEND}${endpoint}`, options);
+        }
+        throw err;
+      }
+    }
 
     const state = {
       profileName: null,
@@ -2361,7 +2379,7 @@
         updateStatus('thinking', 'Connecting to audio channel…');
 
         // 1. Fetch channel & RTC token first
-        const tokRes = await fetch(`${BACKEND_URL}/api/generate-agora-token`);
+        const tokRes = await apiFetch('/api/generate-agora-token');
         if (!tokRes.ok) throw new Error('Token generation failed');
         const tokData = await tokRes.json();
         state.channel = tokData.channel;
@@ -2461,7 +2479,7 @@
 
         // 5. NOW invite Nova into the channel
         updateStatus('thinking', 'Nova is joining the room…');
-        const res = await fetch(SETUP_AGENT_API, {
+        const res = await apiFetch('/api/invite-setup-agent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -2498,6 +2516,7 @@
         if (startBanner) startBanner.style.display = 'flex';
       }
     }
+    window.startVoiceSession = startVoiceSession;
 
     // ─── SPEECH RECOGNITION (Voice Sync) ──────────────────────────────────
     function initSpeechRecognition() {
@@ -2577,7 +2596,7 @@
         isParsingActive = true;
         const transcript = transcriptBuffer.slice(-6).join('\n');
         try {
-          const res = await fetch(PARSE_STATE_API, {
+          const res = await apiFetch('/api/parse-onboarding-state', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -2707,7 +2726,7 @@
       try {
         let track = trackHint;
         if (!track) {
-          const res = await fetch(RESOLVE_TRACK_API, {
+          const res = await apiFetch('/api/resolve-track', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ target_role: roleName })
@@ -2775,7 +2794,7 @@
       try {
         const formData = new FormData();
         formData.append('file', file);
-        const res = await fetch(OCR_API, { method: 'POST', body: formData });
+        const res = await apiFetch('/api/ocr-resume', { method: 'POST', body: formData });
         if (!res.ok) throw new Error('OCR API error');
         const { data } = await res.json();
 
