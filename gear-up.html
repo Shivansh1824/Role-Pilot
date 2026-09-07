@@ -1664,29 +1664,52 @@
       }
     };
 
+    const completedStages = {
+      'role-popup': false,
+      'exp-popup': false,
+      'overview-popup': false
+    };
+
+    function closeAllPopups() {
+      document.querySelectorAll('.popup-overlay.show').forEach(p => {
+        p.classList.remove('show');
+      });
+      currentOpenModal = null;
+    }
+    window.closeAllPopups = closeAllPopups;
+
     function syncModalState(targetModal) {
       if (!targetModal || targetModal === 'none' || targetModal === 'close_all') {
-        if (currentOpenModal) {
-          window.closePopup(currentOpenModal);
-        }
+        closeAllPopups();
         return;
       }
 
-      // If user manually dismissed this modal during the current step, do not force-reopen it
+      // Guard 1: If stage is already answered & completed, NEVER open its modal again!
+      if (completedStages[targetModal]) {
+        const el = document.getElementById(targetModal);
+        if (el) el.classList.remove('show');
+        return;
+      }
+
+      // Guard 2: If user manually dismissed this modal during this step, do not force-reopen
       if (dismissedModalsForStep[state.activeStep + '_' + targetModal]) {
         return;
       }
 
+      // Guard 3: If target modal is already open, do not re-trigger or flicker
       const el = document.getElementById(targetModal);
       if (el && el.classList.contains('show')) {
         currentOpenModal = targetModal;
         return;
       }
 
+      // Close other popups, then show target
+      closeAllPopups();
       if (targetModal === 'overview-popup') {
         updateOverviewSummary();
       }
       showPopup(targetModal);
+      currentOpenModal = targetModal;
     }
     window.syncModalState = syncModalState;
 
@@ -1930,7 +1953,6 @@
         addOrUpdateChatMessage('system', `✓ Identity confirmed as ${state.name}`);
         state.activeStep = 'role';
         updateGuidanceAndProgress();
-        showPopup('role-popup');
         scheduleStateParse();
       } else if (actionType === 'role') {
         confirmRole(text);
@@ -2578,6 +2600,8 @@
 
         if (track && track !== 'unsupported') {
           state.track = track;
+          completedStages['role-popup'] = true;
+          closePopup('role-popup');
           feedback.className = 'panel-feedback matched';
           icon.className = 'fa-solid fa-check-circle';
           text.textContent = `Matched to ${track.toUpperCase()} Panel (Alex, Mark, David).`;
@@ -2587,11 +2611,6 @@
           addOrUpdateChatMessage('system', `✓ Target Role: ${roleName} matched to ${track.toUpperCase()} Panel`);
           state.activeStep = 'experience';
           updateGuidanceAndProgress();
-          // Close the role popup now that role is confirmed.
-          // Experience popup will open when Nova asks about experience level.
-          setTimeout(() => {
-            closePopup('role-popup');
-          }, 600);
         } else {
           feedback.className = 'panel-feedback unsupported';
           icon.className = 'fa-solid fa-triangle-exclamation';
@@ -2603,6 +2622,8 @@
     // ─── EXPERIENCE CONFIRMATION ──────────────────────────────────────────
     window.confirmExperience = function(tier) {
       state.experienceTier = tier;
+      completedStages['exp-popup'] = true;
+      closePopup('exp-popup');
       document.getElementById('val-exp').textContent = tier.toUpperCase();
       document.getElementById('val-exp').classList.remove('empty');
       document.getElementById('hud-exp').classList.add('captured');
@@ -2614,12 +2635,6 @@
       addOrUpdateChatMessage('system', `✓ Experience level calibrated to ${tier.toUpperCase()}`);
       state.activeStep = 'overview';
       updateGuidanceAndProgress();
-
-      // Close the experience popup now that tier is confirmed.
-      // Overview popup will open when Nova confirms readiness.
-      setTimeout(() => {
-        closePopup('exp-popup');
-      }, 600);
     };
 
     // ─── OVERVIEW SUMMARY UPDATE ──────────────────────────────────────────

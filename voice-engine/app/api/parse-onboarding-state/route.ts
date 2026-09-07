@@ -43,14 +43,20 @@ Instructions:
    - "name": Identity is being confirmed or candidate has not confirmed who they are.
    - "role": Identity is confirmed, and target role is being asked or chosen.
    - "experience": Target role is confirmed, and experience level is being asked or chosen.
-   - "overview": Target role AND experience tier are BOTH confirmed, and Nova is discussing the final overview, resume, difficulty, or readiness.
+   - "overview": Both target role and experience tier are confirmed, and Nova is discussing the final overview, resume, difficulty, or readiness.
    - "ready": Candidate confirms readiness to launch into the panel room.
 9. "modal_to_display": The EXACT UI modal to display on the candidate's screen right now:
-   - "none": When on "name" step, during initial greeting, or when candidate and Nova are chatting with no modal needed.
-     IMPORTANT: NEVER display a modal when the candidate has just arrived or is confirming their name!
-   - "role-popup": ONLY when active_step is "role" AND target_role is not yet confirmed.
-   - "exp-popup": ONLY when active_step is "experience" AND target_role is confirmed, and experience_tier is not yet confirmed.
-   - "overview-popup": ONLY when active_step is "overview" (BOTH target_role and experience_tier are confirmed, and Nova is discussing the final overview or readiness).
+   - "none":
+     * During Stage 1 (name/identity confirmation).
+     * AS SOON AS THE CANDIDATE ANSWERS A QUESTION! (When the candidate answers or selects their target role, the role modal MUST CLOSE immediately -> return "none". When the candidate answers or selects their experience tier, the experience modal MUST CLOSE immediately -> return "none").
+     * When Nova is acknowledging an answer, summarizing, or transitioning between steps.
+     * When Nova is asking about resumes or difficulty (Stage 4).
+     * When the interview is launching or ready.
+   - "role-popup": ONLY when Nova's latest utterance is actively asking the candidate to choose or state their target role (Stage 2 question), AND the candidate has NOT yet answered it in the transcript.
+     CRITICAL: As soon as the candidate answers their role, modal_to_display MUST BE "none". It must NEVER open in later stages!
+   - "exp-popup": ONLY when Nova's latest utterance is actively asking the candidate for their experience tier (Stage 3 question), AND the candidate has NOT yet answered it in the transcript.
+     CRITICAL: As soon as the candidate answers their experience tier, modal_to_display MUST BE "none". It must NEVER open again!
+   - "overview-popup": ONLY when Nova's latest utterance is actively presenting the final overview or asking if the candidate is ready for their panel interview to begin (Stage 5 question), AND the candidate has not yet launched.
 10. "ready_to_launch": boolean - true ONLY if candidate verbally confirms readiness ("Yes", "I'm ready", "Open the interview", "Start") or Nova announces opening the panel room.
 11. SINGLE-TAKE RULE: Never clear or overwrite an already-confirmed field unless the candidate explicitly corrects it.
 12. COMPOUND EXTRACTION: If the candidate provides multiple answers in one sentence (e.g. "I'm Shivansh, looking for Software Engineer with 3 years experience"), extract "name", "target_role", and "experience_tier" all at once, set active_step to "overview", and set modal_to_display to "overview-popup".
