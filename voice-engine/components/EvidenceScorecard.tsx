@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Trophy, 
   CheckCircle2, 
@@ -9,14 +9,16 @@ import {
   Cpu, 
   Briefcase, 
   Users, 
-  ArrowLeft, 
   FileText,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Star,
+  Layers
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TRACK_EVALUATIONS, PANEL_CONFIGS } from '@/lib/panel';
 import { isAgentUid } from '@/lib/agora';
+import { ScorecardImpactSpotlight } from './ScorecardImpactSpotlight';
 
 export type TranscriptEntry = {
   turn_id?: string | number;
@@ -31,6 +33,7 @@ interface EvidenceScorecardProps {
   onRestart: () => void;
   onReturnToDashboard?: () => void;
   role?: string;
+  level?: string;
   difficulty?: string;
   track?: string;
   candidateName?: string;
@@ -44,7 +47,28 @@ type EvidenceItem = {
   title: string;
   description: string;
   quotedText: string;
+  impactRating?: 'High' | 'Medium' | 'Low';
   turnIndex?: number;
+};
+
+type AIEvaluationResult = {
+  overallScore: number;
+  decision: string;
+  starRating: number;
+  executiveSummary: string;
+  experienceCalibration: string;
+  impactAnalysis: {
+    verdict: string;
+    impactScore: number;
+    hits: string[];
+    misses: string[];
+  };
+  breakdown: {
+    panelist1: { name: string; roleTitle: string; score: number; feedback: string };
+    panelist2: { name: string; roleTitle: string; score: number; feedback: string };
+    panelist3: { name: string; roleTitle: string; score: number; feedback: string };
+  };
+  evidenceList: EvidenceItem[];
 };
 
 export function EvidenceScorecard({
@@ -53,24 +77,77 @@ export function EvidenceScorecard({
   onRestart,
   onReturnToDashboard,
   role = 'Senior Full-Stack Engineer',
+  level = 'Mid-Level',
   difficulty = 'auto',
   track = 'tech',
   candidateName = '',
 }: EvidenceScorecardProps) {
   const [selectedEvidenceIndex, setSelectedEvidenceIndex] = useState<number | null>(null);
+  const [aiEvaluation, setAiEvaluation] = useState<AIEvaluationResult | null>(null);
+  const [isEvaluating, setIsEvaluating] = useState<boolean>(true);
 
   const trackKey = (track || 'tech').toLowerCase();
-  const evalConfig = TRACK_EVALUATIONS[trackKey] ?? TRACK_EVALUATIONS['tech'];
-  const panelists = PANEL_CONFIGS[trackKey] ?? PANEL_CONFIGS['tech'];
+  const evalConfig = TRACK_EVALUATIONS[trackKey] ?? TRACK_EVALUATIONS.tech;
+  const panelists = PANEL_CONFIGS[trackKey] ?? PANEL_CONFIGS.tech;
 
-  // Derive dynamic evidence items and individual role scores from the real transcript
+  // Live evaluation hook powered by gemini-3.5-flash on dedicated isolated key
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function fetchAiEvaluation() {
+      if (!transcript || transcript.length === 0) {
+        setIsEvaluating(false);
+        return;
+      }
+
+      setIsEvaluating(true);
+      try {
+        const response = await fetch('/api/evaluate-interview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transcript,
+            agentUID,
+            role,
+            level: level || 'Mid-Level',
+            difficulty,
+            track: trackKey,
+            candidateName: candidateName || 'Candidate',
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!isCancelled) {
+          setAiEvaluation(data);
+          setIsEvaluating(false);
+        }
+      } catch (err) {
+        console.warn('AI evaluation offline/fallback triggered:', err);
+        if (!isCancelled) {
+          setIsEvaluating(false);
+        }
+      }
+    }
+
+    fetchAiEvaluation();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [transcript, agentUID, role, level, difficulty, trackKey, candidateName]);
+
+  // Derive dynamic evidence items and individual role scores from the real transcript (fallback & init)
   const {
-    evidenceList,
-    score1,
-    score2,
-    score3,
-    overallScore,
-    decision,
+    fallbackEvidenceList,
+    fallbackScore1,
+    fallbackScore2,
+    fallbackScore3,
+    fallbackOverallScore,
+    fallbackDecision,
     hasAskedQuestions,
   } = useMemo(() => {
     const isTurnFromAgent = (t: TranscriptEntry) => {
@@ -87,7 +164,7 @@ export function EvidenceScorecard({
 
     const items: EvidenceItem[] = [];
 
-    // 1. Analyze Panelist 1 (Lead Domain: e.g. Alex, Sean, Ethan, Mark)
+    // 1. Panelist 1 Fallback
     const p1Regex = new RegExp(`\\[${evalConfig.panelist1.name}|^${evalConfig.panelist1.name}:|${evalConfig.panelist1.name}\\s*\\(`, 'i');
     const p1Prompt = agentTurns.find((t) => p1Regex.test(t.text || ''));
     const p1Answer = candidateTurns.find((t) => evalConfig.panelist1.keywords.test(t.text || '')) || candidateTurns[0];
@@ -101,7 +178,8 @@ export function EvidenceScorecard({
         type: hasKeywords ? 'strength' : 'gap',
         title: hasKeywords ? evalConfig.panelist1.strengthTitle : evalConfig.panelist1.gapTitle,
         description: hasKeywords ? evalConfig.panelist1.strengthDesc : evalConfig.panelist1.gapDesc,
-        quotedText: `"${p1Answer.text.slice(0, 160)}${p1Answer.text.length > 160 ? '...' : ''}"`,
+        quotedText: p1Answer.text.slice(0, 160) + (p1Answer.text.length > 160 ? '...' : ''),
+        impactRating: hasKeywords ? 'High' : 'Medium',
       });
     } else {
       items.push({
@@ -114,10 +192,11 @@ export function EvidenceScorecard({
         quotedText: p1Prompt?.text
           ? `${evalConfig.panelist1.name}: "${p1Prompt.text.slice(0, 140)}..."`
           : 'Demonstrated core domain competency throughout the conversation.',
+        impactRating: 'Medium',
       });
     }
 
-    // 2. Analyze Panelist 2 (Cross-Functional / Specialist Lead)
+    // 2. Panelist 2 Fallback
     const p2Regex = new RegExp(`\\[${evalConfig.panelist2.name}|^${evalConfig.panelist2.name}:|${evalConfig.panelist2.name}\\s*\\(`, 'i');
     const p2Prompt = agentTurns.find((t) => p2Regex.test(t.text || ''));
     const p2Answer = candidateTurns.find((t) => evalConfig.panelist2.keywords.test(t.text || '')) || candidateTurns[1] || candidateTurns[0];
@@ -131,7 +210,8 @@ export function EvidenceScorecard({
         type: hasKeywords ? 'strength' : 'gap',
         title: hasKeywords ? evalConfig.panelist2.strengthTitle : evalConfig.panelist2.gapTitle,
         description: hasKeywords ? evalConfig.panelist2.strengthDesc : evalConfig.panelist2.gapDesc,
-        quotedText: `"${p2Answer.text.slice(0, 160)}${p2Answer.text.length > 160 ? '...' : ''}"`,
+        quotedText: p2Answer.text.slice(0, 160) + (p2Answer.text.length > 160 ? '...' : ''),
+        impactRating: hasKeywords ? 'High' : 'Medium',
       });
     } else {
       items.push({
@@ -144,10 +224,11 @@ export function EvidenceScorecard({
         quotedText: p2Prompt?.text
           ? `${evalConfig.panelist2.name}: "${p2Prompt.text.slice(0, 140)}..."`
           : 'Pushed to connect domain choices with broader organizational implications.',
+        impactRating: 'Medium',
       });
     }
 
-    // 3. Analyze Panelist 3 (David: Hiring Manager / Leadership / STAR)
+    // 3. Panelist 3 Fallback
     const p3Regex = new RegExp(`\\[${evalConfig.panelist3.name}|^${evalConfig.panelist3.name}:|${evalConfig.panelist3.name}\\s*\\(`, 'i');
     const p3Prompt = agentTurns.find((t) => p3Regex.test(t.text || ''));
     const p3Answer = candidateTurns.find((t) => evalConfig.panelist3.keywords.test(t.text || '')) || candidateTurns[2] || candidateTurns[0];
@@ -160,7 +241,8 @@ export function EvidenceScorecard({
         type: 'strength',
         title: evalConfig.panelist3.strengthTitle,
         description: evalConfig.panelist3.strengthDesc,
-        quotedText: `"${p3Answer.text.slice(0, 160)}${p3Answer.text.length > 160 ? '...' : ''}"`,
+        quotedText: p3Answer.text.slice(0, 160) + (p3Answer.text.length > 160 ? '...' : ''),
+        impactRating: 'High',
       });
     } else {
       items.push({
@@ -173,53 +255,49 @@ export function EvidenceScorecard({
         quotedText: p3Prompt?.text
           ? `${evalConfig.panelist3.name}: "${p3Prompt.text.slice(0, 140)}..."`
           : 'Demonstrated structured communication throughout the session.',
+        impactRating: 'Medium',
       });
     }
 
-    // Dynamic scoring calculation
-    const totalWords = candidateTurns.reduce(
-      (acc, t) => acc + (t.text || '').split(/\s+/).length,
-      0,
-    );
+    const totalWords = candidateTurns.reduce((acc, t) => acc + (t.text || '').split(/\s+/).length, 0);
     const depthBonus = Math.min(8, Math.floor(totalWords / 20));
 
-    // 4. Candidate Reverse Q&A Detection (Proactive initiative bonus)
     const reverseQAQuestionRegex = /\?|what is|how do|could you|can you tell me|what does the|roadmap|tech stack|team culture|next steps/i;
     const candidateQAQuestions = candidateTurns.filter((t) => reverseQAQuestionRegex.test(t.text || ''));
     const hasAskedQuestions = candidateQAQuestions.length > 0;
     const qaBonus = hasAskedQuestions ? 4 : 0;
 
-    if (hasAskedQuestions && candidateQAQuestions[0]?.text) {
-      items.push({
-        id: 'ev-candidate-qa',
-        speaker: candidateName && candidateName.toLowerCase() !== 'candidate' ? candidateName : 'Candidate',
-        roleTitle: 'Reverse Q&A Initiative',
-        type: 'strength',
-        title: 'Proactive Inquiry & Strategic Curiosity',
-        description: 'Demonstrated high agency by asking focused questions about team architecture, roadmap, and engineering practices during the closing phase.',
-        quotedText: `"${candidateQAQuestions[0].text.slice(0, 160)}${candidateQAQuestions[0].text.length > 160 ? '...' : ''}"`,
-      });
-    }
-
     const s1 = Math.min(98, Math.max(70, 84 + depthBonus));
-    const s2 = Math.min(
-      95,
-      Math.max(68, (items[1]?.type === 'strength' ? 88 : 74) + Math.floor(depthBonus / 2)),
-    );
+    const s2 = Math.min(95, Math.max(68, (items[1]?.type === 'strength' ? 88 : 74) + Math.floor(depthBonus / 2)));
     const s3 = Math.min(96, Math.max(72, 86 + depthBonus));
     const oScore = Math.min(99, Math.round((s1 + s2 + s3) / 3) + qaBonus);
     const dec = oScore >= 85 ? 'Strong Hire' : oScore >= 75 ? 'Hire' : 'Needs Review';
 
     return {
-      evidenceList: items,
-      score1: s1,
-      score2: s2,
-      score3: s3,
-      overallScore: oScore,
-      decision: dec,
+      fallbackEvidenceList: items,
+      fallbackScore1: s1,
+      fallbackScore2: s2,
+      fallbackScore3: s3,
+      fallbackOverallScore: oScore,
+      fallbackDecision: dec,
       hasAskedQuestions,
     };
-  }, [transcript, agentUID, evalConfig, candidateName]);
+  }, [transcript, agentUID, evalConfig]);
+
+  // Final consolidated properties (AI-preferred, heuristic fallback)
+  const overallScore = aiEvaluation ? aiEvaluation.overallScore : fallbackOverallScore;
+  const decision = aiEvaluation ? aiEvaluation.decision : fallbackDecision;
+  const starRating = aiEvaluation ? aiEvaluation.starRating : (overallScore >= 90 ? 4.8 : overallScore >= 80 ? 4.2 : 3.6);
+  const executiveSummary = aiEvaluation?.executiveSummary || 'Demonstrated high engineering depth with responsive adaptation to product and behavioral cross-examination.';
+  const score1 = aiEvaluation ? aiEvaluation.breakdown.panelist1.score : fallbackScore1;
+  const score2 = aiEvaluation ? aiEvaluation.breakdown.panelist2.score : fallbackScore2;
+  const score3 = aiEvaluation ? aiEvaluation.breakdown.panelist3.score : fallbackScore3;
+  const blurb1 = aiEvaluation?.breakdown.panelist1.feedback || evalConfig.panelist1.cardBlurb;
+  const blurb2 = aiEvaluation?.breakdown.panelist2.feedback || evalConfig.panelist2.cardBlurb;
+  const blurb3 = aiEvaluation?.breakdown.panelist3.feedback || evalConfig.panelist3.cardBlurb;
+  const evidenceList = (aiEvaluation && aiEvaluation.evidenceList?.length > 0)
+    ? aiEvaluation.evidenceList
+    : fallbackEvidenceList;
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto bg-transparent p-4 md:p-8 text-left animate-fade-in">
@@ -230,13 +308,13 @@ export function EvidenceScorecard({
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Post-Interview Evaluation</span>
+              <span>Post-Interview Evaluation • Gemini 3.5 Flash Engine</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mt-1">
               Evidence-Based Assessment Scorecard
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Structured evaluation linked directly to verbatim transcript timestamps.
+              Structured evaluation calibrated against difficulty and experience tier, linking verbatim transcript quotes.
             </p>
           </div>
 
@@ -262,6 +340,16 @@ export function EvidenceScorecard({
           </div>
         </div>
 
+        {/* Live Gemini 3.5 Flash Evaluation Banner */}
+        {isEvaluating && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-primary/40 bg-primary/10 text-xs text-primary animate-pulse">
+            <Sparkles className="h-4 w-4 animate-spin shrink-0 text-primary" />
+            <div className="flex-1">
+              <strong>Gemini 3.5 Flash Evaluation in progress:</strong> Calibrating {level} experience tier on {difficulty} difficulty, testing technical correctness, and computing quantifiable impact hits...
+            </div>
+          </div>
+        )}
+
         {/* Overall Recommendation Banner */}
         <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/30 via-card/50 to-emerald-950/20 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl">
           <div className="flex items-center gap-5">
@@ -269,34 +357,55 @@ export function EvidenceScorecard({
               <Trophy className="h-8 w-8" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Decision</span>
                 <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
                   {decision}
                 </span>
-                <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-amber-300">
+                <span className="flex items-center gap-1 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-bold text-amber-300">
+                  <Star className="h-3 w-3 fill-amber-300 text-amber-300" />
+                  {starRating.toFixed(1)} / 5.0
+                </span>
+                <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-blue-300">
+                  <Layers className="inline h-2.5 w-2.5 mr-1" />
+                  {level}
+                </span>
+                <span className="rounded-full bg-purple-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-purple-300">
                   {difficulty === 'auto' ? '⚡ Adaptive AI Difficulty' : `${difficulty.toUpperCase()} Tier`}
                 </span>
                 {hasAskedQuestions && (
-                  <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-blue-300">
+                  <span className="rounded-full bg-teal-500/20 px-2.5 py-0.5 text-[10px] font-semibold text-teal-300">
                     ★ Reverse Q&A Bonus (+4)
                   </span>
                 )}
               </div>
-              <h2 className="text-xl font-bold text-foreground mt-1">
+              <h2 className="text-xl font-bold text-foreground mt-2">
                 {candidateName && candidateName.toLowerCase() !== 'candidate' ? `${candidateName} • ${role}` : role}
               </h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Demonstrated high engineering depth with responsive adaptation to product and behavioral cross-examination.
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed max-w-2xl">
+                {executiveSummary}
               </p>
             </div>
           </div>
 
-          <div className="flex items-baseline gap-2 bg-black/40 border border-border/50 rounded-xl px-5 py-3 shrink-0">
-            <span className="text-3xl font-extrabold text-foreground">{overallScore}</span>
-            <span className="text-xs text-muted-foreground">/ 100 Overall</span>
+          <div className="flex flex-col items-end bg-black/40 border border-border/50 rounded-xl px-5 py-3 shrink-0">
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-extrabold text-foreground">{overallScore}</span>
+              <span className="text-xs text-muted-foreground">/ 100 Overall</span>
+            </div>
+            <span className="text-[10px] text-primary/80 mt-1 font-medium">
+              {aiEvaluation ? '✓ Verified by Gemini 3.5 Flash' : '⚡ Local Analysis'}
+            </span>
           </div>
         </div>
+
+        {/* Quantifiable Hits & Impact Analysis Spotlight */}
+        {aiEvaluation?.impactAnalysis && (
+          <ScorecardImpactSpotlight
+            impactAnalysis={aiEvaluation.impactAnalysis}
+            experienceCalibration={aiEvaluation.experienceCalibration}
+          />
+        )}
 
         {/* Role-by-Role Panel Breakdown */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -316,10 +425,10 @@ export function EvidenceScorecard({
                   <span className="text-lg font-bold text-blue-300">{score1}%</span>
                 </div>
                 <div className="h-1.5 w-full rounded-full bg-blue-950 overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${score1}%` }} />
+                  <div className="h-full bg-blue-500 rounded-full transition-all duration-700" style={{ width: `${score1}%` }} />
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  {evalConfig.panelist1.cardBlurb}
+                  {blurb1}
                 </p>
               </div>
             );
@@ -340,10 +449,10 @@ export function EvidenceScorecard({
                   <span className="text-lg font-bold text-purple-300">{score2}%</span>
                 </div>
                 <div className="h-1.5 w-full rounded-full bg-purple-950 overflow-hidden">
-                  <div className="h-full bg-purple-500 rounded-full" style={{ width: `${score2}%` }} />
+                  <div className="h-full bg-purple-500 rounded-full transition-all duration-700" style={{ width: `${score2}%` }} />
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  {evalConfig.panelist2.cardBlurb}
+                  {blurb2}
                 </p>
               </div>
             );
@@ -364,10 +473,10 @@ export function EvidenceScorecard({
                   <span className="text-lg font-bold text-emerald-300">{score3}%</span>
                 </div>
                 <div className="h-1.5 w-full rounded-full bg-emerald-950 overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${score3}%` }} />
+                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${score3}%` }} />
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  {evalConfig.panelist3.cardBlurb}
+                  {blurb3}
                 </p>
               </div>
             );
@@ -401,7 +510,7 @@ export function EvidenceScorecard({
 
                 return (
                   <div
-                    key={item.id}
+                    key={item.id || idx}
                     onClick={() => setSelectedEvidenceIndex(isSelected ? null : idx)}
                     className={`cursor-pointer rounded-xl border p-4 transition-all ${
                       isSelected
@@ -412,7 +521,7 @@ export function EvidenceScorecard({
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold ${badgeColor}`}>
-                          {item.speaker} ({item.roleTitle})
+                          {item.speaker} {item.roleTitle ? `(${item.roleTitle})` : ''}
                         </span>
                         {item.type === 'strength' ? (
                           <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-400">
@@ -421,6 +530,11 @@ export function EvidenceScorecard({
                         ) : (
                           <span className="flex items-center gap-1 text-[11px] font-medium text-amber-400">
                             <AlertCircle className="h-3 w-3" /> Opportunity
+                          </span>
+                        )}
+                        {item.impactRating && (
+                          <span className="rounded bg-primary/15 border border-primary/25 px-1.5 py-0.2 text-[9px] font-semibold text-primary">
+                            {item.impactRating} Impact
                           </span>
                         )}
                       </div>
@@ -432,10 +546,12 @@ export function EvidenceScorecard({
                       {item.description}
                     </p>
 
-                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-border/40 bg-black/30 p-2 text-xs text-muted-foreground italic">
-                      <Quote className="h-3.5 w-3.5 shrink-0 text-primary/70 not-italic mt-0.5" />
-                      <span className="line-clamp-2">&quot;{item.quotedText}&quot;</span>
-                    </div>
+                    {item.quotedText && (
+                      <div className="mt-3 flex items-start gap-2 rounded-lg border border-border/40 bg-black/30 p-2 text-xs text-muted-foreground italic">
+                        <Quote className="h-3.5 w-3.5 shrink-0 text-primary/70 not-italic mt-0.5" />
+                        <span className="line-clamp-2">&quot;{item.quotedText}&quot;</span>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -448,7 +564,7 @@ export function EvidenceScorecard({
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Session Transcript ({transcript.length} turns recorded)
               </span>
-              <span className="text-[11px] text-muted-foreground">Synced via Agora RTM</span>
+              <span className="text-[11px] text-muted-foreground">Synced via Agora Engine</span>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -458,20 +574,30 @@ export function EvidenceScorecard({
                 </div>
               ) : (
                 transcript.map((msg, i) => {
-                  const isAgent = String(msg.uid) === agentUID;
-                  const isHighlighted = selectedEvidenceIndex !== null;
+                  const isAgent = isAgentUid(msg.uid) || String(msg.uid) === agentUID || /^\[.+\]/.test((msg.text || '').trim());
+                  const selectedQuote = selectedEvidenceIndex !== null && evidenceList[selectedEvidenceIndex]?.quotedText;
+                  const isHighlighted = Boolean(
+                    selectedQuote &&
+                    msg.text &&
+                    (msg.text.includes(selectedQuote.replace(/^["']|["']$/g, '').slice(0, 40)) ||
+                     selectedQuote.includes(msg.text.slice(0, 40)))
+                  );
 
                   return (
                     <div
                       key={i}
-                      className={`rounded-xl border p-3 text-xs leading-relaxed transition-colors ${
-                        isAgent
+                      className={`rounded-xl border p-3 text-xs leading-relaxed transition-all ${
+                        isHighlighted
+                          ? 'border-primary bg-primary/20 ring-2 ring-primary/40 shadow-lg'
+                          : isAgent
                           ? 'border-border/70 bg-card/60 text-foreground'
                           : 'border-primary/30 bg-primary/10 text-foreground'
-                      } ${isHighlighted ? 'border-primary/60 bg-primary/15 ring-1 ring-primary/30' : ''}`}
+                      }`}
                     >
                       <div className="flex items-center justify-between text-[10px] font-semibold text-muted-foreground mb-1">
-                        <span>{isAgent ? 'AI Interview Committee' : (candidateName && candidateName.toLowerCase() !== 'candidate' ? candidateName : 'Interviewee')}</span>
+                        <span className={isAgent ? 'text-muted-foreground' : 'text-primary font-bold'}>
+                          {isAgent ? 'AI Interview Committee' : (candidateName && candidateName.toLowerCase() !== 'candidate' ? candidateName : 'Candidate')}
+                        </span>
                         {msg.createdAt && (
                           <span>{new Date(msg.createdAt).toLocaleTimeString([], { minute: '2-digit', second: '2-digit' })}</span>
                         )}

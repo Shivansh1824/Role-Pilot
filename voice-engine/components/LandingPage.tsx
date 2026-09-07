@@ -304,6 +304,7 @@ export default function LandingPage() {
               onRestart={() => setShowScorecard(false)}
               onReturnToDashboard={() => (window.location.href = '/dashboard.html')}
               role={setupConfig.role}
+              level={setupConfig.level}
               difficulty={setupConfig.difficulty}
               track={setupConfig.track}
               candidateName={setupConfig.candidate}

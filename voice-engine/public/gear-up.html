@@ -2845,32 +2845,47 @@
     window.enterPanelRoom = function() {
       const btn = document.getElementById('final-launch-btn');
       if (btn) {
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparing Panel Room…';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Entering Panel Room…';
         btn.style.pointerEvents = 'none';
       }
 
       if (state.agentId) {
-        fetch(`${BACKEND_URL}/api/stop-conversation`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agent_id: state.agentId })
-        }).catch(() => {});
+        try {
+          apiFetch('/api/stop-conversation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agent_id: state.agentId })
+          }).catch(() => {});
+        } catch (_) {}
       }
 
       const queryParams = new URLSearchParams({
         track:      state.track || 'tech',
-        role:       state.role || 'Software Engineer',
-        level:      state.experienceTier || 'mid-level',
+        role:       state.role || state.profileRole || 'Software Engineer',
+        level:      state.experienceTier || state.profileExperience || 'mid-level',
         candidate:  state.name || state.profileName || 'Candidate',
         panel:      'recommended',
         difficulty: state.difficulty || 'auto',
         resume:     state.resumeChoice || 'quick'
       });
 
+      try {
+        if (state.resumeChoice === 'quick') {
+          sessionStorage.setItem('rolepilot_resume_source', 'quick');
+          sessionStorage.setItem('rolepilot_resume_summary', '');
+        } else if (state.resumeChoice === 'saved' && state.savedResumes && state.savedResumes.length > 0) {
+          const sel = state.savedResumes.find(r => r.id === state.selectedResumeId) || state.savedResumes[0];
+          sessionStorage.setItem('rolepilot_resume_source', `Saved: ${sel.title}`);
+        }
+      } catch (_) {}
+
       setTimeout(() => {
-        const interviewBase = (window.location.port === '3000' || !window.location.port) ? '/interview' : 'http://localhost:3000/interview';
+        let interviewBase = '/interview';
+        if (isLocal && window.location.port !== '3000') {
+          interviewBase = 'http://localhost:3000/interview';
+        }
         window.location.href = `${interviewBase}?${queryParams.toString()}`;
-      }, 600);
+      }, 400);
     };
 
     window.startVoiceSession = startVoiceSession;
