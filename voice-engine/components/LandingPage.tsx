@@ -27,8 +27,11 @@ const ConversationComponent = dynamic(() => import('./ConversationComponent'), {
 // the RTC join succeeds, so this wrapper only needs to provide the RTC client.
 const AgoraProvider = dynamic(
   async () => {
-    const { AgoraRTCProvider, default: AgoraRTC } =
-      await import('agora-rtc-react');
+    const agoraModule = await import('agora-rtc-react');
+    const AgoraRTCProvider =
+      agoraModule.AgoraRTCProvider ||
+      (agoraModule.default as any)?.AgoraRTCProvider;
+    const AgoraRTC = (agoraModule.default || agoraModule) as any;
     return {
       default: function AgoraProviders({
         children,

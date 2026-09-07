@@ -65,7 +65,7 @@ You MUST output ONLY valid JSON in the exact following structure:
 }`;
 
     let responseText = '';
-    const modelsToTry = ['gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-3.6-flash'];
+    const modelsToTry = ['gemini-3.6-flash', 'gemini-3.1-flash-lite'];
     let lastError = null;
 
     for (const modelName of modelsToTry) {
