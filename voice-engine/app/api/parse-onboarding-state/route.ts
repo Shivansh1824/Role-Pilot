@@ -62,10 +62,11 @@ Instructions:
      CRITICAL: As soon as the candidate answers their experience tier, modal_to_display MUST BE "none". It must NEVER open again!
    - "overview-popup": ONLY when Nova's latest utterance is actively presenting the final overview or asking if the candidate is ready for their panel interview to begin (Stage 5 question), AND the candidate has not yet launched.
 11. "ready_to_launch": boolean - true ONLY if candidate verbally confirms readiness ("Yes", "I'm ready", "Open the interview", "Start") or Nova announces opening the panel room.
-12. SINGLE-TAKE RULE: Never clear or overwrite an already-confirmed field unless the candidate explicitly corrects it.
-13. COMPOUND EXTRACTION: If the candidate provides multiple answers in one sentence (e.g. "I'm Shivansh, looking for Software Engineer with 3 years experience"), extract "name", "target_role", and "experience_tier" all at once, set active_step to "overview", and set modal_to_display to "overview-popup".
-14. TYPO & ASR TOLERANCE: Normalize phonetic STT errors (e.g. "sofware enginer" -> "Software Engineer").
-15. OFF-TOPIC FILTERING: Ignore off-topic chatter and preserve existing state.
+12. PERMANENT MODAL LOCK INVARIANT: Once a requirement is answered by the candidate, that modal is PERMANENTLY LOCKED and closed. If target_role is known, role-popup can NEVER be armed or displayed again. If experience_tier is known, exp-popup can NEVER be armed or displayed again. Once answered, modal_to_display MUST BE "none". It will NEVER open again and again.
+13. SINGLE-TAKE RULE: Never clear or overwrite an already-confirmed field unless the candidate explicitly corrects it.
+14. COMPOUND EXTRACTION: If the candidate provides multiple answers in one sentence (e.g. "I'm Shivansh, looking for Software Engineer with 3 years experience"), extract "name", "target_role", and "experience_tier" all at once, set active_step to "overview", and set modal_to_display to "overview-popup".
+15. TYPO & ASR TOLERANCE: Normalize phonetic STT errors (e.g. "sofware enginer" -> "Software Engineer").
+16. OFF-TOPIC FILTERING: Ignore off-topic chatter and preserve existing state.
 
 You MUST output ONLY valid JSON in the exact following structure:
 {

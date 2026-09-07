@@ -1638,7 +1638,22 @@
     let dismissedModalsForStep = {};
 
     // ─── POPUP UTILS (SYNCHRONIZED & FLUID TRANSITIONS) ───────────────────
+    const completedStages = {
+      'role-popup': false,
+      'exp-popup': false,
+      'overview-popup': false
+    };
+
+    function isModalCompleted(id) {
+      if (!id || id === 'none') return true;
+      if (completedStages[id]) return true;
+      if (id === 'role-popup' && (state.role || completedStages['role-popup'])) return true;
+      if (id === 'exp-popup' && (state.experienceTier || completedStages['exp-popup'])) return true;
+      return false;
+    }
+
     function showPopup(id) {
+      if (!id || isModalCompleted(id)) return;
       const target = document.getElementById(id);
       if (!target) return;
 
@@ -1653,8 +1668,10 @@
         // Smoothly dismiss currently open popups first, then glide in target
         currentlyOpen.forEach(p => p.classList.remove('show'));
         setTimeout(() => {
-          target.classList.add('show');
-          currentOpenModal = id;
+          if (!isModalCompleted(id)) {
+            target.classList.add('show');
+            currentOpenModal = id;
+          }
         }, 160);
       } else {
         target.classList.add('show');
@@ -1682,20 +1699,10 @@
       }
     };
 
-    const completedStages = {
-      'role-popup': false,
-      'exp-popup': false,
-      'overview-popup': false
-    };
-
     let armedModal = null;
 
     function armModal(modalId) {
-      if (!modalId || modalId === 'none') {
-        armedModal = null;
-        return;
-      }
-      if (completedStages[modalId]) {
+      if (!modalId || modalId === 'none' || isModalCompleted(modalId)) {
         armedModal = null;
         return;
       }
@@ -1704,14 +1711,16 @@
     window.armModal = armModal;
 
     function triggerArmedModal() {
-      if (!armedModal) return;
-      if (completedStages[armedModal]) {
+      if (!armedModal || isModalCompleted(armedModal)) {
         armedModal = null;
         return;
       }
       const target = armedModal;
-      armedModal = null;
-      syncModalState(target);
+      armedModal = null; // Consume the gate immediately so it only opens once per stage!
+      if (target === 'overview-popup') {
+        updateOverviewSummary();
+      }
+      showPopup(target);
     }
     window.triggerArmedModal = triggerArmedModal;
 
@@ -1730,7 +1739,7 @@
       }
 
       // Guard 1: If stage is already answered & completed, NEVER open its modal again!
-      if (completedStages[targetModal]) {
+      if (isModalCompleted(targetModal)) {
         const el = document.getElementById(targetModal);
         if (el) el.classList.remove('show');
         return;
@@ -2020,7 +2029,6 @@
       document.getElementById('status-text').textContent = text;
     }
     function setNovaSpeaking(speaking) {
-      const wasSpeaking = isNovaSpeakingFlag;
       isNovaSpeakingFlag = speaking;
       if (speaking) hasNovaSpokenAnyTurn = true;
       document.getElementById('nova-orb').classList.toggle('speaking', speaking);
@@ -2030,9 +2038,6 @@
       } else {
         updateStatus('listening', 'Listening to you…');
         setSpeakerIndicator('Listening to your voice…', false, true);
-        if (wasSpeaking && armedModal) {
-          triggerArmedModal();
-        }
       }
     }
     function showDialogue(speaker, text) {
@@ -2669,37 +2674,25 @@
         }
       }
 
-      // 4. Active Step & Modal Sync driven by Gemini
+      // 4. Active Step & Armed Gate from brain
       if (parsed.active_step) {
         state.activeStep = parsed.active_step;
       }
 
-      // 5. Pre-arm modal from Gemini's brain
-      if (parsed.armed_modal) {
+      // If state parser identifies an armed gate for the upcoming uncompleted stage
+      if (parsed.armed_modal && !completedStages[parsed.armed_modal]) {
         armModal(parsed.armed_modal);
       }
 
-      // 6. Synchronize visual popup with Gemini's active modal decision
-      if (parsed.modal_to_display === 'none' || parsed.modal_to_display === 'close_all') {
-        closeAllPopups();
-      } else if (parsed.modal_to_display) {
-        // If Nova is still actively speaking, do not interrupt her speech with a popup — keep it armed!
-        if (isNovaSpeakingFlag || remoteAudioTrack?.isPlaying) {
-          armModal(parsed.modal_to_display);
-        } else {
-          // Nova has already finished speaking, show the modal immediately
-          syncModalState(parsed.modal_to_display);
-        }
+      // Ensure any answered/completed stages stay closed permanently
+      if (completedStages['role-popup']) {
+        closePopup('role-popup');
+      }
+      if (completedStages['exp-popup']) {
+        closePopup('exp-popup');
       }
 
-      // Fast-trigger if modal is armed AND Nova is NOT speaking!
-      if (armedModal && !isNovaSpeakingFlag && (!remoteAudioTrack || !remoteAudioTrack.isPlaying)) {
-        if (hasNovaSpokenAnyTurn) {
-          triggerArmedModal();
-        }
-      }
-
-      // 7. Auto-launch panel if ready
+      // 5. Auto-launch panel if ready
       if (parsed.active_step === 'ready' || parsed.ready_to_launch) {
         autoLaunchPanelRoom('AI State parser confirmed readiness', 2800);
       }
