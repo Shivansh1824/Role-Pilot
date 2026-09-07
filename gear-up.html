@@ -2164,70 +2164,96 @@
         showDialogue('Nova', text);
         addOrUpdateChatMessage('nova', text, turnId);
 
-        const lowerNova = text.toLowerCase();
-
-        // 1. NOVA DIRECT LAUNCH SPOKEN TRIGGER
-        if (
-          lowerNova.includes('opening your panel room') ||
-          lowerNova.includes('opening the panel room') ||
-          lowerNova.includes('opening your interview') ||
-          lowerNova.includes('launching your panel room') ||
-          lowerNova.includes('transferring you to the panel') ||
-          lowerNova.includes('transferring you to the interview') ||
-          lowerNova.includes('entering the panel room')
-        ) {
-          autoLaunchPanelRoom('Nova verbal launch: ' + text, 2400);
-        }
-
-        // 2. NOVA ASKS FOR TARGET ROLE -> Synchronize and open Role Modal immediately
-        if (!state.role && (
-          lowerNova.includes('what job role') ||
-          lowerNova.includes('what role') ||
-          lowerNova.includes('target role') ||
-          lowerNova.includes('role are you targeting') ||
-          lowerNova.includes('role in your profile') ||
-          lowerNova.includes('stick with this') ||
-          lowerNova.includes('switch to another role') ||
-          lowerNova.includes('what position') ||
-          lowerNova.includes('which role')
-        )) {
-          state.activeStep = 'role';
-          updateGuidanceAndProgress();
-          showPopup('role-popup');
-        }
-
-        // 3. NOVA ASKS FOR EXPERIENCE TIER -> Close Role modal & open Experience modal immediately
-        if (!state.experienceTier && (
-          lowerNova.includes('experience tier') ||
-          lowerNova.includes('experience level') ||
-          lowerNova.includes('how many years') ||
-          lowerNova.includes('fresher, junior') ||
-          lowerNova.includes('what tier') ||
-          lowerNova.includes('years of experience')
-        )) {
-          state.activeStep = 'experience';
-          updateGuidanceAndProgress();
-          closePopup('role-popup');
-          showPopup('exp-popup');
-        }
-
-        // 4. NOVA CONFIRMING EXPERIENCE / READINESS -> Open Overview modal
-        if (
-          lowerNova.includes('everything is calibrated') ||
-          lowerNova.includes('calibrated and ready') ||
-          lowerNova.includes('ready for your panel interview') ||
-          lowerNova.includes('ready to begin') ||
-          lowerNova.includes('ready for your interview')
-        ) {
-          state.activeStep = 'overview';
-          updateGuidanceAndProgress();
-          closePopup('role-popup');
-          closePopup('exp-popup');
-          showPopup('overview-popup');
-          updateOverviewSummary();
-        }
-
+        // ── ALL DETECTION RUNS ONLY WHEN NOVA'S TURN IS COMPLETE ──
         if (isEnd) {
+          const lowerNova = text.toLowerCase();
+
+          // 1. NOVA DIRECT LAUNCH SPOKEN TRIGGER
+          if (
+            lowerNova.includes('opening your panel room') ||
+            lowerNova.includes('opening the panel room') ||
+            lowerNova.includes('opening your interview') ||
+            lowerNova.includes('launching your panel room') ||
+            lowerNova.includes('transferring you to the panel') ||
+            lowerNova.includes('transferring you to the interview') ||
+            lowerNova.includes('entering the panel room')
+          ) {
+            autoLaunchPanelRoom('Nova verbal launch: ' + text, 2400);
+          }
+
+          // 2. NOVA CONFIRMS ROLE ("locked in for your Tech Panel") -> close role popup
+          if (
+            lowerNova.includes('locked in for') ||
+            lowerNova.includes('locked in as') ||
+            lowerNova.includes('matched to') ||
+            lowerNova.includes('is locked in')
+          ) {
+            // Nova confirmed a role - close role popup if open
+            closePopup('role-popup');
+          }
+
+          // 3. NOVA ASKS FOR EXPERIENCE TIER -> open Experience modal
+          if (!state.experienceTier && (
+            lowerNova.includes('experience level') ||
+            lowerNova.includes('experience tier') ||
+            lowerNova.includes('how many years') ||
+            lowerNova.includes('fresher, junior') ||
+            lowerNova.includes('what tier') ||
+            lowerNova.includes('years of experience') ||
+            lowerNova.includes('are you a fresher') ||
+            lowerNova.includes('experience do you have')
+          )) {
+            state.activeStep = 'experience';
+            updateGuidanceAndProgress();
+            closePopup('role-popup');
+            showPopup('exp-popup');
+          }
+
+          // 4. NOVA ASKS FOR TARGET ROLE -> open Role modal
+          // Only if Nova is specifically asking about roles (not just mentioning "role" in passing)
+          if (!state.role && (
+            lowerNova.includes('what job role') ||
+            lowerNova.includes('what role are you') ||
+            lowerNova.includes('which role') ||
+            lowerNova.includes('what position') ||
+            lowerNova.includes('stick with that') ||
+            lowerNova.includes('stick with this') ||
+            lowerNova.includes('would you like to stick') ||
+            lowerNova.includes('switch to another role') ||
+            lowerNova.includes('interview for a different role')
+          )) {
+            state.activeStep = 'role';
+            updateGuidanceAndProgress();
+            showPopup('role-popup');
+          }
+
+          // 5. NOVA CONFIRMS READINESS / OVERVIEW -> Open Overview modal
+          if (
+            lowerNova.includes('everything is calibrated') ||
+            lowerNova.includes('calibrated and ready') ||
+            lowerNova.includes('ready for your panel interview') ||
+            lowerNova.includes('ready to begin') ||
+            lowerNova.includes('ready for your interview') ||
+            lowerNova.includes('are you ready')
+          ) {
+            state.activeStep = 'overview';
+            updateGuidanceAndProgress();
+            closePopup('role-popup');
+            closePopup('exp-popup');
+            showPopup('overview-popup');
+            updateOverviewSummary();
+          }
+
+          // 6. NOVA ASKS ABOUT RESUME -> close experience popup
+          if (
+            lowerNova.includes('handle your resume') ||
+            lowerNova.includes('saved resume') ||
+            lowerNova.includes('upload a resume') ||
+            lowerNova.includes('quick-start without')
+          ) {
+            closePopup('exp-popup');
+          }
+
           transcriptBuffer.push(`Nova: ${text}`);
           scheduleStateParse();
           setTimeout(() => {
@@ -2241,101 +2267,101 @@
         showDialogue('You', text);
         addOrUpdateChatMessage('user', text, turnId);
 
-        const lowerUser = text.toLowerCase();
-
-        // 1. CANDIDATE VOICE LAUNCH QUERY DETECTION ("is the interview ready?", "open the interview", etc.)
-        const isLaunchQuery =
-          lowerUser.includes('is the interview ready') ||
-          lowerUser.includes('is it ready') ||
-          lowerUser.includes('is interview ready') ||
-          lowerUser.includes('open the interview') ||
-          lowerUser.includes('open interview') ||
-          lowerUser.includes('open the panel') ||
-          lowerUser.includes('open panel room') ||
-          lowerUser.includes('start the interview') ||
-          lowerUser.includes('start interview') ||
-          lowerUser.includes('take me to the panel') ||
-          lowerUser.includes('take me to the interview') ||
-          lowerUser.includes('launch the interview') ||
-          lowerUser.includes('launch panel');
-
-        if (isLaunchQuery) {
-          autoLaunchPanelRoom('Candidate query: ' + text, 1800);
-        }
-
-        // 2. CANDIDATE CONFIRMS IDENTITY -> Open Role modal
-        if (!state.name && (
-          lowerUser.includes('ready to gear up') ||
-          lowerUser.includes("i'm ready") ||
-          lowerUser.includes('i am ready') ||
-          lowerUser.includes('ready') ||
-          lowerUser.includes("that's me") ||
-          lowerUser === 'yes' ||
-          lowerUser === 'yeah' ||
-          lowerUser === 'yep'
-        )) {
-          state.name = state.profileName || 'Candidate';
-          const nameEl = document.getElementById('val-name');
-          if (nameEl) {
-            nameEl.textContent = state.name;
-            nameEl.classList.remove('empty');
-          }
-          const hudName = document.getElementById('hud-name');
-          if (hudName) hudName.classList.add('captured');
-          state.activeStep = 'role';
-          updateGuidanceAndProgress();
-          showPopup('role-popup');
-        }
-
-        // 3. CANDIDATE CONFIRMS PROFILE ROLE ("stick with that", "same role", etc.)
-        if (!state.role && (
-          lowerUser.includes('stick with') ||
-          lowerUser.includes('sticking with') ||
-          lowerUser.includes('same role') ||
-          lowerUser.includes('keep that') ||
-          lowerUser.includes('keep this') ||
-          lowerUser.includes('continue with that')
-        )) {
-          confirmRole(state.profileRole || 'Software Engineer');
-        }
-
-        // 4. CANDIDATE STATES A TARGET ROLE
-        if (!state.role) {
-          if (lowerUser.includes('software engineer') || lowerUser.includes('software developer')) {
-            confirmRole('Software Engineer');
-          } else if (lowerUser.includes('full stack') || lowerUser.includes('fullstack')) {
-            confirmRole('Full Stack Developer');
-          } else if (lowerUser.includes('frontend') || lowerUser.includes('front end')) {
-            confirmRole('Frontend Developer');
-          } else if (lowerUser.includes('backend') || lowerUser.includes('back end')) {
-            confirmRole('Backend Developer');
-          } else if (lowerUser.includes('mobile') || lowerUser.includes('android') || lowerUser.includes('ios')) {
-            confirmRole('Mobile Developer');
-          } else if (lowerUser.includes('cloud') || lowerUser.includes('devops') || lowerUser.includes('architect')) {
-            confirmRole('Cloud Architect');
-          } else if (lowerUser.includes('product manager') || lowerUser.includes('pm')) {
-            confirmRole('Product Manager');
-          } else if (lowerUser.includes('data engineer') || lowerUser.includes('machine learning') || lowerUser.includes('ai engineer')) {
-            confirmRole('Data Engineer');
-          }
-        }
-
-        // 5. CANDIDATE STATES EXPERIENCE TIER
-        if (!state.experienceTier) {
-          if (lowerUser.includes('1 year') || lowerUser.includes('one year') || lowerUser.includes('1-year') || lowerUser.includes('0-1')) {
-            confirmExperience('1-year fresher');
-          } else if (lowerUser.includes('fresher') || lowerUser.includes('junior') || lowerUser.includes('entry level') || lowerUser.includes('graduate')) {
-            confirmExperience('fresher');
-          } else if (lowerUser.includes('mid level') || lowerUser.includes('mid-level') || lowerUser.includes('3 year') || lowerUser.includes('4 year') || lowerUser.includes('5 year')) {
-            confirmExperience('mid-level');
-          } else if (lowerUser.includes('senior') || lowerUser.includes('6 year') || lowerUser.includes('7 year') || lowerUser.includes('8 year')) {
-            confirmExperience('senior');
-          } else if (lowerUser.includes('lead') || lowerUser.includes('staff') || lowerUser.includes('principal') || lowerUser.includes('10 year')) {
-            confirmExperience('lead');
-          }
-        }
-
+        // ── ALL DETECTION RUNS ONLY WHEN USER'S TURN IS COMPLETE ──
         if (isEnd) {
+          const lowerUser = text.toLowerCase();
+
+          // 1. CANDIDATE VOICE LAUNCH QUERY DETECTION
+          const isLaunchQuery =
+            lowerUser.includes('is the interview ready') ||
+            lowerUser.includes('is it ready') ||
+            lowerUser.includes('is interview ready') ||
+            lowerUser.includes('open the interview') ||
+            lowerUser.includes('open interview') ||
+            lowerUser.includes('open the panel') ||
+            lowerUser.includes('open panel room') ||
+            lowerUser.includes('start the interview') ||
+            lowerUser.includes('start interview') ||
+            lowerUser.includes('take me to the panel') ||
+            lowerUser.includes('take me to the interview') ||
+            lowerUser.includes('launch the interview') ||
+            lowerUser.includes('launch panel');
+
+          if (isLaunchQuery) {
+            autoLaunchPanelRoom('Candidate query: ' + text, 1800);
+          }
+
+          // 2. CANDIDATE CONFIRMS IDENTITY
+          if (!state.name && (
+            lowerUser.includes('ready to gear up') ||
+            lowerUser.includes("i'm ready") ||
+            lowerUser.includes('i am ready') ||
+            lowerUser.includes("that's me") ||
+            lowerUser === 'yes' ||
+            lowerUser === 'yeah' ||
+            lowerUser === 'yep'
+          )) {
+            state.name = state.profileName || 'Candidate';
+            const nameEl = document.getElementById('val-name');
+            if (nameEl) {
+              nameEl.textContent = state.name;
+              nameEl.classList.remove('empty');
+            }
+            const hudName = document.getElementById('hud-name');
+            if (hudName) hudName.classList.add('captured');
+            addOrUpdateChatMessage('system', `✓ Identity confirmed as ${state.name}`);
+          }
+
+          // 3. CANDIDATE CONFIRMS PROFILE ROLE ("stick with that", "same role", etc.)
+          if (!state.role && (
+            lowerUser.includes('stick with') ||
+            lowerUser.includes('sticking with') ||
+            lowerUser.includes('same role') ||
+            lowerUser.includes('keep that') ||
+            lowerUser.includes('keep this') ||
+            lowerUser.includes('continue with that')
+          )) {
+            confirmRole(state.profileRole || 'Software Engineer');
+          }
+
+          // 4. CANDIDATE STATES A TARGET ROLE
+          if (!state.role) {
+            if (lowerUser.includes('software engineer') || lowerUser.includes('software developer')) {
+              confirmRole('Software Engineer');
+            } else if (lowerUser.includes('full stack') || lowerUser.includes('fullstack')) {
+              confirmRole('Full Stack Developer');
+            } else if (lowerUser.includes('frontend') || lowerUser.includes('front end')) {
+              confirmRole('Frontend Developer');
+            } else if (lowerUser.includes('backend') || lowerUser.includes('back end')) {
+              confirmRole('Backend Developer');
+            } else if (lowerUser.includes('mobile developer') || lowerUser.includes('mobile dev')) {
+              confirmRole('Mobile Developer');
+            } else if (lowerUser.includes('android developer') || lowerUser.includes('ios developer')) {
+              confirmRole('Mobile Developer');
+            } else if (lowerUser.includes('cloud') || lowerUser.includes('devops') || lowerUser.includes('architect')) {
+              confirmRole('Cloud Architect');
+            } else if (lowerUser.includes('product manager')) {
+              confirmRole('Product Manager');
+            } else if (lowerUser.includes('data engineer') || lowerUser.includes('machine learning') || lowerUser.includes('ai engineer')) {
+              confirmRole('Data Engineer');
+            }
+          }
+
+          // 5. CANDIDATE STATES EXPERIENCE TIER
+          if (!state.experienceTier) {
+            if (lowerUser.includes('1 year') || lowerUser.includes('one year') || lowerUser.includes('1-year') || lowerUser.includes('0-1')) {
+              confirmExperience('1-year fresher');
+            } else if (lowerUser.includes('fresher') || lowerUser.includes('junior') || lowerUser.includes('entry level') || lowerUser.includes('graduate')) {
+              confirmExperience('fresher');
+            } else if (lowerUser.includes('mid level') || lowerUser.includes('mid-level') || lowerUser.includes('3 year') || lowerUser.includes('4 year') || lowerUser.includes('5 year')) {
+              confirmExperience('mid-level');
+            } else if (lowerUser.includes('senior') || lowerUser.includes('6 year') || lowerUser.includes('7 year') || lowerUser.includes('8 year')) {
+              confirmExperience('senior');
+            } else if (lowerUser.includes('lead') || lowerUser.includes('staff') || lowerUser.includes('principal') || lowerUser.includes('10 year')) {
+              confirmExperience('lead');
+            }
+          }
+
           transcriptBuffer.push(`User: ${text}`);
           scheduleStateParse();
         }
@@ -2607,24 +2633,13 @@
         confirmExperience(parsed.experience_tier);
       }
 
-      // 4. Active Step Progression & Popups
+      // 4. Active Step Progression (state only, no popups)
+      // Popups are managed exclusively by Nova's completed speech turns
       if (parsed.active_step) {
         state.activeStep = parsed.active_step;
-        if (parsed.active_step === 'role' && !state.role) {
-          showPopup('role-popup');
-        } else if (parsed.active_step === 'experience' && !state.experienceTier) {
-          closePopup('role-popup');
-          showPopup('exp-popup');
-        } else if (parsed.active_step === 'overview') {
-          closePopup('role-popup');
-          closePopup('exp-popup');
-          showPopup('overview-popup');
-          updateOverviewSummary();
-        } else if (parsed.active_step === 'ready' || parsed.ready_to_launch) {
-          closePopup('role-popup');
-          closePopup('exp-popup');
-          showPopup('overview-popup');
-          updateOverviewSummary();
+
+        // Only auto-launch if parser says ready
+        if (parsed.active_step === 'ready' || parsed.ready_to_launch) {
           autoLaunchPanelRoom('AI State parser confirmed readiness', 2800);
         }
       }
@@ -2666,10 +2681,11 @@
           addOrUpdateChatMessage('system', `✓ Target Role: ${roleName} matched to ${track.toUpperCase()} Panel`);
           state.activeStep = 'experience';
           updateGuidanceAndProgress();
+          // Close the role popup now that role is confirmed.
+          // Experience popup will open when Nova asks about experience level.
           setTimeout(() => {
             closePopup('role-popup');
-            if (!state.experienceTier) showPopup('exp-popup');
-          }, 1200);
+          }, 600);
         } else {
           feedback.className = 'panel-feedback unsupported';
           icon.className = 'fa-solid fa-triangle-exclamation';
@@ -2693,11 +2709,11 @@
       state.activeStep = 'overview';
       updateGuidanceAndProgress();
 
+      // Close the experience popup now that tier is confirmed.
+      // Overview popup will open when Nova confirms readiness.
       setTimeout(() => {
         closePopup('exp-popup');
-        showPopup('overview-popup');
-        updateOverviewSummary();
-      }, 1000);
+      }, 600);
     };
 
     // ─── OVERVIEW SUMMARY UPDATE ──────────────────────────────────────────
