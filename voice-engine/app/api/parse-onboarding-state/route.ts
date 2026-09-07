@@ -18,8 +18,9 @@ ${JSON.stringify(currentState || {}, null, 2)}
 
 Instructions:
 1. "name": Candidate's confirmed name (string | null).
-   - If candidate confirms their profile name (e.g. "Yes, I am Shivansh" or "Yes, that's me"), lock in their name.
-   - If candidate introduces a new name, extract that new name.
+   - If candidate confirms their profile name (e.g. "Yes, I am Shivansh", "Yes, that's me", "Yes, ready to gear up", "I'm ready", "Yes"), lock in their profile name.
+   - If candidate introduces a new name (e.g. "No, it's for Rahul"), extract that new name.
+   - CRITICAL: While candidate has NOT yet spoken or responded in the transcript, "name" must remain null. Never treat Nova's spoken greeting as candidate confirmation.
 2. "is_own_profile": boolean | null - true if candidate confirms it's their own profile, false if for someone else.
 3. "target_role": The target job role (e.g. "Software Engineer", "Full Stack Developer", "Product Manager") or null if not yet provided.
 4. "resolved_track": Classify target_role into:
@@ -45,13 +46,13 @@ Instructions:
    - "overview": Both target role and experience tier are confirmed, and Nova is discussing the final overview, resume, difficulty, or readiness.
    - "ready": Candidate confirms readiness to launch into the panel room.
 9. "armed_modal": The NEXT modal that is pre-armed and gated to open the exact millisecond Nova finishes speaking her question:
-   - "role-popup": When candidate has confirmed identity/name, and Nova is moving to or currently asking Stage 2 (Target Role).
+   - "role-popup": ONLY when candidate has ALREADY confirmed identity/name, and Nova is moving to or currently asking Stage 2 (Target Role). During Stage 1 (while candidate has not responded), armed_modal MUST BE null.
    - "exp-popup": When candidate has confirmed target role, and Nova is moving to or currently asking Stage 3 (Experience Level).
    - "overview-popup": When candidate has confirmed experience level, and Nova is moving to or currently presenting Stage 5 (Final Overview / Readiness).
-   - null: When no modal is armed or when stage is already answered.
+   - null: When candidate is in Stage 1, or when no modal is armed, or when stage is already answered.
 10. "modal_to_display": The EXACT UI modal to display on the candidate's screen right now:
    - "none":
-     * During Stage 1 (name/identity confirmation).
+     * During Stage 1 (name/identity confirmation) — NO MODAL MUST EVER BE DISPLAYED DURING STAGE 1!
      * AS SOON AS THE CANDIDATE ANSWERS A QUESTION! (When the candidate answers or selects their target role, the role modal MUST CLOSE immediately -> return "none". When the candidate answers or selects their experience tier, the experience modal MUST CLOSE immediately -> return "none").
      * When Nova is acknowledging an answer, summarizing, or transitioning between steps.
      * When Nova is asking about resumes or difficulty (Stage 4).

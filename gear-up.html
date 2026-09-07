@@ -1917,7 +1917,7 @@
     function updateGuidanceAndProgress() {
       // Determine active step
       let stepKey = 'name';
-      if (state.name || state.profileName) {
+      if (state.name) {
         if (!state.role) stepKey = 'role';
         else if (!state.experienceTier) stepKey = 'experience';
         else stepKey = 'overview';
@@ -2007,6 +2007,15 @@
         addOrUpdateChatMessage('system', `✓ Identity confirmed as ${state.name}`);
         state.activeStep = 'role';
         armModal('role-popup');
+        updateGuidanceAndProgress();
+        scheduleStateParse(true);
+      } else if (actionType === 'other-name') {
+        state.name = null;
+        document.getElementById('val-name').textContent = 'Awaiting…';
+        document.getElementById('val-name').classList.add('empty');
+        document.getElementById('hud-name').classList.remove('captured');
+        state.activeStep = 'name';
+        armModal(null);
         updateGuidanceAndProgress();
         scheduleStateParse(true);
       } else if (actionType === 'role') {
