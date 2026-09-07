@@ -1,15 +1,35 @@
 // Role-Pilot Candidate Dashboard Controller
-// Strictly Light Theme, Modular, Scorecards & Full Transcript Modal
+// Strictly Light Theme, Modular, Rich Card System & Full Transcript Modal
 
 const SCORECARDS_DATA = [
     {
         id: "1",
+        category: "systems",
         title: "Full-Stack Systems Architecture Panel",
         track: "Full-Stack & Systems",
+        trackIcon: "fa-solid fa-laptop-code",
+        trackGradient: "linear-gradient(90deg, #7c3aed, #6366f1)",
+        badgeBg: "rgba(124, 58, 237, 0.1)",
+        badgeColor: "#7c3aed",
         date: "Jun 12, 2026",
         duration: "24 mins",
         score: 91,
         verdict: "Strong Hire",
+        verdictBg: "rgba(16, 185, 129, 0.12)",
+        verdictColor: "#059669",
+        consensus: "3/3 Committee Consensus",
+        panelistsRoster: [
+            { initials: "DC", name: "David Chen", role: "Staff Architect", color: "#7c3aed" },
+            { initials: "AR", name: "Alex Rivera", role: "Hiring Mgr", color: "#0284c7" },
+            { initials: "MV", name: "Marcus Vance", role: "Bar Raiser", color: "#d97706" }
+        ],
+        rubricMini: [
+            { label: "STAR Structure", val: 94, color: "#06b6d4" },
+            { label: "Systems Scale & Concurrency", val: 92, color: "#7c3aed" },
+            { label: "Voice Cadence & Fluency", val: 95, color: "#f59e0b" }
+        ],
+        highlightQuote: "When pressed on WebSocket reconnect backoff and memory footprint during regional failovers, Shivansh broke down the jittered exponential backoff strategy with remarkable clarity.",
+        quoteAuthor: "David Chen (Staff Architect)",
         panelistsText: "David Chen (Staff Architect) &bull; Alex Rivera (Hiring Mgr) &bull; Marcus Vance (Bar Raiser)",
         panelists: [
             {
@@ -54,12 +74,31 @@ const SCORECARDS_DATA = [
     },
     {
         id: "2",
+        category: "product",
         title: "Strategic Product & Execution Panel",
         track: "Product Architecture",
+        trackIcon: "fa-solid fa-cubes",
+        trackGradient: "linear-gradient(90deg, #06b6d4, #0284c7)",
+        badgeBg: "rgba(6, 182, 212, 0.1)",
+        badgeColor: "#0891b2",
         date: "Jun 08, 2026",
         duration: "19 mins",
         score: 86,
         verdict: "Hire",
+        verdictBg: "rgba(6, 182, 212, 0.12)",
+        verdictColor: "#0284c7",
+        consensus: "2/2 Committee Consensus",
+        panelistsRoster: [
+            { initials: "MD", name: "Mark Davis", role: "Staff Product Lead", color: "#0891b2" },
+            { initials: "MV", name: "Marcus Vance", role: "Bar Raiser", color: "#d97706" }
+        ],
+        rubricMini: [
+            { label: "Product Sense & Vision", val: 88, color: "#06b6d4" },
+            { label: "Cross-Functional Alignment", val: 85, color: "#0284c7" },
+            { label: "Clarity of Thought", val: 89, color: "#7c3aed" }
+        ],
+        highlightQuote: "He mapped telemetry signals directly to user friction points, showing high maturity in product telemetry instrumentation and customer retention focus.",
+        quoteAuthor: "Mark Davis (Staff Product Lead)",
         panelistsText: "Mark Davis (Staff Product Lead) &bull; Marcus Vance (Bar Raiser)",
         panelists: [
             {
@@ -93,12 +132,31 @@ const SCORECARDS_DATA = [
     },
     {
         id: "3",
+        category: "systems",
         title: "Enterprise Cloud & Security Panel",
         track: "Enterprise Cloud & Infra",
+        trackIcon: "fa-solid fa-cloud-bolt",
+        trackGradient: "linear-gradient(90deg, #10b981, #059669)",
+        badgeBg: "rgba(16, 185, 129, 0.1)",
+        badgeColor: "#059669",
         date: "Jun 03, 2026",
         duration: "22 mins",
         score: 89,
         verdict: "Strong Hire",
+        verdictBg: "rgba(16, 185, 129, 0.12)",
+        verdictColor: "#059669",
+        consensus: "2/2 Committee Consensus",
+        panelistsRoster: [
+            { initials: "DC", name: "David Chen", role: "Staff Cloud Architect", color: "#10b981" },
+            { initials: "MV", name: "Marcus Vance", role: "Bar Raiser", color: "#d97706" }
+        ],
+        rubricMini: [
+            { label: "Zero-Trust Architecture", val: 92, color: "#10b981" },
+            { label: "Cost & Auto-Scaling", val: 88, color: "#059669" },
+            { label: "Disaster Recovery", val: 89, color: "#06b6d4" }
+        ],
+        highlightQuote: "Explained automated secret rotation and mTLS between microservices with surgical accuracy, balancing strict zero-trust with low inter-service latency.",
+        quoteAuthor: "David Chen (Staff Cloud Architect)",
         panelistsText: "David Chen (Staff Architect) &bull; Marcus Vance (Bar Raiser)",
         panelists: [
             {
@@ -129,12 +187,31 @@ const SCORECARDS_DATA = [
     },
     {
         id: "4",
+        category: "leadership",
         title: "Leadership & Behavioral Culture Panel",
         track: "Leadership & Culture",
+        trackIcon: "fa-solid fa-people-group",
+        trackGradient: "linear-gradient(90deg, #f59e0b, #d97706)",
+        badgeBg: "rgba(245, 158, 11, 0.1)",
+        badgeColor: "#d97706",
         date: "May 28, 2026",
         duration: "18 mins",
         score: 84,
         verdict: "Hire",
+        verdictBg: "rgba(245, 158, 11, 0.12)",
+        verdictColor: "#d97706",
+        consensus: "2/2 Committee Consensus",
+        panelistsRoster: [
+            { initials: "AR", name: "Alex Rivera", role: "Hiring Manager", color: "#0284c7" },
+            { initials: "MD", name: "Mark Davis", role: "VP People & Culture", color: "#d97706" }
+        ],
+        rubricMini: [
+            { label: "Mentorship & Growth", val: 88, color: "#f59e0b" },
+            { label: "Conflict Resolution", val: 84, color: "#ea580c" },
+            { label: "Culture Alignment", val: 85, color: "#7c3aed" }
+        ],
+        highlightQuote: "Described coaching an engineer through a difficult outage with constructive feedback rather than blame, exemplifying high psychological safety.",
+        quoteAuthor: "Alex Rivera (Hiring Manager)",
         panelistsText: "Alex Rivera (Hiring Mgr) &bull; Mark Davis (VP People & Culture)",
         panelists: [
             {
@@ -201,39 +278,99 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. Render Scorecards List
-    const scorecardsContainer = document.getElementById('scorecards-list');
+    // 3. Render Visual Scorecard Cards Grid
+    const scorecardsGrid = document.getElementById('scorecards-grid');
+    const filterButtons = document.querySelectorAll('.scorecard-filter-btn');
     let currentScorecard = SCORECARDS_DATA[0];
     let activeModalTab = 'feedback';
+    let currentFilter = 'all';
 
-    function renderScorecards() {
-        if (!scorecardsContainer) return;
-        scorecardsContainer.innerHTML = SCORECARDS_DATA.map(item => `
-            <div class="scorecard-card-row">
-                <div class="scorecard-main-info">
-                    <h3 class="scorecard-title">${item.title}</h3>
-                    <div class="scorecard-meta-line">
-                        <span><i class="fa-regular fa-calendar" style="color: var(--primary);"></i> ${item.date}</span>
-                        <span>&bull;</span>
-                        <span><i class="fa-regular fa-clock"></i> ${item.duration}</span>
-                        <span>&bull;</span>
-                        <span><i class="fa-solid fa-users"></i> ${item.panelistsText}</span>
+    function renderScorecards(filter = 'all') {
+        if (!scorecardsGrid) return;
+
+        const filtered = filter === 'all' 
+            ? SCORECARDS_DATA 
+            : SCORECARDS_DATA.filter(item => item.category === filter);
+
+        scorecardsGrid.innerHTML = filtered.map(item => `
+            <article class="scorecard-visual-card" style="--card-track-gradient: ${item.trackGradient};">
+                <!-- Top Track Header -->
+                <div class="card-top-header">
+                    <span class="card-track-badge" style="background: ${item.badgeBg}; color: ${item.badgeColor};">
+                        <i class="${item.trackIcon}"></i> ${item.track}
+                    </span>
+                    <span class="card-date-duration">
+                        <i class="fa-regular fa-calendar"></i> ${item.date} &bull; ${item.duration}
+                    </span>
+                </div>
+
+                <!-- Session Title -->
+                <div class="card-title-group">
+                    <h3>${item.title}</h3>
+                </div>
+
+                <!-- Score Hero Banner -->
+                <div class="card-score-banner">
+                    <div class="card-score-num-box">
+                        <span class="card-score-big">${item.score}</span>
+                        <span class="card-score-denom">/100</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="card-verdict-tag" style="background: ${item.verdictBg}; color: ${item.verdictColor};">
+                            <i class="fa-solid fa-circle-check"></i> ${item.verdict}
+                        </span>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; font-weight: 600;">
+                            ${item.consensus}
+                        </div>
                     </div>
                 </div>
-                <div class="scorecard-score-block">
-                    <div class="scorecard-numeric-badge">
-                        <div class="scorecard-big-number">${item.score}<span style="font-size: 0.9rem; color: var(--text-muted);">/100</span></div>
-                        <div class="scorecard-verdict-tag">${item.verdict}</div>
+
+                <!-- Panelists Roster Row -->
+                <div class="card-panelists-roster">
+                    <span class="roster-label">Committee Evaluators</span>
+                    <div class="roster-chips">
+                        ${item.panelistsRoster.map(p => `
+                            <span class="roster-panelist-chip">
+                                <span class="roster-avatar-circle" style="background: ${p.color};">${p.initials}</span>
+                                <span>${p.name} <span style="color: var(--text-muted); font-size: 0.7rem;">(${p.role})</span></span>
+                            </span>
+                        `).join('')}
                     </div>
-                    <button class="btn btn-secondary-outline btn-sm view-scorecard-btn" data-id="${item.id}">
-                        <i class="fa-solid fa-file-lines" style="margin-right: 4px;"></i> View Scorecard
-                    </button>
                 </div>
-            </div>
+
+                <!-- Rubric Mini Progress Meters -->
+                <div class="card-rubric-meters">
+                    ${item.rubricMini.map(r => `
+                        <div class="submetric-item">
+                            <div class="submetric-labels">
+                                <span>${r.label}</span>
+                                <span style="font-weight: 700;">${r.val}%</span>
+                            </div>
+                            <div class="submetric-track-bar">
+                                <div class="submetric-fill-bar" style="width: ${r.val}%; background: ${r.color};"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Highlight Executive Quote -->
+                <div class="card-quote-box">
+                    <i class="fa-solid fa-quote-left" style="opacity: 0.4; margin-right: 4px;"></i> "${item.highlightQuote}"
+                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; font-weight: 600; text-align: right;">
+                        &mdash; ${item.quoteAuthor}
+                    </div>
+                </div>
+
+                <!-- Action CTA -->
+                <button class="btn btn-primary-gradient view-scorecard-card-btn" data-id="${item.id}">
+                    <span>View Full Scorecard & Transcript</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </article>
         `).join('');
 
         // Attach click listeners to "View Scorecard" buttons
-        document.querySelectorAll('.view-scorecard-btn').forEach(btn => {
+        scorecardsGrid.querySelectorAll('.view-scorecard-card-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
                 const found = SCORECARDS_DATA.find(s => s.id === id);
@@ -244,7 +381,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    renderScorecards();
+    // Filter Buttons Interaction
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.getAttribute('data-filter') || 'all';
+            renderScorecards(currentFilter);
+        });
+    });
+
+    renderScorecards(currentFilter);
 
     // 4. Modal Interactions
     const modalBackdrop = document.getElementById('scorecard-modal');
@@ -260,7 +407,6 @@ document.addEventListener('DOMContentLoaded', () => {
         modalTitle.textContent = scorecard.title;
         modalSubtitle.innerHTML = `Conducted on ${scorecard.date} &bull; Duration: ${scorecard.duration} &bull; Committee Consensus: <strong>${scorecard.verdict} (${scorecard.score}/100)</strong>`;
 
-        // Reset tabs
         modalTabBtns.forEach(btn => {
             if (btn.getAttribute('data-tab') === 'feedback') {
                 btn.classList.add('active');
@@ -299,7 +445,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Tab buttons inside modal
     modalTabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             modalTabBtns.forEach(b => b.classList.remove('active'));
@@ -313,9 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!modalContentArea || !currentScorecard) return;
 
         if (activeModalTab === 'feedback') {
-            // Rubrics & Panelist evaluations
             modalContentArea.innerHTML = `
-                <!-- Rubric Badges Summary -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 8px;">
                     ${currentScorecard.rubrics.map(r => `
                         <div style="background: rgba(124, 58, 237, 0.04); border: 1px solid rgba(124, 58, 237, 0.1); border-radius: 12px; padding: 12px 14px;">
@@ -352,7 +495,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 `).join('')}
             `;
         } else {
-            // Full chronological transcript
             modalContentArea.innerHTML = `
                 <div class="transcript-stream">
                     ${currentScorecard.transcript.map(msg => `
@@ -381,12 +523,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Clean OAuth access_token hash from address bar if present
             if (window.location.hash && window.location.hash.includes('access_token')) {
                 history.replaceState(null, '', window.location.pathname + window.location.search);
             }
             
-            // Fetch profile data
             const { data: profile } = await db
                 .from('profiles')
                 .select('username, avatar_url, full_name, target_role, experience_level')
@@ -398,7 +538,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            // Populate user details:
             const fullName = profile.full_name || session.user.user_metadata?.full_name || "User";
             const firstName = fullName.split(' ')[0];
             const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -420,7 +559,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 subtitleEl.innerHTML = `Target Role: ${profile.target_role} &bull; Current Level: ${profile.experience_level.charAt(0).toUpperCase() + profile.experience_level.slice(1)}`;
             }
 
-            // Handle Logout
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async (e) => {

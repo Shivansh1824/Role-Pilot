@@ -5813,131 +5813,423 @@ body.page-exit {
 .bargein-box.rolepilot .bargein-value { color: #34d399; }
 
 /* ==========================================================================
-   Refined Interview Scorecards & Transcript Architecture (Uncluttered & Light)
+   Enhanced Informative Metrics & Visual Scorecard Card System (Light & Premium)
    ========================================================================== */
 
-.scorecards-container {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-top: 14px;
+/* Informative Metric Cards Layout */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.25rem;
 }
 
-.scorecard-card-row {
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid var(--glass-border);
-    border-radius: 18px;
-    padding: 1.25rem 1.5rem;
-    box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.04), 0 10px 24px -6px rgba(15, 23, 42, 0.04);
+.metric-card-glass {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.metric-card-glass:hover {
+    transform: translateY(-4px);
+    border-color: rgba(124, 58, 237, 0.25);
+    box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+}
+
+.metric-card-glass::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--metric-top-gradient, linear-gradient(90deg, var(--primary), var(--accent)));
+}
+
+.metric-header-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    gap: 10px;
 }
 
-.scorecard-card-row:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 16px 32px -8px rgba(15, 23, 42, 0.08);
-    border-color: rgba(124, 58, 237, 0.25);
-}
-
-.scorecard-meta-block {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex: 1;
-    min-width: 0;
-}
-
-.scorecard-track-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    background: rgba(124, 58, 237, 0.08);
-    color: var(--primary);
+.metric-icon-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
-    flex-shrink: 0;
-}
-
-.scorecard-info-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-}
-
-.scorecard-title-line {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.scorecard-title-line h4 {
-    margin: 0;
     font-size: 1.05rem;
+}
+
+.metric-benchmark-tag {
+    font-size: 0.72rem;
     font-weight: 700;
-    color: var(--text-primary);
-}
-
-.scorecard-date-badge {
-    font-size: 0.76rem;
-    color: var(--text-muted);
-    font-weight: 500;
-}
-
-.scorecard-panelists-chips {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    flex-wrap: wrap;
-}
-
-.panelist-mini-pill {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 3px 9px;
+    border-radius: 20px;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    background: rgba(15, 23, 42, 0.04);
+    gap: 5px;
+}
+
+.metric-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.metric-title-label {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.metric-score-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.metric-main-val {
+    font-size: 2.2rem;
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.metric-verdict-pill {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+/* Informative Definition Box */
+.metric-info-explain {
+    background: rgba(248, 250, 252, 0.95);
     border: 1px solid rgba(15, 23, 42, 0.06);
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 0.72rem;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.48;
+}
+
+.metric-info-explain strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+/* Visual Sub-metrics Breakdown */
+.submetric-progress-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.submetric-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.submetric-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.74rem;
+    color: var(--text-secondary);
     font-weight: 600;
 }
 
-.scorecard-score-block {
+.submetric-track-bar {
+    width: 100%;
+    height: 5px;
+    background: rgba(15, 23, 42, 0.06);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.submetric-fill-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--primary);
+}
+
+/* ==========================================================================
+   Visual Scorecard Card System (Interactive Grid & Rich Cards)
+   ========================================================================== */
+
+/* Filter Bar */
+.scorecards-filter-bar {
     display: flex;
     align-items: center;
-    gap: 20px;
-    flex-shrink: 0;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 1rem 0 1.5rem 0;
 }
 
-.scorecard-numeric-badge {
-    text-align: right;
+.scorecard-filter-btn {
+    background: rgba(15, 23, 42, 0.04);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-body);
 }
 
-.scorecard-big-number {
-    font-size: 1.5rem;
+.scorecard-filter-btn:hover {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.2);
+    color: var(--primary);
+}
+
+.scorecard-filter-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+}
+
+/* 2-Column Responsive Card Grid */
+.scorecard-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .scorecard-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Individual Visual Card */
+.scorecard-visual-card {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.09);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.scorecard-visual-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.1), 0 6px 16px -2px rgba(15, 23, 42, 0.04);
+    border-color: rgba(124, 58, 237, 0.25);
+}
+
+.scorecard-visual-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--card-track-gradient, linear-gradient(90deg, #7c3aed, #06b6d4));
+}
+
+.card-top-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.card-track-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.card-date-duration {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.card-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.card-title-group h3 {
+    margin: 0;
+    font-size: 1.12rem;
     font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.35;
+}
+
+/* Score Hero Block inside Card */
+.card-score-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(248, 250, 252, 0.85);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.card-score-num-box {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.card-score-big {
+    font-size: 1.85rem;
     font-family: var(--font-display);
+    font-weight: 800;
     color: var(--primary);
     line-height: 1;
 }
 
-.scorecard-verdict-tag {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--success);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-top: 2px;
+.card-score-denom {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
 }
+
+.card-verdict-tag {
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+/* Panelists Roster Row */
+.card-panelists-roster {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.roster-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+}
+
+.roster-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.roster-panelist-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.roster-avatar-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Visual Rubric Progress Meters */
+.card-rubric-meters {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 0;
+    border-top: 1px solid rgba(15, 23, 42, 0.06);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+/* Executive Quote Box */
+.card-quote-box {
+    background: rgba(248, 250, 252, 0.95);
+    border-left: 3px solid var(--primary);
+    padding: 10px 12px;
+    border-radius: 0 10px 10px 0;
+    font-size: 0.82rem;
+    font-style: italic;
+    color: var(--text-secondary);
+    line-height: 1.45;
+}
+
+/* Full Width Action CTA */
+.view-scorecard-card-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 0;
+    font-size: 0.88rem;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border: none;
+}
+
+.view-scorecard-card-btn:hover {
+    transform: translateY(-1px);
+}
+
 
 /* Modal Overlay & Dialog */
 .scorecard-modal-backdrop {

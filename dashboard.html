@@ -91,64 +91,255 @@
             </div>
         </section>
 
-        <!-- North Star Performance Matrix -->
+        <!-- North Star Performance Matrix (Informative & Benchmark-Driven) -->
         <section class="metrics-grid">
-            <div class="metric-card-glass">
-                <div class="metric-header">
-                    <span>Overall Readiness Score</span>
-                    <div class="metric-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <!-- Metric 1: Overall Readiness Score -->
+            <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #7c3aed, #6366f1);">
+                <div class="metric-header-top">
+                    <div class="metric-icon-badge" style="background: rgba(124, 58, 237, 0.1); color: var(--primary);">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <span class="metric-benchmark-tag" style="background: rgba(124, 58, 237, 0.1); color: var(--primary);">
+                        <i class="fa-solid fa-award"></i> Top 10% Candidate
+                    </span>
                 </div>
-                <div class="metric-value">
-                    88%
-                    <span class="metric-trend trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +6%</span>
+                
+                <div class="metric-title-group">
+                    <span class="metric-title-label">
+                        Overall Readiness Score
+                        <i class="fa-solid fa-circle-info" style="font-size: 0.85rem; color: var(--text-muted);" title="Weighted composite score across all multi-role panelists"></i>
+                    </span>
                 </div>
-                <div class="metric-sub">Cross-panel readiness average</div>
-                <div class="micro-badges">
-                    <span class="micro-badge" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">Consensus: Strong Hire</span>
+
+                <div class="metric-score-row">
+                    <div class="metric-main-val">
+                        88%
+                        <span class="metric-trend trend-up" style="font-size: 0.85rem; margin-left: 6px;"><i class="fa-solid fa-arrow-trend-up"></i> +6%</span>
+                    </div>
+                    <span class="metric-verdict-pill" style="background: rgba(16, 185, 129, 0.12); color: var(--success);">
+                        <i class="fa-solid fa-circle-check"></i> Strong Hire
+                    </span>
+                </div>
+
+                <div class="metric-info-explain">
+                    <strong>What is this?</strong> Composite readiness index aggregating all 3 panelist evaluations (Tech Lead 40%, Hiring Mgr 35%, Bar Raiser 25%). Scores above 85% signal immediate final-loop readiness.
+                </div>
+
+                <div class="submetric-progress-group">
+                    <div class="submetric-item">
+                        <div class="submetric-labels">
+                            <span>Tech Lead Consensus</span>
+                            <span>93%</span>
+                        </div>
+                        <div class="submetric-track-bar">
+                            <div class="submetric-fill-bar" style="width: 93%; background: #7c3aed;"></div>
+                        </div>
+                    </div>
+                    <div class="submetric-item">
+                        <div class="submetric-labels">
+                            <span>Hiring Manager Alignment</span>
+                            <span>90%</span>
+                        </div>
+                        <div class="submetric-track-bar">
+                            <div class="submetric-fill-bar" style="width: 90%; background: #8b5cf6;"></div>
+                        </div>
+                    </div>
+                    <div class="submetric-item">
+                        <div class="submetric-labels">
+                            <span>Bar Raiser Verdict</span>
+                            <span>88%</span>
+                        </div>
+                        <div class="submetric-track-bar">
+                            <div class="submetric-fill-bar" style="width: 88%; background: #a78bfa;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="metric-card-glass">
-                <div class="metric-header">
-                    <span>STAR Behavioral Structure</span>
-                    <div class="metric-icon"><i class="fa-solid fa-comments"></i></div>
+            <!-- Metric 2: STAR Behavioral Structure -->
+            <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #06b6d4, #3b82f6);">
+                <div class="metric-header-top">
+                    <div class="metric-icon-badge" style="background: rgba(6, 182, 212, 0.1); color: var(--accent);">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <span class="metric-benchmark-tag" style="background: rgba(6, 182, 212, 0.1); color: #0891b2;">
+                        <i class="fa-solid fa-bullseye"></i> High Precision
+                    </span>
                 </div>
-                <div class="metric-value">
-                    A- <span style="font-size: 1rem; color: var(--text-secondary);">(92%)</span>
+
+                <div class="metric-title-group">
+                    <span class="metric-title-label">
+                        STAR Behavioral Structure
+                        <i class="fa-solid fa-circle-info" style="font-size: 0.85rem; color: var(--text-muted);" title="Situation, Task, Action, Result storytelling structure"></i>
+                    </span>
                 </div>
-                <div class="metric-sub">Situation, Task, Action, Result</div>
-                <div class="micro-badges">
-                    <span class="micro-badge">Concise Pacing</span>
-                    <span class="micro-badge" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">Fillers: &lt; 2%</span>
+
+                <div class="metric-score-row">
+                    <div class="metric-main-val">
+                        A- <span style="font-size: 1.1rem; color: var(--text-muted); font-weight: 600;">(92%)</span>
+                    </div>
+                    <span class="metric-verdict-pill" style="background: rgba(6, 182, 212, 0.12); color: #0891b2;">
+                        <i class="fa-solid fa-sparkles"></i> Structured
+                    </span>
+                </div>
+
+                <div class="metric-info-explain">
+                    <strong>What is this?</strong> Measures strict adherence to Situation-Task-Action-Result format. Confirms clear personal ownership (Action) and quantified business ROI (Result) with &lt;2% filler words.
+                </div>
+
+                <div class="submetric-progress-group">
+                    <div class="submetric-item">
+                        <div class="submetric-labels">
+                            <span>Situation & Task Framing</span>
+                            <span>94%</span>
+                        </div>
+                        <div class="submetric-track-bar">
+                            <div class="submetric-fill-bar" style="width: 94%; background: #06b6d4;"></div>
+                        </div>
+                    </div>
+                    <div class="submetric-item">
+                        <div class="submetric-labels">
+                            <span>Action Specificity & Ownership</span>
+                            <span>95%</span>
+                        </div>
+                        <div class="submetric-track-bar">
+                            <div class="submetric-fill-bar" style="width: 95%; background: #0284c7;"></div>
+                        </div>
+                    </div>
+                    <div class="submetric-item">
+                        <div class="submetric-labels">
+                            <span>Quantified Business ROI</span>
+                            <span>89%</span>
+                        </div>
+                        <div class="submetric-track-bar">
+                            <div class="submetric-fill-bar" style="width: 89%; background: #38bdf8;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="metric-card-glass">
-                <div class="metric-header">
-                    <span>Technical Architecture Depth</span>
-                    <div class="metric-icon"><i class="fa-solid fa-network-wired"></i></div>
+            <!-- Metric 3: Technical Architecture Depth -->
+            <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #10b981, #059669);">
+                <div class="metric-header-top">
+                    <div class="metric-icon-badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                        <i class="fa-solid fa-network-wired"></i>
+                    </div>
+                    <span class="metric-benchmark-tag" style="background: rgba(16, 185, 129, 0.1); color: #059669;">
+                        <i class="fa-solid fa-microchip"></i> Staff Tier
+                    </span>
                 </div>
-                <div class="metric-value">
-                    91%
+
+                <div class="metric-title-group">
+                    <span class="metric-title-label">
+                        Technical Architecture Depth
+                        <i class="fa-solid fa-circle-info" style="font-size: 0.85rem; color: var(--text-muted);" title="Distributed scalability, trade-off defense, and fault tolerance"></i>
+                    </span>
                 </div>
-                <div class="metric-sub">Systems design & trade-off defense</div>
-                <div class="micro-badges">
-                    <span class="micro-badge">Distributed Systems Match</span>
+
+                <div class="metric-score-row">
+                    <div class="metric-main-val">
+                        91%
+                    </div>
+                    <span class="metric-verdict-pill" style="background: rgba(16, 185, 129, 0.12); color: var(--success);">
+                        <i class="fa-solid fa-shield-halved"></i> Trade-offs Defended
+                    </span>
+                </div>
+
+                <div class="metric-info-explain">
+                    <strong>What is this?</strong> Assesses distributed system scalability reasoning, trade-off justification (CAP theorem, caching, rate limiting), and composure under edge-case stress pushback.
+                </div>
+
+                <div class="submetric-progress-group">
+                    <div class="submetric-item">
+                        <div class="submetric-labels">
+                            <span>Scalability & Concurrency</span>
+                            <span>94%</span>
+                        </div>
+                        <div class="submetric-track-bar">
+                            <div class="submetric-fill-bar" style="width: 94%; background: #10b981;"></div>
+                        </div>
+                    </div>
+                    <div class="submetric-item">
+                        <div class="submetric-labels">
+                            <span>Trade-Off Articulation</span>
+                            <span>90%</span>
+                        </div>
+                        <div class="submetric-track-bar">
+                            <div class="submetric-fill-bar" style="width: 90%; background: #059669;"></div>
+                        </div>
+                    </div>
+                    <div class="submetric-item">
+                        <div class="submetric-labels">
+                            <span>Failure Mode Resilience</span>
+                            <span>89%</span>
+                        </div>
+                        <div class="submetric-track-bar">
+                            <div class="submetric-fill-bar" style="width: 89%; background: #34d399;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="metric-card-glass">
-                <div class="metric-header">
-                    <span>Agora Real-Time Voice Flow</span>
-                    <div class="metric-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+            <!-- Metric 4: Agora Real-Time Voice Flow -->
+            <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #f59e0b, #ea580c);">
+                <div class="metric-header-top">
+                    <div class="metric-icon-badge" style="background: rgba(245, 158, 11, 0.1); color: #d97706;">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <span class="metric-benchmark-tag" style="background: rgba(245, 158, 11, 0.1); color: #d97706;">
+                        <i class="fa-solid fa-gauge-high"></i> 185ms Latency
+                    </span>
                 </div>
-                <div class="metric-value">
-                    94%
-                    <span class="metric-trend trend-up"><i class="fa-solid fa-caret-up"></i> &lt;250ms</span>
+
+                <div class="metric-title-group">
+                    <span class="metric-title-label">
+                        Agora Real-Time Voice Flow
+                        <i class="fa-solid fa-circle-info" style="font-size: 0.85rem; color: var(--text-muted);" title="Conversational pacing, latency, and barge-in handling on Agora SD-RTN"></i>
+                    </span>
                 </div>
-                <div class="metric-sub">Turn-taking responsiveness</div>
-                <div class="micro-badges">
-                    <span class="micro-badge"><i class="fa-solid fa-microphone-lines"></i> Natural Cadence</span>
+
+                <div class="metric-score-row">
+                    <div class="metric-main-val">
+                        94%
+                        <span class="metric-trend trend-up" style="font-size: 0.85rem; margin-left: 6px;"><i class="fa-solid fa-caret-up"></i> Optimal</span>
+                    </div>
+                    <span class="metric-verdict-pill" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
+                        <i class="fa-solid fa-microphone"></i> Natural Cadence
+                    </span>
+                </div>
+
+                <div class="metric-info-explain">
+                    <strong>What is this?</strong> Real-time voice telemetry over Agora SD-RTN. Measures sub-250ms conversational latency, thoughtful pause control, and graceful barge-in recovery during interruptions.
+                </div>
+
+                <div class="submetric-progress-group">
+                    <div class="submetric-item">
+                        <div class="submetric-labels">
+                            <span>Turn-Taking Response (185ms)</span>
+                            <span>96%</span>
+                        </div>
+                        <div class="submetric-track-bar">
+                            <div class="submetric-fill-bar" style="width: 96%; background: #f59e0b;"></div>
+                        </div>
+                    </div>
+                    <div class="submetric-item">
+                        <div class="submetric-labels">
+                            <span>Barge-in / Interruption Recovery</span>
+                            <span>94%</span>
+                        </div>
+                        <div class="submetric-track-bar">
+                            <div class="submetric-fill-bar" style="width: 94%; background: #ea580c;"></div>
+                        </div>
+                    </div>
+                    <div class="submetric-item">
+                        <div class="submetric-labels">
+                            <span>Cadence & Vocal Steadiness</span>
+                            <span>93%</span>
+                        </div>
+                        <div class="submetric-track-bar">
+                            <div class="submetric-fill-bar" style="width: 93%; background: #fbbf24;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -156,17 +347,26 @@
         <!-- Main Two-Column Work Layout -->
         <section class="dashboard-work-area">
             
-            <!-- Left Column: Scorecards & History -->
+            <!-- Left Column: Scorecards & History (Visual Card System) -->
             <div class="panel-section" id="scorecards-section">
-                <div class="glass-panel">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                <div class="glass-panel" style="padding: 1.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 12px;">
                         <div>
-                            <h2 class="panel-title" style="font-size: 1.25rem;"><i class="fa-solid fa-clipboard-check" style="color: var(--primary);"></i> Committee Scorecard History</h2>
-                            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 4px;">Inspect past multi-agent evaluation sessions, panelist rubrics, cited performance quotes, and complete voice conversation transcripts.</p>
+                            <h2 class="panel-title" style="font-size: 1.25rem;"><i class="fa-solid fa-clipboard-check" style="color: var(--primary);"></i> Committee Scorecard Deck</h2>
+                            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 4px;">Interactive multi-agent evaluation cards. Select any session to review panelist rubrics, cited performance quotes, and complete voice conversation transcripts.</p>
                         </div>
                     </div>
 
-                    <div class="scorecards-container" id="scorecards-list" style="margin-top: 1.25rem;">
+                    <!-- Category Filter Bar -->
+                    <div class="scorecards-filter-bar">
+                        <button class="scorecard-filter-btn active" data-filter="all"><i class="fa-solid fa-border-all"></i> All Panels (4)</button>
+                        <button class="scorecard-filter-btn" data-filter="systems"><i class="fa-solid fa-laptop-code"></i> Engineering (2)</button>
+                        <button class="scorecard-filter-btn" data-filter="product"><i class="fa-solid fa-cubes"></i> Product (1)</button>
+                        <button class="scorecard-filter-btn" data-filter="leadership"><i class="fa-solid fa-people-group"></i> Leadership (1)</button>
+                    </div>
+
+                    <!-- Dynamic Card Grid Container -->
+                    <div class="scorecard-cards-grid" id="scorecards-grid">
                         <!-- Rendered by js/dashboard.js -->
                     </div>
                 </div>
