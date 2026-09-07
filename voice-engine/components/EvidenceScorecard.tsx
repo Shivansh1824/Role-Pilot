@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { TRACK_EVALUATIONS, PANEL_CONFIGS } from '@/lib/panel';
 import { isAgentUid } from '@/lib/agora';
 import { ScorecardImpactSpotlight } from './ScorecardImpactSpotlight';
+import { ScorecardLoadingView } from './ScorecardLoadingView';
 
 export type TranscriptEntry = {
   turn_id?: string | number;
@@ -133,10 +134,17 @@ export function EvidenceScorecard({
       }
     }
 
+    const safetyTimer = setTimeout(() => {
+      if (!isCancelled) {
+        setIsEvaluating(false);
+      }
+    }, 16000);
+
     fetchAiEvaluation();
 
     return () => {
       isCancelled = true;
+      clearTimeout(safetyTimer);
     };
   }, [transcript, agentUID, role, level, difficulty, trackKey, candidateName]);
 
@@ -299,6 +307,19 @@ export function EvidenceScorecard({
     ? aiEvaluation.evidenceList
     : fallbackEvidenceList;
 
+  if (isEvaluating) {
+    return (
+      <ScorecardLoadingView
+        role={role}
+        level={level}
+        difficulty={difficulty}
+        candidateName={candidateName}
+        transcriptLength={transcript?.length || 0}
+        panelists={panelists}
+      />
+    );
+  }
+
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto bg-transparent p-4 md:p-8 text-left animate-fade-in">
       <div className="mx-auto w-full max-w-5xl space-y-6">
@@ -339,16 +360,6 @@ export function EvidenceScorecard({
             </Button>
           </div>
         </div>
-
-        {/* Live Gemini 3.5 Flash Evaluation Banner */}
-        {isEvaluating && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-primary/40 bg-primary/10 text-xs text-primary animate-pulse">
-            <Sparkles className="h-4 w-4 animate-spin shrink-0 text-primary" />
-            <div className="flex-1">
-              <strong>Gemini 3.5 Flash Evaluation in progress:</strong> Calibrating {level} experience tier on {difficulty} difficulty, testing technical correctness, and computing quantifiable impact hits...
-            </div>
-          </div>
-        )}
 
         {/* Overall Recommendation Banner */}
         <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/30 via-card/50 to-emerald-950/20 p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xl">
