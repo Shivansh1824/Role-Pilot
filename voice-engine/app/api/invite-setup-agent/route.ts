@@ -144,29 +144,29 @@ CONVERSATIONAL STAGES (Pacing: Ask ONLY 1 question at a time):
      * Speak clearly: "Awesome! Opening your panel room now. Best of luck with Alex, Mark, and David!"
      * The system will automatically detect your verbal launch command and transfer the candidate into the panel interview room.`;
 
-    const geminiKey = process.env.GEMINI_API_KEY_NOVA || process.env.GEMINI_API_KEY;
-    const publicTunnel = process.env.PUBLIC_URL || process.env.TUNNEL_URL;
+    const hostHeader = request.headers.get('host');
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const requestHost = hostHeader && !hostHeader.includes('localhost') && !hostHeader.includes('127.0.0.1')
+      ? `${protocol}://${hostHeader}`
+      : null;
 
-    // Use CustomLLM only if a public tunnel URL is provided (Agora Cloud blocks localhost/127.0.0.1)
-    const llmProvider = (publicTunnel && publicTunnel.startsWith("http"))
-      ? new CustomLLM({
-        url: `${publicTunnel}/api/setup-agent-llm`,
-        apiKey: "dummy-key",
-        model: "gemini-3.6-flash",
-        greetingMessage: greetingText,
-        failureMessage: "Please wait a moment.",
-        maxHistory: 50,
-        params: { max_tokens: 512, temperature: 0.7, top_p: 0.95 },
-      })
-      : new OpenAI({
-        apiKey: geminiKey || "dummy",
-        model: "gemini-3.1-flash-lite",
-        url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-        greetingMessage: greetingText,
-        failureMessage: "Please wait a moment.",
-        maxHistory: 50,
-        temperature: 0.7,
-      });
+    const publicHost = process.env.PUBLIC_URL ||
+                       process.env.TUNNEL_URL ||
+                       requestHost ||
+                       (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
+                       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                       'https://voice-engine-kappa.vercel.app';
+
+    // Dedicated custom brain for Nova using Gemini 3.1 Flash Lite
+    const llmProvider = new CustomLLM({
+      url: `${publicHost}/api/setup-agent-llm`,
+      apiKey: "dummy-key",
+      model: "gemini-3.1-flash-lite",
+      greetingMessage: greetingText,
+      failureMessage: "Please wait a moment.",
+      maxHistory: 50,
+      params: { max_tokens: 512, temperature: 0.7, top_p: 0.95 },
+    });
 
     const agent = new Agent({
       client,

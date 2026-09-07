@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY_APP || process.env.GEMINI_API_KEY });
 
 export async function POST(request: NextRequest) {
   try {
@@ -83,29 +82,43 @@ You MUST output ONLY valid JSON in the exact following structure:
   "ready_to_launch": boolean
 }`;
 
+    const keys = Array.from(
+      new Set(
+        [
+          process.env.GEMINI_API_KEY_APP,
+          process.env.GEMINI_API_KEY_NOVA,
+          process.env.GEMINI_API_KEY_INTERVIEW,
+          process.env.GEMINI_API_KEY,
+        ].filter(Boolean) as string[],
+      ),
+    );
+
     let responseText = '';
-    const modelsToTry = ['gemini-3.6-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash'];
     let lastError = null;
 
-    for (const modelName of modelsToTry) {
-      try {
-        const response = await ai.models.generateContent({
-          model: modelName,
-          contents: [
-            systemInstruction,
-            `Latest Conversation Transcript:\n${transcript}`
-          ],
-          config: {
-            temperature: 0.1,
-            responseMimeType: 'application/json'
-          }
-        });
-        responseText = response.text?.trim() || '{}';
-        if (responseText) break;
-      } catch (err) {
-        lastError = err;
-        console.warn(`Model ${modelName} failed, attempting next model...`, err);
+    for (const key of keys) {
+      const client = new GoogleGenAI({ apiKey: key });
+      for (const modelName of ['gemini-3.1-flash-lite', 'gemini-3.6-flash']) {
+        try {
+          const response = await client.models.generateContent({
+            model: modelName,
+            contents: [
+              systemInstruction,
+              `Latest Conversation Transcript:\n${transcript}`,
+            ],
+            config: {
+              temperature: 0.1,
+              responseMimeType: 'application/json',
+            },
+          });
+          responseText = response.text?.trim() || '{}';
+          if (responseText) break;
+        } catch (err: any) {
+          lastError = err;
+          console.warn(`[State Parser] Key ...${key.slice(-4)} with ${modelName} failed:`, err.message || err);
+        }
       }
+      if (responseText) break;
     }
 
     if (!responseText && lastError) {
