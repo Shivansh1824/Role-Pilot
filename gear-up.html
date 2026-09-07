@@ -1670,6 +1670,33 @@
       'overview-popup': false
     };
 
+    let armedModal = null;
+
+    function armModal(modalId) {
+      if (!modalId || modalId === 'none') {
+        armedModal = null;
+        return;
+      }
+      if (completedStages[modalId]) {
+        armedModal = null;
+        return;
+      }
+      armedModal = modalId;
+    }
+    window.armModal = armModal;
+
+    function triggerArmedModal() {
+      if (!armedModal) return;
+      if (completedStages[armedModal]) {
+        armedModal = null;
+        return;
+      }
+      const target = armedModal;
+      armedModal = null;
+      syncModalState(target);
+    }
+    window.triggerArmedModal = triggerArmedModal;
+
     function closeAllPopups() {
       document.querySelectorAll('.popup-overlay.show').forEach(p => {
         p.classList.remove('show');
@@ -1952,8 +1979,9 @@
         document.getElementById('hud-name').classList.add('captured');
         addOrUpdateChatMessage('system', `✓ Identity confirmed as ${state.name}`);
         state.activeStep = 'role';
+        armModal('role-popup');
         updateGuidanceAndProgress();
-        scheduleStateParse();
+        scheduleStateParse(true);
       } else if (actionType === 'role') {
         confirmRole(text);
       } else if (actionType === 'experience') {
@@ -1961,9 +1989,12 @@
       } else if (actionType === 'launch') {
         enterPanelRoom();
       } else {
-        scheduleStateParse();
+        scheduleStateParse(true);
       }
     };
+
+    let isNovaSpeakingFlag = false;
+    let hasNovaSpokenAnyTurn = false;
 
     function updateStatus(type, text) {
       const capsule = document.getElementById('status-capsule');
@@ -1971,6 +2002,9 @@
       document.getElementById('status-text').textContent = text;
     }
     function setNovaSpeaking(speaking) {
+      const wasSpeaking = isNovaSpeakingFlag;
+      isNovaSpeakingFlag = speaking;
+      if (speaking) hasNovaSpokenAnyTurn = true;
       document.getElementById('nova-orb').classList.toggle('speaking', speaking);
       if (speaking) {
         updateStatus('speaking', 'Nova is speaking…');
@@ -1978,6 +2012,9 @@
       } else {
         updateStatus('listening', 'Listening to you…');
         setSpeakerIndicator('Listening to your voice…', false, true);
+        if (wasSpeaking && armedModal) {
+          triggerArmedModal();
+        }
       }
     }
     function showDialogue(speaker, text) {
@@ -2250,10 +2287,15 @@
           }
 
           transcriptBuffer.push(`Nova: ${text}`);
-          scheduleStateParse();
+
+          // Nova finished speaking her question for this stage!
+          setNovaSpeaking(false);
+          triggerArmedModal(); // 0ms INSTANT POPUP!
+
+          scheduleStateParse(false);
           setTimeout(() => {
             if (!remoteAudioTrack?.isPlaying) setNovaSpeaking(false);
-          }, 800);
+          }, 400);
         }
       } else if (isUser) {
         agoraUserSttActive = true;
@@ -2261,6 +2303,11 @@
         setSpeakerIndicator('Listening to your voice…', false, true);
         showDialogue('You', text);
         addOrUpdateChatMessage('user', text, turnId);
+
+        // When user starts answering the question, dismiss active input modal immediately
+        if (currentOpenModal && currentOpenModal !== 'overview-popup') {
+          closeAllPopups();
+        }
 
         // ── USER COMPLETED TURN ──
         if (isEnd) {
@@ -2287,7 +2334,7 @@
           }
 
           transcriptBuffer.push(`User: ${text}`);
-          scheduleStateParse();
+          scheduleStateParse(true);
         }
       }
     }
@@ -2492,8 +2539,12 @@
                   autoLaunchPanelRoom('Candidate query (speechRec): ' + text, 1800);
                 }
 
+                if (currentOpenModal && currentOpenModal !== 'overview-popup') {
+                  closeAllPopups();
+                }
+
                 transcriptBuffer.push(`User: ${text}`);
-                scheduleStateParse();
+                scheduleStateParse(true);
               }
             }
           }
@@ -2508,9 +2559,22 @@
     }
 
     // ─── DEBOUNCED STATE PARSER & POPUP STEP SYNCHRONIZATION ─────────────
-    function scheduleStateParse() {
-      if (parseDebounce) clearTimeout(parseDebounce);
-      parseDebounce = setTimeout(async () => {
+    let parseDebounce = null;
+    let isParsingActive = false;
+    let pendingImmediateParse = false;
+
+    function scheduleStateParse(immediate = false) {
+      if (parseDebounce) {
+        clearTimeout(parseDebounce);
+        parseDebounce = null;
+      }
+
+      const runParse = async () => {
+        if (isParsingActive) {
+          pendingImmediateParse = true;
+          return;
+        }
+        isParsingActive = true;
         const transcript = transcriptBuffer.slice(-6).join('\n');
         try {
           const res = await fetch(PARSE_STATE_API, {
@@ -2528,11 +2592,26 @@
               }
             })
           });
-          if (!res.ok) return;
-          const { state: parsed } = await res.json();
-          applyParsedState(parsed);
-        } catch (_) {}
-      }, 700);
+          if (res.ok) {
+            const { state: parsed } = await res.json();
+            applyParsedState(parsed);
+          }
+        } catch (e) {
+          console.warn('[State Parser Error]:', e);
+        } finally {
+          isParsingActive = false;
+          if (pendingImmediateParse) {
+            pendingImmediateParse = false;
+            scheduleStateParse(true);
+          }
+        }
+      };
+
+      if (immediate) {
+        runParse();
+      } else {
+        parseDebounce = setTimeout(runParse, 400);
+      }
     }
 
     function applyParsedState(parsed) {
@@ -2545,16 +2624,31 @@
         document.getElementById('val-name').classList.remove('empty');
         document.getElementById('hud-name').classList.add('captured');
         addOrUpdateChatMessage('system', `✓ Identity confirmed as ${parsed.name}`);
+        if (!state.role && !completedStages['role-popup']) {
+          armModal('role-popup');
+        }
       }
 
       // 2. Target Role & Track
-      if (parsed.target_role && !state.role) {
-        confirmRole(parsed.target_role, parsed.resolved_track);
+      if (parsed.target_role) {
+        completedStages['role-popup'] = true;
+        if (!state.role) {
+          confirmRole(parsed.target_role, parsed.resolved_track);
+        }
+        if (!state.experienceTier && !completedStages['exp-popup']) {
+          armModal('exp-popup');
+        }
       }
 
       // 3. Experience Tier
-      if (parsed.experience_tier && !state.experienceTier) {
-        confirmExperience(parsed.experience_tier);
+      if (parsed.experience_tier) {
+        completedStages['exp-popup'] = true;
+        if (!state.experienceTier) {
+          confirmExperience(parsed.experience_tier);
+        }
+        if (!completedStages['overview-popup']) {
+          armModal('overview-popup');
+        }
       }
 
       // 4. Active Step & Modal Sync driven by Gemini
@@ -2562,12 +2656,32 @@
         state.activeStep = parsed.active_step;
       }
 
-      // Synchronize visual popup with Gemini's active modal decision
-      if (parsed.modal_to_display) {
-        syncModalState(parsed.modal_to_display);
+      // 5. Pre-arm modal from Gemini's brain
+      if (parsed.armed_modal) {
+        armModal(parsed.armed_modal);
       }
 
-      // Only auto-launch if parser says ready
+      // 6. Synchronize visual popup with Gemini's active modal decision
+      if (parsed.modal_to_display === 'none' || parsed.modal_to_display === 'close_all') {
+        closeAllPopups();
+      } else if (parsed.modal_to_display) {
+        // If Nova is still actively speaking, do not interrupt her speech with a popup — keep it armed!
+        if (isNovaSpeakingFlag || remoteAudioTrack?.isPlaying) {
+          armModal(parsed.modal_to_display);
+        } else {
+          // Nova has already finished speaking, show the modal immediately
+          syncModalState(parsed.modal_to_display);
+        }
+      }
+
+      // Fast-trigger if modal is armed AND Nova is NOT speaking!
+      if (armedModal && !isNovaSpeakingFlag && (!remoteAudioTrack || !remoteAudioTrack.isPlaying)) {
+        if (hasNovaSpokenAnyTurn) {
+          triggerArmedModal();
+        }
+      }
+
+      // 7. Auto-launch panel if ready
       if (parsed.active_step === 'ready' || parsed.ready_to_launch) {
         autoLaunchPanelRoom('AI State parser confirmed readiness', 2800);
       }
@@ -2578,6 +2692,10 @@
     // ─── ROLE & TRACK CONFIRMATION ────────────────────────────────────────
     window.confirmRole = async function(roleName, trackHint = null) {
       state.role = roleName;
+      completedStages['role-popup'] = true;
+      closePopup('role-popup');
+      armModal('exp-popup');
+      scheduleStateParse(true);
       document.getElementById('val-role').textContent = roleName;
       document.getElementById('val-role').classList.remove('empty');
       document.getElementById('hud-role').classList.add('captured');
@@ -2600,8 +2718,6 @@
 
         if (track && track !== 'unsupported') {
           state.track = track;
-          completedStages['role-popup'] = true;
-          closePopup('role-popup');
           feedback.className = 'panel-feedback matched';
           icon.className = 'fa-solid fa-check-circle';
           text.textContent = `Matched to ${track.toUpperCase()} Panel (Alex, Mark, David).`;
@@ -2624,6 +2740,8 @@
       state.experienceTier = tier;
       completedStages['exp-popup'] = true;
       closePopup('exp-popup');
+      armModal('overview-popup');
+      scheduleStateParse(true);
       document.getElementById('val-exp').textContent = tier.toUpperCase();
       document.getElementById('val-exp').classList.remove('empty');
       document.getElementById('hud-exp').classList.add('captured');

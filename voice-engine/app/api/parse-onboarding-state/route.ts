@@ -45,7 +45,12 @@ Instructions:
    - "experience": Target role is confirmed, and experience level is being asked or chosen.
    - "overview": Both target role and experience tier are confirmed, and Nova is discussing the final overview, resume, difficulty, or readiness.
    - "ready": Candidate confirms readiness to launch into the panel room.
-9. "modal_to_display": The EXACT UI modal to display on the candidate's screen right now:
+9. "armed_modal": The NEXT modal that is pre-armed and gated to open the exact millisecond Nova finishes speaking her question:
+   - "role-popup": When candidate has confirmed identity/name, and Nova is moving to or currently asking Stage 2 (Target Role).
+   - "exp-popup": When candidate has confirmed target role, and Nova is moving to or currently asking Stage 3 (Experience Level).
+   - "overview-popup": When candidate has confirmed experience level, and Nova is moving to or currently presenting Stage 5 (Final Overview / Readiness).
+   - null: When no modal is armed or when stage is already answered.
+10. "modal_to_display": The EXACT UI modal to display on the candidate's screen right now:
    - "none":
      * During Stage 1 (name/identity confirmation).
      * AS SOON AS THE CANDIDATE ANSWERS A QUESTION! (When the candidate answers or selects their target role, the role modal MUST CLOSE immediately -> return "none". When the candidate answers or selects their experience tier, the experience modal MUST CLOSE immediately -> return "none").
@@ -57,11 +62,11 @@ Instructions:
    - "exp-popup": ONLY when Nova's latest utterance is actively asking the candidate for their experience tier (Stage 3 question), AND the candidate has NOT yet answered it in the transcript.
      CRITICAL: As soon as the candidate answers their experience tier, modal_to_display MUST BE "none". It must NEVER open again!
    - "overview-popup": ONLY when Nova's latest utterance is actively presenting the final overview or asking if the candidate is ready for their panel interview to begin (Stage 5 question), AND the candidate has not yet launched.
-10. "ready_to_launch": boolean - true ONLY if candidate verbally confirms readiness ("Yes", "I'm ready", "Open the interview", "Start") or Nova announces opening the panel room.
-11. SINGLE-TAKE RULE: Never clear or overwrite an already-confirmed field unless the candidate explicitly corrects it.
-12. COMPOUND EXTRACTION: If the candidate provides multiple answers in one sentence (e.g. "I'm Shivansh, looking for Software Engineer with 3 years experience"), extract "name", "target_role", and "experience_tier" all at once, set active_step to "overview", and set modal_to_display to "overview-popup".
-13. TYPO & ASR TOLERANCE: Normalize phonetic STT errors (e.g. "sofware enginer" -> "Software Engineer").
-14. OFF-TOPIC FILTERING: Ignore off-topic chatter and preserve existing state.
+11. "ready_to_launch": boolean - true ONLY if candidate verbally confirms readiness ("Yes", "I'm ready", "Open the interview", "Start") or Nova announces opening the panel room.
+12. SINGLE-TAKE RULE: Never clear or overwrite an already-confirmed field unless the candidate explicitly corrects it.
+13. COMPOUND EXTRACTION: If the candidate provides multiple answers in one sentence (e.g. "I'm Shivansh, looking for Software Engineer with 3 years experience"), extract "name", "target_role", and "experience_tier" all at once, set active_step to "overview", and set modal_to_display to "overview-popup".
+14. TYPO & ASR TOLERANCE: Normalize phonetic STT errors (e.g. "sofware enginer" -> "Software Engineer").
+15. OFF-TOPIC FILTERING: Ignore off-topic chatter and preserve existing state.
 
 You MUST output ONLY valid JSON in the exact following structure:
 {
@@ -73,6 +78,7 @@ You MUST output ONLY valid JSON in the exact following structure:
   "resume_choice": "saved" | "upload" | "quick" | null,
   "difficulty_mode": "auto" | "easy" | "medium" | "hard" | null,
   "active_step": "name" | "role" | "experience" | "overview" | "ready",
+  "armed_modal": "role-popup" | "exp-popup" | "overview-popup" | null,
   "modal_to_display": "none" | "role-popup" | "exp-popup" | "overview-popup",
   "ready_to_launch": boolean
 }`;
