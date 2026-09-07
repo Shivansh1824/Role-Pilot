@@ -18,11 +18,14 @@ ${JSON.stringify(currentState || {}, null, 2)}
 
 Instructions:
 1. "name": Candidate's confirmed name (string | null).
-   - If candidate confirms their profile name (e.g. "Yes, I am Shivansh", "Yes, that's me", "Yes, ready to gear up", "I'm ready", "Yes"), lock in their profile name.
-   - If candidate introduces a new name (e.g. "No, it's for Rahul"), extract that new name.
-   - CRITICAL: While candidate has NOT yet spoken or responded in the transcript, "name" must remain null. Never treat Nova's spoken greeting as candidate confirmation.
+   - Can ONLY be confirmed when a "User: ..." utterance in the transcript confirms it (e.g. User says "Yes, I am Shivansh", "Yes, ready to gear up", "I'm ready", "Yes", "That's me").
+   - If candidate introduces a new name (e.g. User says "No, it's for Rahul"), extract that new name.
+   - CRITICAL: Never extract name from Nova's speech! While candidate has not yet answered in a "User: ..." utterance, "name" MUST remain null.
 2. "is_own_profile": boolean | null - true if candidate confirms it's their own profile, false if for someone else.
-3. "target_role": The target job role (e.g. "Software Engineer", "Full Stack Developer", "Product Manager") or null if not yet provided.
+3. "target_role": The target job role (e.g. "Software Engineer", "Full Stack Developer", "Product Manager", "Mobile Developer") or null if not yet provided.
+   - CRITICAL: "target_role" can ONLY be confirmed when the CANDIDATE (User) explicitly states, selects, or confirms their role in a "User: ..." message!
+   - When Nova is asking a question (e.g. "Since your profile lists your target as a Mobile Developer, would you like to stick with that role, or would you prefer to switch to something else?"), Nova is asking a question. The candidate has NOT answered yet!
+   - "target_role" MUST REMAIN NULL until the candidate actually answers in a "User: ..." message!
 4. "resolved_track": Classify target_role into:
    - "tech" (Software, Web, Data, DevOps, Cloud, QA, AI/ML, Security)
    - "product" (Product Manager, Owner, UI/UX Designer, Product Marketing)
@@ -37,22 +40,24 @@ Instructions:
    - "senior" (5 to 8 or 9 years)
    - "lead" (more than 9 years)
    - null if not yet stated.
+   - CRITICAL: "experience_tier" can ONLY be confirmed when the CANDIDATE (User) states it in a "User: ..." message.
 6. "resume_choice": "saved" | "upload" | "quick" | null.
 7. "difficulty_mode": "auto" | "easy" | "medium" | "hard" | null.
 8. "active_step": Determine which step is currently active:
-   - "name": Identity is being confirmed or candidate has not confirmed who they are.
-   - "role": Identity is confirmed, and target role is being asked or chosen.
-   - "experience": Target role is confirmed, and experience level is being asked or chosen.
-   - "overview": Both target role and experience tier are confirmed, and Nova is discussing the final overview, resume, difficulty, or readiness.
+   - "name": Candidate has not yet confirmed identity or readiness in a "User:" message.
+   - "role": Identity is confirmed by candidate, and target role is being asked or chosen.
+   - "experience": Target role is confirmed by candidate, and experience level is being asked or chosen.
+   - "overview": Both target role and experience tier are confirmed by candidate, and Nova is discussing the final overview, resume, difficulty, or readiness.
    - "ready": Candidate confirms readiness to launch into the panel room.
 9. "armed_modal": The NEXT modal that is pre-armed and gated to open the exact millisecond Nova finishes speaking her question:
-   - "role-popup": ONLY when candidate has ALREADY confirmed identity/name, and Nova is moving to or currently asking Stage 2 (Target Role). During Stage 1 (while candidate has not responded), armed_modal MUST BE null.
-   - "exp-popup": When candidate has confirmed target role, and Nova is moving to or currently asking Stage 3 (Experience Level).
-   - "overview-popup": When candidate has confirmed experience level, and Nova is moving to or currently presenting Stage 5 (Final Overview / Readiness).
-   - null: When candidate is in Stage 1, or when no modal is armed, or when stage is already answered.
+   - "role-popup": ONLY when candidate has ALREADY confirmed identity/name in a "User:" message, and Nova is moving to or currently asking Stage 2 (Target Role). During Stage 1, armed_modal MUST BE null.
+   - "exp-popup": ONLY when candidate has ALREADY confirmed target role in a "User:" message, and Nova is moving to or currently asking Stage 3 (Experience Level). If candidate has not yet answered their target role, armed_modal MUST NOT be "exp-popup"!
+   - "overview-popup": ONLY when candidate has ALREADY confirmed experience level in a "User:" message, and Nova is moving to or currently presenting Stage 5 (Final Overview / Readiness).
+   - null: When candidate has not yet answered the current stage question, or when no modal is armed, or when stage is already answered.
 10. "modal_to_display": The EXACT UI modal to display on the candidate's screen right now:
    - "none":
      * During Stage 1 (name/identity confirmation) — NO MODAL MUST EVER BE DISPLAYED DURING STAGE 1!
+     * While Nova is asking a question until Nova finishes speaking!
      * AS SOON AS THE CANDIDATE ANSWERS A QUESTION! (When the candidate answers or selects their target role, the role modal MUST CLOSE immediately -> return "none". When the candidate answers or selects their experience tier, the experience modal MUST CLOSE immediately -> return "none").
      * When Nova is acknowledging an answer, summarizing, or transitioning between steps.
      * When Nova is asking about resumes or difficulty (Stage 4).

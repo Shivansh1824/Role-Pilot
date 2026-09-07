@@ -2324,7 +2324,6 @@
           setNovaSpeaking(false);
           triggerArmedModal(); // 0ms INSTANT POPUP!
 
-          scheduleStateParse(false);
           setTimeout(() => {
             if (!remoteAudioTrack?.isPlaying) setNovaSpeaking(false);
           }, 400);
