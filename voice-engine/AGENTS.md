@@ -235,3 +235,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Both voice assistants use `lib/gemini-voice.ts` through the setup/interview LLM routes. Preserve provider key priority, nonempty replies, stable OpenAI SSE turn IDs, and the rule that fallback is allowed only before text has been emitted. Never convert all-provider failure into a successful empty stream. Keep `verify:voice` in the aggregate verification and use `doctor:ai` explicitly for live key/billing/quota diagnostics. These custom routes require Gemini keys, unlike the upstream managed-LLM recipe. Public callback URL configuration still applies to local testing.
 
 Keep test factories outside `route.ts` files. The optional OpenAI proxy factory is in `app/api/chat/completions/handler.ts`; Next.js rejects arbitrary route exports.
+
+Interview completion uses a timer owned by the ending state, independent of transcript updates. Evaluation opens before remote agent shutdown, whose request is bounded to 10 seconds.

@@ -212,3 +212,5 @@ Run `pnpm run doctor:ai` to test actual text generation with every configured ke
 The optional OpenAI proxy factory lives in `app/api/chat/completions/handler.ts`; its route exports only the HTTP handler to satisfy Next.js route validation.
 
 For Git-triggered production deployments, the Vercel `voice-engine` project uses the `Role-Pilot` repository, production branch `main`, Root Directory `voice-engine`, and Include source files outside the Root Directory enabled so static assets can sync from the repository root. Provider credentials are stored as encrypted Vercel environment variables.
+
+Interview completion uses a timer owned by the ending state, independent of transcript updates. Evaluation opens before remote agent shutdown, whose request is bounded to 10 seconds.

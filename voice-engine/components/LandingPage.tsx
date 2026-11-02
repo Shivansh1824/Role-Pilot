@@ -224,6 +224,12 @@ export default function LandingPage() {
   );
 
   const handleEndConversation = async (transcript?: any[]) => {
+    // Open evaluation immediately; remote shutdown must not block the scorecard.
+    if (transcript && transcript.length > 0) setFinalTranscript(transcript);
+    setShowConversation(false);
+    setShowScorecard(true);
+    rtmClient?.logout().catch((err) => console.error('RTM logout error:', err));
+    setRtmClient(null);
     // Stop the AI agent(s)
     const agentIdsToStop = agoraData?.agentIds && agoraData.agentIds.length > 0
       ? agoraData.agentIds
@@ -234,6 +240,7 @@ export default function LandingPage() {
     if (agentIdsToStop.length > 0) {
       try {
         const response = await fetch('/api/stop-conversation', {
+          signal: AbortSignal.timeout(10000),
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ agent_ids: agentIdsToStop }),
@@ -246,16 +253,7 @@ export default function LandingPage() {
       }
     }
 
-    // Save transcript and switch to Scorecard
-    if (transcript && transcript.length > 0) {
-      setFinalTranscript(transcript);
-    }
-    
-    // Tear down RTM
-    rtmClient?.logout().catch((err) => console.error('RTM logout error:', err));
-    setRtmClient(null);
-    setShowConversation(false);
-    setShowScorecard(true);
+
   };
 
   return (

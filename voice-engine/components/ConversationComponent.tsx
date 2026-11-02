@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import AgoraRTC, {
   useRTCClient,
   useLocalMicrophoneTrack,
@@ -529,6 +529,15 @@ export default function ConversationComponent({
     onEndConversation(messageList);
   }, [onEndConversation, messageList]);
 
+  const endConversationRef = useRef(handleEndConversation);
+  useEffect(() => { endConversationRef.current = handleEndConversation; }, [handleEndConversation]);
+  const endDelayRef = useRef(1800);
+  useEffect(() => {
+    if (!isEndingSession) return;
+    const timer = setTimeout(() => { void endConversationRef.current(); }, endDelayRef.current);
+    return () => clearTimeout(timer);
+  }, [isEndingSession]);
+
   // Track hits from transcript with comprehensive matching
   const hitCount = useMemo(() => {
     let hits = 0;
@@ -614,13 +623,8 @@ export default function ConversationComponent({
     const isMaxHits = hitCount >= 3;
 
     if (isAgentFinishAnnouncement || isCandidateFinishRequest || isMaxHits) {
+      endDelayRef.current = isAgentFinishAnnouncement ? 1800 : isMaxHits ? 2000 : 3500;
       setIsEndingSession(true);
-      // Allow the final concluding spoken sentence to finish before opening scorecard
-      const delay = isAgentFinishAnnouncement ? 1800 : isMaxHits ? 2000 : 3500;
-      const timer = setTimeout(() => {
-        handleEndConversation();
-      }, delay);
-      return () => clearTimeout(timer);
     }
   }, [messageList, currentInProgressMessage, hitCount, client.uid, handleEndConversation]);
 
