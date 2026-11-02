@@ -1,27 +1,123 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Tab Switching Logic
+    // ─── TAB SWITCHING LOGIC ───────────────────────────────────────────────
     const tabs = document.querySelectorAll('.nav-tab');
     const panes = document.querySelectorAll('.dashboard-pane');
 
     tabs.forEach(tab => {
         tab.addEventListener('click', (e) => {
-            // Remove active class from all
             tabs.forEach(t => t.classList.remove('active'));
             panes.forEach(p => p.classList.remove('active'));
 
-            // Add active class to clicked
             tab.classList.add('active');
             const targetId = tab.getAttribute('data-target');
-            document.getElementById(targetId).classList.add('active');
-            
-            // If it's a real user click, stop auto-play
+            const targetPane = document.getElementById(targetId);
+            if (targetPane) targetPane.classList.add('active');
+
             if (e.isTrusted && typeof stopAutoPlay === 'function') {
                 stopAutoPlay();
             }
         });
     });
 
-    // Dashboard Auto-Play Feature
+    // ─── INTERACTIVE TRACK SELECTOR (Tech, Product, Sales, HR) ────────────
+    const trackPills = document.querySelectorAll('.demo-track-pill');
+    const panelRosterContainer = document.getElementById('demo-roster-display');
+    const dialogueSpeaker = document.getElementById('demo-active-speaker');
+    const dialogueText = document.getElementById('demo-active-speech');
+
+    const TRACK_DATA = {
+        tech: {
+            roster: [
+                { name: 'David', role: 'Hiring Manager (Chair)', cls: 'ava-david' },
+                { name: 'Alex', role: 'Technical Lead', cls: 'ava-alex' },
+                { name: 'Mark', role: 'Product Manager', cls: 'ava-mark' }
+            ],
+            speaker: '[Alex (Technical Lead)]',
+            text: '"Let\'s analyze write contention in your PostgreSQL microservice. How did you structure your transaction isolation and connection pooling to prevent deadlocks?"'
+        },
+        product: {
+            roster: [
+                { name: 'David', role: 'Hiring Manager (Chair)', cls: 'ava-david' },
+                { name: 'Mark', role: 'Product Lead', cls: 'ava-mark' },
+                { name: 'Alex', role: 'Technical Lead', cls: 'ava-alex' }
+            ],
+            speaker: '[Mark (Product Lead)]',
+            text: '"If latency spikes to 800ms during peak checkout hours, how do you balance caching aggressively against product inventory consistency for high-value SKUs?"'
+        },
+        sales: {
+            roster: [
+                { name: 'David', role: 'Hiring Manager (Chair)', cls: 'ava-david' },
+                { name: 'Marcus', role: 'Sales Director', cls: 'ava-marcus' },
+                { name: 'Sean', role: 'VP of Sales', cls: 'ava-sean' }
+            ],
+            speaker: '[Marcus (Sales Director)]',
+            text: '"Walk me through your MEDDIC qualification process when a 6-figure enterprise deal stalls at security review in the final two weeks of the quarter."'
+        },
+        hr: {
+            roster: [
+                { name: 'David', role: 'Hiring Manager (Chair)', cls: 'ava-david' },
+                { name: 'Sam', role: 'Culture Lead', cls: 'ava-sam' },
+                { name: 'Ethan', role: 'HR Director', cls: 'ava-ethan' }
+            ],
+            speaker: '[Ethan (HR Director)]',
+            text: '"How do you navigate mediation when a senior principal engineer and an engineering manager have an irreconcilable conflict on delivery commitments?"'
+        }
+    };
+
+    if (trackPills.length > 0 && panelRosterContainer) {
+        trackPills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                trackPills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                const selectedTrack = pill.getAttribute('data-track') || 'tech';
+                const data = TRACK_DATA[selectedTrack];
+                if (!data) return;
+
+                // Update roster avatars
+                panelRosterContainer.innerHTML = data.roster.map(r => `
+                    <div class="panelist-row">
+                        <div class="panelist-mini-avatar ${r.cls}">${r.name.slice(0, 2)}</div>
+                        <div class="panelist-info-text">
+                            <span class="panelist-name-role">${r.name} • ${r.role}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Update speech dialogue
+                if (dialogueSpeaker) dialogueSpeaker.textContent = data.speaker;
+                if (dialogueText) dialogueText.textContent = data.text;
+            });
+        });
+    }
+
+    // ─── INTERACTIVE BARGE-IN SIMULATION ──────────────────────────────────
+    const triggerBargeinBtn = document.getElementById('trigger-bargein-demo');
+    const bargeinStatus = document.getElementById('bargein-live-status');
+    const bargeinYieldTag = document.getElementById('bargein-yield-tag');
+    const bargeinVoiceWave = document.getElementById('bargein-wave');
+
+    if (triggerBargeinBtn && bargeinStatus) {
+        triggerBargeinBtn.addEventListener('click', () => {
+            triggerBargeinBtn.disabled = true;
+            bargeinStatus.innerHTML = '<span style="color:#ef4444;"><i class="fa-solid fa-microphone"></i> Candidate speaking mid-sentence...</span>';
+            if (bargeinVoiceWave) bargeinVoiceWave.style.opacity = '1';
+
+            setTimeout(() => {
+                bargeinStatus.innerHTML = '<span style="color:#34d399;"><i class="fa-solid fa-bolt"></i> 160ms VAD Triggered • Alex Yielded Instantly</span>';
+                if (bargeinYieldTag) {
+                    bargeinYieldTag.style.display = 'inline-block';
+                    bargeinYieldTag.classList.add('animate-pulse');
+                }
+
+                setTimeout(() => {
+                    bargeinStatus.innerHTML = '<span style="color:var(--text-muted);"><i class="fa-solid fa-circle-check"></i> Turn smoothly handed over to Candidate</span>';
+                    triggerBargeinBtn.disabled = false;
+                }, 1800);
+            }, 600);
+        });
+    }
+
+    // ─── DASHBOARD AUTO-PLAY FEATURE ──────────────────────────────────────
     const dashboardPreview = document.querySelector('.dashboard-preview-window');
     const cursor = document.querySelector('.simulated-cursor');
     let autoPlayInterval;
@@ -31,164 +127,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const stopAutoPlay = () => {
         isUserInteracted = true;
         clearInterval(autoPlayInterval);
-        if (cursor) {
-            cursor.style.opacity = '0'; // Hide cursor when user takes over
-        }
+        if (cursor) cursor.style.opacity = '0';
     };
 
     if (dashboardPreview && tabs.length > 0 && cursor) {
-        // Show cursor initially
         setTimeout(() => {
             if (!isUserInteracted) cursor.style.opacity = '1';
         }, 1000);
 
         const simulateClick = (index) => {
             if (isUserInteracted) return;
-
             const targetTab = tabs[index];
-            
-            // Move cursor to tab
+            if (!targetTab) return;
             const tabRect = targetTab.getBoundingClientRect();
             const containerRect = dashboardPreview.getBoundingClientRect();
-            
-            // Calculate relative position based on container
+
             const top = tabRect.top - containerRect.top + (tabRect.height / 2);
             const left = tabRect.left - containerRect.left + (tabRect.width / 2);
-            
+
             cursor.style.top = `${top}px`;
             cursor.style.left = `${left}px`;
-            
-            // Simulate click down effect on cursor
+
             setTimeout(() => {
                 if (isUserInteracted) return;
                 cursor.style.transform = 'scale(0.8)';
-                targetTab.click(); // Trigger actual tab switch logic
-                
-                // Release click
+                targetTab.click();
+
                 setTimeout(() => {
                     if (isUserInteracted) return;
                     cursor.style.transform = 'scale(1)';
-                    // Move cursor slightly away after clicking to not obscure the active tab
-                    cursor.style.top = `${top + 40}px`;
-                    cursor.style.left = `${left + 40}px`;
+                    cursor.style.top = `${top + 30}px`;
+                    cursor.style.left = `${left + 30}px`;
                 }, 200);
-                
-            }, 800); // 800ms matches the CSS transition duration
+            }, 800);
         };
 
         const startAutoPlay = () => {
             autoPlayInterval = setInterval(() => {
                 currentTabIndex = (currentTabIndex + 1) % tabs.length;
                 simulateClick(currentTabIndex);
-            }, 4500); // 4.5 seconds per tab
-            
-            // Initial click after 2 seconds
-            setTimeout(() => {
-                if (!isUserInteracted) {
-                    currentTabIndex = (currentTabIndex + 1) % tabs.length;
-                    simulateClick(currentTabIndex);
-                }
-            }, 2000);
+            }, 5500);
         };
 
-        // Stop on any interaction
         dashboardPreview.addEventListener('mouseenter', stopAutoPlay);
         dashboardPreview.addEventListener('touchstart', stopAutoPlay);
-
         startAutoPlay();
-    }
-
-    // ATS Auto-Tailor Simulation
-    const optimizeBtn = document.getElementById('optimize-resume-btn');
-    if (optimizeBtn) {
-        optimizeBtn.addEventListener('click', () => {
-            const atsPath = document.getElementById('ats-progress-path');
-            const scoreNum = document.getElementById('ats-score-num');
-            const feedbackItems = document.querySelectorAll('.feedback-item');
-            
-            optimizeBtn.disabled = true;
-            optimizeBtn.innerHTML = '<div class="spinner" style="display:block; margin: 0 auto;"></div>';
-            
-            // Add scanning laser effect
-            const laser = document.querySelector('.scan-laser');
-            if(laser) laser.style.display = 'block';
-
-            setTimeout(() => {
-                if(laser) laser.style.display = 'none';
-                
-                // Animate score from 62 to 96
-                let currentScore = 62;
-                const targetScore = 96;
-                const interval = setInterval(() => {
-                    currentScore += 2;
-                    if (currentScore >= targetScore) {
-                        currentScore = targetScore;
-                        clearInterval(interval);
-                    }
-                    scoreNum.textContent = currentScore;
-                    
-                    // Update circle stroke
-                    // Formula: stroke-dashoffset = 100 - score
-                    const offset = 100 - currentScore;
-                    atsPath.style.strokeDashoffset = offset;
-                    
-                    if(currentScore > 80) {
-                        atsPath.style.stroke = 'var(--success)';
-                        scoreNum.style.color = 'var(--success)';
-                    }
-                }, 50);
-
-                // Change feedback
-                feedbackItems.forEach(item => item.style.display = 'none');
-                const atsFeedback = document.querySelector('.ats-feedback');
-                if(atsFeedback) {
-                    atsFeedback.innerHTML = `
-                        <div class="feedback-item success" style="color: var(--success);"><i class="fa-solid fa-circle-check"></i> Added React & Node.js keywords</div>
-                        <div class="feedback-item success" style="color: var(--success);"><i class="fa-solid fa-circle-check"></i> Optimized impact verbs (e.g., 'Spearheaded')</div>
-                    `;
-                }
-
-                optimizeBtn.innerHTML = '<i class="fa-solid fa-check"></i> Optimized';
-                optimizeBtn.style.background = 'var(--success)';
-            }, 1500);
-        });
-    }
-
-    // Coding Arena Run & Submit Simulation
-    const runCodeBtn = document.getElementById('run-code-btn');
-    const xpToast = document.getElementById('xp-toast');
-    const userLbXp = document.getElementById('user-lb-xp');
-    const userLbRank = document.getElementById('user-lb-rank');
-    
-    if (runCodeBtn) {
-        runCodeBtn.addEventListener('click', () => {
-            runCodeBtn.disabled = true;
-            runCodeBtn.innerHTML = '<div class="spinner" style="display:block; margin: 0 auto; border-top-color: white;"></div>';
-            
-            setTimeout(() => {
-                runCodeBtn.innerHTML = '<i class="fa-solid fa-check-double"></i> All Tests Passed!';
-                
-                // Show XP Toast
-                if(xpToast) {
-                    xpToast.classList.add('show');
-                    setTimeout(() => {
-                        xpToast.classList.remove('show');
-                    }, 3000);
-                }
-
-                // Update global XP counter
-                const topXpEl = document.querySelector('.user-xp');
-                if (topXpEl) topXpEl.innerHTML = '<i class="fa-solid fa-star"></i> 2,500 XP (Level 12)';
-                if (userLbXp) userLbXp.innerHTML = '2,500 XP';
-                if (userLbRank) {
-                    userLbRank.innerHTML = '<i class="fa-solid fa-caret-up" style="color:var(--success)"></i> 138';
-                }
-                
-                setTimeout(() => {
-                    runCodeBtn.disabled = false;
-                    runCodeBtn.innerHTML = '<i class="fa-solid fa-play"></i> Run & Submit';
-                }, 4000);
-            }, 1200);
-        });
     }
 });

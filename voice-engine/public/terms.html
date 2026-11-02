@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - Role-Pilot</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Inline Theme Script (Crucial: Place immediately in <head> to prevent FOUC / flickering) -->
+    <script>
+      (function() {
+          document.documentElement.classList.add('light-theme');
+          try {
+              localStorage.setItem('theme', 'light');
+          } catch (e) {}
+      })();
+    </script>
+    <!-- Theme Manager Script (for DOM toggles) -->
+    <script src="js/theme.js"></script>
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase JS Client Library CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="landing-body subpage-body">
+    <div class="bg-layers">
+        <div class="bg-layer dark-bg"></div>
+        <div class="bg-layer light-bg"></div>
+    </div>
+    <div class="landing-overlay"></div>
+    
+    <header class="app-header">
+        <div class="header-left">
+            <a href="index.html" class="logo-wrapper">
+                <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--primary)" />
+                            <stop offset="100%" stop-color="var(--accent)" />
+                        </linearGradient>
+                    </defs>
+                    <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                    <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                    <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                    <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                    <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                    <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                </svg>
+                <span class="logo-text">Role<span>Pilot</span></span>
+            </a>
+        </div>
+        
+        <div class="header-center">
+            <nav class="header-nav">
+                <a href="index.html#panels-section" class="nav-link">Domain Panels</a>
+                <a href="index.html#nova-section" class="nav-link">Nova Voice Prep</a>
+                <a href="index.html#demo-section" class="nav-link">Interactive Demo</a>
+                <a href="careers.html" class="nav-link">Careers</a>
+                <a href="index.html#faq" class="nav-link">FAQ</a>
+                <div class="mobile-only-actions">
+                    <a href="login.html" class="btn-secondary-outline mobile-nav-btn">Sign In</a>
+                    <a href="gear-up.html" class="btn btn-header mobile-nav-btn">Start Your Interview</a>
+                </div>
+            </nav>
+        </div>
+
+        <div class="header-actions">
+            <a href="login.html" id="header-signin-btn" class="btn-secondary-outline">Sign In</a>
+            <a href="gear-up.html" class="btn btn-header header-signup-desktop">Start Your Interview</a>
+            <button class="mobile-menu-toggle" aria-label="Toggle Mobile Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="page-main subpage-main">
+        <section class="subpage-content-section">
+            <div class="section-header">
+                <h2>Terms of <span class="gradient-text">Service</span></h2>
+                <p>Platform rules, acceptable voice interaction standards, and simulation disclaimers.</p>
+            </div>
+            <div class="image-glass-wrapper content-glass-panel">
+                <div class="premium-content-body">
+                    <h3>1. Acceptance of Terms</h3>
+                    <p>By accessing or utilizing Role-Pilot ("Platform"), you agree to be bound by these Terms of Service. If you disagree with any portion of these terms, you must discontinue your use of our real-time voice interview platform, conversational onboarding agents, and analytical services immediately.</p>
+
+                    <h3>2. Real-Time Voice Streaming & Audio Access</h3>
+                    <p>Role-Pilot provides real-time, bidirectional voice simulation powered by Agora WebRTC communication. To access voice sessions with Nova and the multi-role interview committees, you must grant temporary browser microphone access. You acknowledge that your spoken audio will be processed in real time by neural speech recognition and language models strictly for the duration of the interview session.</p>
+
+                    <h3>3. Acceptable Use & Voice Conduct</h3>
+                    <p>Role-Pilot is an enterprise preparation platform for professionals. When engaging in voice sessions, you agree to adhere to standard professional conduct. You are strictly prohibited from:</p>
+                    <ul>
+                        <li><strong>Abusive or Defamatory Language:</strong> Using hate speech, harassment, vulgarity, or threatening behavior toward other users or platform AI personas.</li>
+                        <li><strong>Audio Stream Interception:</strong> Reverse-engineering Agora channel authorization tokens, unauthorized recording or rebroadcasting of internal voice feeds, or attempting packet tampering.</li>
+                        <li><strong>Prompt Injection Attacks:</strong> Attempting to manipulate AI interviewers into revealing system prompts, bypassing role constraints, or executing malicious code payloads.</li>
+                        <li><strong>Denial of Service:</strong> Flooding audio endpoints, initiating concurrent synthetic sessions, or attempting to exhaust platform API token quotas.</li>
+                    </ul>
+
+                    <h3>4. Simulated Evaluation & No Guarantee of Employment</h3>
+                    <p>Role-Pilot provides simulated interview loops and automated feedback for educational, practice, and candidate readiness purposes. You acknowledge that:</p>
+                    <ul>
+                        <li>Interview competency scores, STAR evaluations, and growth gap assessments are generated by artificial intelligence.</li>
+                        <li>Role-Pilot does not guarantee employment offers, interview invitations, or hiring decisions with any third-party employer.</li>
+                        <li>Our evaluations represent automated readiness benchmarks, not binding professional or legal certifications.</li>
+                    </ul>
+
+                    <h3>5. Intellectual Property & Candidate Data</h3>
+                    <p>You retain full ownership of your uploaded resume, personal credentials, and interview transcript data. Role-Pilot and its licensors retain all proprietary rights to the platform software, multi-agent turn-taking orchestration algorithms, user interface designs, and AI audio pipelines.</p>
+
+                    <h3>6. Modifications to Service</h3>
+                    <p>We reserve the right to modify or discontinue features, update track rosters, or refine AI scoring algorithms to enhance platform performance and security.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- Column 1: Brand -->
+                <div class="footer-brand-col">
+                    <a href="index.html" class="logo-wrapper">
+                        <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                            <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                            <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                            <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                            <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                            <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                        </svg>
+                        <span class="logo-text">Role<span>Pilot</span></span>
+                    </a>
+                    <p class="footer-pitch">The enterprise multi-role AI voice interview platform. Master technical, product, and leadership rounds with specialized AI committees.</p>
+                    <div class="footer-socials">
+                        <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+                        <a href="#" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Column 2: Product -->
+                <div class="footer-links-col">
+                    <h3>Product</h3>
+                    <ul>
+                        <li><a href="gear-up.html">Voice Warm-Up (Nova)</a></li>
+                        <li><a href="interview-setup.html">Multi-Role Panels</a></li>
+                        <li><a href="interview-setup.html">Adaptive Difficulty</a></li>
+                        <li><a href="interview-setup.html">Evidence Scorecard</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 3: Domain Panels -->
+                <div class="footer-links-col">
+                    <h3>Domain Panels</h3>
+                    <ul>
+                        <li><a href="interview-setup.html?track=tech">Tech Engineering</a></li>
+                        <li><a href="interview-setup.html?track=product">Product Leadership</a></li>
+                        <li><a href="interview-setup.html?track=sales">Enterprise Sales & GTM</a></li>
+                        <li><a href="interview-setup.html?track=hr">HR & People Ops</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 4: Company -->
+                <div class="footer-links-col">
+                    <h3>Company</h3>
+                    <ul>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="careers.html">Careers</a></li>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms of Service</a></li>
+                        <li><a href="cookies.html">Cookies</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2026 Role-Pilot. All rights reserved. Enterprise AI Voice Interview Platform.</p>
+                <div class="footer-bottom-links">
+                    <a href="privacy.html">Privacy</a>
+                    <a href="terms.html">Terms</a>
+                    <a href="cookies.html">Cookies</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const header = document.querySelector('.app-header');
+            
+            if (menuToggle && header) {
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    header.classList.toggle('mobile-nav-active');
+                });
+                
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (header.classList.contains('mobile-nav-active') && !header.contains(e.target)) {
+                        header.classList.remove('mobile-nav-active');
+                    }
+                });
+                
+                // Close menu when clicking navigation links
+                const navLinks = header.querySelectorAll('.nav-link, .mobile-nav-btn');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        header.classList.remove('mobile-nav-active');
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

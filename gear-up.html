@@ -10,12 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script>
     (function() {
-      const currentTheme = localStorage.getItem('theme') || 'dark';
-      if (currentTheme === 'light') {
-        document.documentElement.classList.add('light-theme');
-      } else {
-        document.documentElement.classList.remove('light-theme');
-      }
+      document.documentElement.classList.add('light-theme');
+      try {
+        localStorage.setItem('theme', 'light');
+      } catch (e) {}
     })();
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -1276,10 +1274,9 @@
     <div class="header-center">
       <nav class="header-nav">
         <ul class="dashboard-nav-tabs">
-          <li><a href="dashboard.html" class="nav-tab-link">Dashboard</a></li>
-          <li><a href="gear-up.html" class="nav-tab-link active"><i class="fa-solid fa-microphone-lines" style="color: var(--accent); margin-right: 6px;"></i> Voice Onboarding</a></li>
-          <li><a href="ats-tailor.html" class="nav-tab-link">ATS Tailor</a></li>
-          <li><a href="dashboard.html" class="nav-tab-link">Leaderboard</a></li>
+          <li><a href="dashboard.html" class="nav-tab-link"><i class="fa-solid fa-chart-pie" style="margin-right: 6px;"></i> Dashboard</a></li>
+          <li><a href="gear-up.html" class="nav-tab-link active"><i class="fa-solid fa-play" style="color: var(--primary); margin-right: 6px;"></i> Start Your Interview</a></li>
+          <li><a href="dashboard.html#scorecards-section" class="nav-tab-link"><i class="fa-solid fa-clipboard-check" style="color: var(--primary); margin-right: 6px;"></i> Scorecards & History</a></li>
         </ul>
       </nav>
     </div>
@@ -1290,9 +1287,6 @@
         <span class="profile-dot" style="width:8px; height:8px; border-radius:50%; background:var(--success);"></span>
         <span id="profile-label">Voice Engine Active</span>
       </div>
-
-      <!-- Real App Theme Toggle (☀️ / 🌙) -->
-      <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
 
       <a href="dashboard.html" class="btn-secondary-outline" style="padding: 7px 14px; font-size: 0.84rem; text-decoration: none; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-weight: 500;">
         <i class="fa-solid fa-gauge-high"></i> <span>Dashboard</span>
@@ -1310,7 +1304,7 @@
     <section class="cockpit-mission-header">
       <div class="mission-meta">
         <div class="mission-badge-group">
-          <span class="arch-badge"><i class="fa-solid fa-microchip"></i> ECHO-SPHERE NOVA-3 ARCHITECTURE</span>
+          <span class="arch-badge"><i class="fa-solid fa-microchip"></i> ENTERPRISE VOICE AI ARCHITECTURE</span>
           <span class="engine-spec-badge"><i class="fa-solid fa-bolt"></i> 160ms VAD • Gemini 2.5 • MiniMax HD</span>
         </div>
         <h1 class="mission-title">Adaptive Voice <span>Onboarding Cockpit</span></h1>
@@ -1394,7 +1388,7 @@
 
           <!-- Start Voice Session Button -->
           <div class="start-banner" id="start-banner" onclick="startVoiceSession()">
-            <i class="fa-solid fa-play"></i> Start Voice Conversation
+            <i class="fa-solid fa-play"></i> Start Your Interview
           </div>
 
           <!-- Audio Autoplay Banner if Browser Suspends Audio -->
@@ -1592,12 +1586,30 @@
   <script type="module">
     import { getSupabaseClient } from './js/supabase-client.js';
 
-    // ─── STATE ────────────────────────────────────────────────────────────
-    const BACKEND_URL       = 'http://localhost:3000';
-    const SETUP_AGENT_API   = `${BACKEND_URL}/api/invite-setup-agent`;
-    const PARSE_STATE_API   = `${BACKEND_URL}/api/parse-onboarding-state`;
-    const RESOLVE_TRACK_API = `${BACKEND_URL}/api/resolve-track`;
-    const OCR_API           = `${BACKEND_URL}/api/ocr-resume`;
+    // Dynamic origin resolution: unified deployment uses relative paths, local dev uses port 3000, with auto-failover to live Vercel backend
+    const isVercel = window.location.hostname.includes('vercel.app');
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const PRIMARY_BACKEND = isVercel ? '' : (isLocal && window.location.port === '3000' ? '' : 'http://localhost:3000');
+    const FALLBACK_BACKEND = 'https://voice-engine-kappa.vercel.app';
+
+    async function apiFetch(endpoint, options = {}) {
+      const primaryUrl = `${PRIMARY_BACKEND}${endpoint}`;
+      try {
+        const res = await fetch(primaryUrl, options);
+        if (res.ok) return res;
+        if (!isVercel) {
+          console.warn(`[API Failover] Primary ${primaryUrl} returned ${res.status}, retrying via Vercel fallback...`);
+          return await fetch(`${FALLBACK_BACKEND}${endpoint}`, options);
+        }
+        return res;
+      } catch (err) {
+        if (!isVercel) {
+          console.warn(`[API Failover] Primary ${primaryUrl} unreachable, retrying via Vercel fallback...`, err);
+          return await fetch(`${FALLBACK_BACKEND}${endpoint}`, options);
+        }
+        throw err;
+      }
+    }
 
     const state = {
       profileName: null,
@@ -1622,10 +1634,33 @@
     let transcriptBuffer = [];
     let parseDebounce = null;
 
+    let currentOpenModal = null;
+    let dismissedModalsForStep = {};
+
     // ─── POPUP UTILS (SYNCHRONIZED & FLUID TRANSITIONS) ───────────────────
+    const completedStages = {
+      'role-popup': false,
+      'exp-popup': false,
+      'overview-popup': false
+    };
+
+    function isModalCompleted(id) {
+      if (!id || id === 'none') return true;
+      if (completedStages[id]) return true;
+      if (id === 'role-popup' && (state.role || completedStages['role-popup'])) return true;
+      if (id === 'exp-popup' && (state.experienceTier || completedStages['exp-popup'])) return true;
+      return false;
+    }
+
     function showPopup(id) {
+      if (!id || isModalCompleted(id)) return;
       const target = document.getElementById(id);
       if (!target) return;
+
+      if (target.classList.contains('show')) {
+        currentOpenModal = id;
+        return;
+      }
 
       const currentlyOpen = Array.from(document.querySelectorAll('.popup-overlay.show')).filter(p => p.id !== id);
 
@@ -1633,10 +1668,14 @@
         // Smoothly dismiss currently open popups first, then glide in target
         currentlyOpen.forEach(p => p.classList.remove('show'));
         setTimeout(() => {
-          target.classList.add('show');
+          if (!isModalCompleted(id)) {
+            target.classList.add('show');
+            currentOpenModal = id;
+          }
         }, 160);
       } else {
         target.classList.add('show');
+        currentOpenModal = id;
       }
     }
     window.showPopup = showPopup;
@@ -1645,10 +1684,88 @@
       if (id) {
         const el = document.getElementById(id);
         if (el) el.classList.remove('show');
+        if (currentOpenModal === id) currentOpenModal = null;
+        if (state.activeStep) {
+          dismissedModalsForStep[state.activeStep + '_' + id] = true;
+        }
       } else {
-        document.querySelectorAll('.popup-overlay.show').forEach(p => p.classList.remove('show'));
+        document.querySelectorAll('.popup-overlay.show').forEach(p => {
+          p.classList.remove('show');
+          if (state.activeStep) {
+            dismissedModalsForStep[state.activeStep + '_' + p.id] = true;
+          }
+        });
+        currentOpenModal = null;
       }
     };
+
+    let armedModal = null;
+
+    function armModal(modalId) {
+      if (!modalId || modalId === 'none' || isModalCompleted(modalId)) {
+        armedModal = null;
+        return;
+      }
+      armedModal = modalId;
+    }
+    window.armModal = armModal;
+
+    function triggerArmedModal() {
+      if (!armedModal || isModalCompleted(armedModal)) {
+        armedModal = null;
+        return;
+      }
+      const target = armedModal;
+      armedModal = null; // Consume the gate immediately so it only opens once per stage!
+      if (target === 'overview-popup') {
+        updateOverviewSummary();
+      }
+      showPopup(target);
+    }
+    window.triggerArmedModal = triggerArmedModal;
+
+    function closeAllPopups() {
+      document.querySelectorAll('.popup-overlay.show').forEach(p => {
+        p.classList.remove('show');
+      });
+      currentOpenModal = null;
+    }
+    window.closeAllPopups = closeAllPopups;
+
+    function syncModalState(targetModal) {
+      if (!targetModal || targetModal === 'none' || targetModal === 'close_all') {
+        closeAllPopups();
+        return;
+      }
+
+      // Guard 1: If stage is already answered & completed, NEVER open its modal again!
+      if (isModalCompleted(targetModal)) {
+        const el = document.getElementById(targetModal);
+        if (el) el.classList.remove('show');
+        return;
+      }
+
+      // Guard 2: If user manually dismissed this modal during this step, do not force-reopen
+      if (dismissedModalsForStep[state.activeStep + '_' + targetModal]) {
+        return;
+      }
+
+      // Guard 3: If target modal is already open, do not re-trigger or flicker
+      const el = document.getElementById(targetModal);
+      if (el && el.classList.contains('show')) {
+        currentOpenModal = targetModal;
+        return;
+      }
+
+      // Close other popups, then show target
+      closeAllPopups();
+      if (targetModal === 'overview-popup') {
+        updateOverviewSummary();
+      }
+      showPopup(targetModal);
+      currentOpenModal = targetModal;
+    }
+    window.syncModalState = syncModalState;
 
     // Backdrop click-to-dismiss for all popups
     document.querySelectorAll('.popup-overlay').forEach(overlay => {
@@ -1800,7 +1917,7 @@
     function updateGuidanceAndProgress() {
       // Determine active step
       let stepKey = 'name';
-      if (state.name || state.profileName) {
+      if (state.name) {
         if (!state.role) stepKey = 'role';
         else if (!state.experienceTier) stepKey = 'experience';
         else stepKey = 'overview';
@@ -1889,9 +2006,18 @@
         document.getElementById('hud-name').classList.add('captured');
         addOrUpdateChatMessage('system', `✓ Identity confirmed as ${state.name}`);
         state.activeStep = 'role';
+        armModal('role-popup');
         updateGuidanceAndProgress();
-        showPopup('role-popup');
-        scheduleStateParse();
+        scheduleStateParse(true);
+      } else if (actionType === 'other-name') {
+        state.name = null;
+        document.getElementById('val-name').textContent = 'Awaiting…';
+        document.getElementById('val-name').classList.add('empty');
+        document.getElementById('hud-name').classList.remove('captured');
+        state.activeStep = 'name';
+        armModal(null);
+        updateGuidanceAndProgress();
+        scheduleStateParse(true);
       } else if (actionType === 'role') {
         confirmRole(text);
       } else if (actionType === 'experience') {
@@ -1899,9 +2025,12 @@
       } else if (actionType === 'launch') {
         enterPanelRoom();
       } else {
-        scheduleStateParse();
+        scheduleStateParse(true);
       }
     };
+
+    let isNovaSpeakingFlag = false;
+    let hasNovaSpokenAnyTurn = false;
 
     function updateStatus(type, text) {
       const capsule = document.getElementById('status-capsule');
@@ -1909,6 +2038,8 @@
       document.getElementById('status-text').textContent = text;
     }
     function setNovaSpeaking(speaking) {
+      isNovaSpeakingFlag = speaking;
+      if (speaking) hasNovaSpokenAnyTurn = true;
       document.getElementById('nova-orb').classList.toggle('speaking', speaking);
       if (speaking) {
         updateStatus('speaking', 'Nova is speaking…');
@@ -2090,6 +2221,29 @@
 
     const chunkAssembler = new AgoraChunkedAssembler();
     let agoraUserSttActive = false;
+    let hasLaunchedRoom = false;
+
+    function autoLaunchPanelRoom(reason = '', delayMs = 2400) {
+      if (hasLaunchedRoom) return;
+      hasLaunchedRoom = true;
+      console.log('[Nova Direct Launch] Triggering panel room launch. Reason:', reason);
+
+      updateStatus('speaking', '🚀 Opening your interview panel room…');
+      setSpeakerIndicator('Transferring you to the interview panel…', true, false);
+      addOrUpdateChatMessage('system', '🚀 Opening your Panel Interview Room…');
+
+      const launchBtn = document.getElementById('final-launch-btn');
+      if (launchBtn) {
+        launchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Entering Panel Room…';
+        launchBtn.style.pointerEvents = 'none';
+      }
+
+      // Allow Nova's spoken confirmation to finish before navigation
+      setTimeout(() => {
+        enterPanelRoom();
+      }, delayMs);
+    }
+    window.autoLaunchPanelRoom = autoLaunchPanelRoom;
 
     function handleAgoraTranscriptMessage(uid, message) {
       if (!message || typeof message !== 'object') return;
@@ -2146,10 +2300,33 @@
         setNovaSpeaking(true);
         showDialogue('Nova', text);
         addOrUpdateChatMessage('nova', text, turnId);
+
+        // ── NOVA COMPLETED TURN ──
         if (isEnd) {
+          const lowerNova = text.toLowerCase();
+
+          // Verbal launch command trigger from Nova
+          if (
+            lowerNova.includes('opening your panel room') ||
+            lowerNova.includes('opening the panel room') ||
+            lowerNova.includes('opening your interview') ||
+            lowerNova.includes('launching your panel room') ||
+            lowerNova.includes('transferring you to the panel') ||
+            lowerNova.includes('transferring you to the interview') ||
+            lowerNova.includes('entering the panel room')
+          ) {
+            autoLaunchPanelRoom('Nova verbal launch: ' + text, 2400);
+          }
+
+          transcriptBuffer.push(`Nova: ${text}`);
+
+          // Nova finished speaking her question for this stage!
+          setNovaSpeaking(false);
+          triggerArmedModal(); // 0ms INSTANT POPUP!
+
           setTimeout(() => {
             if (!remoteAudioTrack?.isPlaying) setNovaSpeaking(false);
-          }, 800);
+          }, 400);
         }
       } else if (isUser) {
         agoraUserSttActive = true;
@@ -2157,9 +2334,38 @@
         setSpeakerIndicator('Listening to your voice…', false, true);
         showDialogue('You', text);
         addOrUpdateChatMessage('user', text, turnId);
+
+        // When user starts answering the question, dismiss active input modal immediately
+        if (currentOpenModal && currentOpenModal !== 'overview-popup') {
+          closeAllPopups();
+        }
+
+        // ── USER COMPLETED TURN ──
         if (isEnd) {
+          const lowerUser = text.toLowerCase();
+
+          // Candidate verbal query to launch into panel
+          const isLaunchQuery =
+            lowerUser.includes('is the interview ready') ||
+            lowerUser.includes('is it ready') ||
+            lowerUser.includes('is interview ready') ||
+            lowerUser.includes('open the interview') ||
+            lowerUser.includes('open interview') ||
+            lowerUser.includes('open the panel') ||
+            lowerUser.includes('open panel room') ||
+            lowerUser.includes('start the interview') ||
+            lowerUser.includes('start interview') ||
+            lowerUser.includes('take me to the panel') ||
+            lowerUser.includes('take me to the interview') ||
+            lowerUser.includes('launch the interview') ||
+            lowerUser.includes('launch panel');
+
+          if (isLaunchQuery) {
+            autoLaunchPanelRoom('Candidate query: ' + text, 1800);
+          }
+
           transcriptBuffer.push(`User: ${text}`);
-          scheduleStateParse();
+          scheduleStateParse(true);
         }
       }
     }
@@ -2186,7 +2392,7 @@
         updateStatus('thinking', 'Connecting to audio channel…');
 
         // 1. Fetch channel & RTC token first
-        const tokRes = await fetch(`${BACKEND_URL}/api/generate-agora-token`);
+        const tokRes = await apiFetch('/api/generate-agora-token');
         if (!tokRes.ok) throw new Error('Token generation failed');
         const tokData = await tokRes.json();
         state.channel = tokData.channel;
@@ -2286,7 +2492,7 @@
 
         // 5. NOW invite Nova into the channel
         updateStatus('thinking', 'Nova is joining the room…');
-        const res = await fetch(SETUP_AGENT_API, {
+        const res = await apiFetch('/api/invite-setup-agent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -2323,6 +2529,7 @@
         if (startBanner) startBanner.style.display = 'flex';
       }
     }
+    window.startVoiceSession = startVoiceSession;
 
     // ─── SPEECH RECOGNITION (Voice Sync) ──────────────────────────────────
     function initSpeechRecognition() {
@@ -2343,8 +2550,33 @@
               if (text) {
                 showDialogue('You', text);
                 addOrUpdateChatMessage('user', text);
+
+                const lowerUser = text.toLowerCase();
+                const isLaunchQuery =
+                  lowerUser.includes('is the interview ready') ||
+                  lowerUser.includes('is it ready') ||
+                  lowerUser.includes('is interview ready') ||
+                  lowerUser.includes('open the interview') ||
+                  lowerUser.includes('open interview') ||
+                  lowerUser.includes('open the panel') ||
+                  lowerUser.includes('open panel room') ||
+                  lowerUser.includes('start the interview') ||
+                  lowerUser.includes('start interview') ||
+                  lowerUser.includes('take me to the panel') ||
+                  lowerUser.includes('take me to the interview') ||
+                  lowerUser.includes('launch the interview') ||
+                  lowerUser.includes('launch panel');
+
+                if (isLaunchQuery) {
+                  autoLaunchPanelRoom('Candidate query (speechRec): ' + text, 1800);
+                }
+
+                if (currentOpenModal && currentOpenModal !== 'overview-popup') {
+                  closeAllPopups();
+                }
+
                 transcriptBuffer.push(`User: ${text}`);
-                scheduleStateParse();
+                scheduleStateParse(true);
               }
             }
           }
@@ -2359,12 +2591,24 @@
     }
 
     // ─── DEBOUNCED STATE PARSER & POPUP STEP SYNCHRONIZATION ─────────────
-    function scheduleStateParse() {
-      if (parseDebounce) clearTimeout(parseDebounce);
-      parseDebounce = setTimeout(async () => {
+    let isParsingActive = false;
+    let pendingImmediateParse = false;
+
+    function scheduleStateParse(immediate = false) {
+      if (parseDebounce) {
+        clearTimeout(parseDebounce);
+        parseDebounce = null;
+      }
+
+      const runParse = async () => {
+        if (isParsingActive) {
+          pendingImmediateParse = true;
+          return;
+        }
+        isParsingActive = true;
         const transcript = transcriptBuffer.slice(-6).join('\n');
         try {
-          const res = await fetch(PARSE_STATE_API, {
+          const res = await apiFetch('/api/parse-onboarding-state', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -2379,11 +2623,26 @@
               }
             })
           });
-          if (!res.ok) return;
-          const { state: parsed } = await res.json();
-          applyParsedState(parsed);
-        } catch (_) {}
-      }, 700);
+          if (res.ok) {
+            const { state: parsed } = await res.json();
+            applyParsedState(parsed);
+          }
+        } catch (e) {
+          console.warn('[State Parser Error]:', e);
+        } finally {
+          isParsingActive = false;
+          if (pendingImmediateParse) {
+            pendingImmediateParse = false;
+            scheduleStateParse(true);
+          }
+        }
+      };
+
+      if (immediate) {
+        runParse();
+      } else {
+        parseDebounce = setTimeout(runParse, 400);
+      }
     }
 
     function applyParsedState(parsed) {
@@ -2396,32 +2655,54 @@
         document.getElementById('val-name').classList.remove('empty');
         document.getElementById('hud-name').classList.add('captured');
         addOrUpdateChatMessage('system', `✓ Identity confirmed as ${parsed.name}`);
+        if (!state.role && !completedStages['role-popup']) {
+          armModal('role-popup');
+        }
       }
 
       // 2. Target Role & Track
-      if (parsed.target_role && !state.role) {
-        confirmRole(parsed.target_role, parsed.resolved_track);
+      if (parsed.target_role) {
+        completedStages['role-popup'] = true;
+        if (!state.role) {
+          confirmRole(parsed.target_role, parsed.resolved_track);
+        }
+        if (!state.experienceTier && !completedStages['exp-popup']) {
+          armModal('exp-popup');
+        }
       }
 
       // 3. Experience Tier
-      if (parsed.experience_tier && !state.experienceTier) {
-        confirmExperience(parsed.experience_tier);
+      if (parsed.experience_tier) {
+        completedStages['exp-popup'] = true;
+        if (!state.experienceTier) {
+          confirmExperience(parsed.experience_tier);
+        }
+        if (!completedStages['overview-popup']) {
+          armModal('overview-popup');
+        }
       }
 
-      // 4. Active Step Progression & Popups
+      // 4. Active Step & Armed Gate from brain
       if (parsed.active_step) {
         state.activeStep = parsed.active_step;
-        if (parsed.active_step === 'role' && !state.role) {
-          showPopup('role-popup');
-        } else if (parsed.active_step === 'experience' && !state.experienceTier) {
-          closePopup('role-popup');
-          showPopup('exp-popup');
-        } else if (parsed.active_step === 'overview' || parsed.active_step === 'ready') {
-          closePopup('role-popup');
-          closePopup('exp-popup');
-          showPopup('overview-popup');
-          updateOverviewSummary();
-        }
+      }
+
+      // If state parser identifies an armed gate for the upcoming uncompleted stage
+      if (parsed.armed_modal && !completedStages[parsed.armed_modal]) {
+        armModal(parsed.armed_modal);
+      }
+
+      // Ensure any answered/completed stages stay closed permanently
+      if (completedStages['role-popup']) {
+        closePopup('role-popup');
+      }
+      if (completedStages['exp-popup']) {
+        closePopup('exp-popup');
+      }
+
+      // 5. Auto-launch panel if ready
+      if (parsed.active_step === 'ready' || parsed.ready_to_launch) {
+        autoLaunchPanelRoom('AI State parser confirmed readiness', 2800);
       }
 
       updateGuidanceAndProgress();
@@ -2430,6 +2711,10 @@
     // ─── ROLE & TRACK CONFIRMATION ────────────────────────────────────────
     window.confirmRole = async function(roleName, trackHint = null) {
       state.role = roleName;
+      completedStages['role-popup'] = true;
+      closePopup('role-popup');
+      armModal('exp-popup');
+      scheduleStateParse(true);
       document.getElementById('val-role').textContent = roleName;
       document.getElementById('val-role').classList.remove('empty');
       document.getElementById('hud-role').classList.add('captured');
@@ -2441,7 +2726,7 @@
       try {
         let track = trackHint;
         if (!track) {
-          const res = await fetch(RESOLVE_TRACK_API, {
+          const res = await apiFetch('/api/resolve-track', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ target_role: roleName })
@@ -2461,10 +2746,6 @@
           addOrUpdateChatMessage('system', `✓ Target Role: ${roleName} matched to ${track.toUpperCase()} Panel`);
           state.activeStep = 'experience';
           updateGuidanceAndProgress();
-          setTimeout(() => {
-            closePopup('role-popup');
-            if (!state.experienceTier) showPopup('exp-popup');
-          }, 1200);
         } else {
           feedback.className = 'panel-feedback unsupported';
           icon.className = 'fa-solid fa-triangle-exclamation';
@@ -2476,6 +2757,10 @@
     // ─── EXPERIENCE CONFIRMATION ──────────────────────────────────────────
     window.confirmExperience = function(tier) {
       state.experienceTier = tier;
+      completedStages['exp-popup'] = true;
+      closePopup('exp-popup');
+      armModal('overview-popup');
+      scheduleStateParse(true);
       document.getElementById('val-exp').textContent = tier.toUpperCase();
       document.getElementById('val-exp').classList.remove('empty');
       document.getElementById('hud-exp').classList.add('captured');
@@ -2487,12 +2772,6 @@
       addOrUpdateChatMessage('system', `✓ Experience level calibrated to ${tier.toUpperCase()}`);
       state.activeStep = 'overview';
       updateGuidanceAndProgress();
-
-      setTimeout(() => {
-        closePopup('exp-popup');
-        showPopup('overview-popup');
-        updateOverviewSummary();
-      }, 1000);
     };
 
     // ─── OVERVIEW SUMMARY UPDATE ──────────────────────────────────────────
@@ -2515,7 +2794,7 @@
       try {
         const formData = new FormData();
         formData.append('file', file);
-        const res = await fetch(OCR_API, { method: 'POST', body: formData });
+        const res = await apiFetch('/api/ocr-resume', { method: 'POST', body: formData });
         if (!res.ok) throw new Error('OCR API error');
         const { data } = await res.json();
 
@@ -2565,30 +2844,48 @@
     // ─── LAUNCH PANEL ROOM ───────────────────────────────────────────────
     window.enterPanelRoom = function() {
       const btn = document.getElementById('final-launch-btn');
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparing Panel Room…';
-      btn.style.pointerEvents = 'none';
+      if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Entering Panel Room…';
+        btn.style.pointerEvents = 'none';
+      }
 
       if (state.agentId) {
-        fetch(`${BACKEND_URL}/api/stop-conversation`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ agent_id: state.agentId })
-        }).catch(() => {});
+        try {
+          apiFetch('/api/stop-conversation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agent_id: state.agentId })
+          }).catch(() => {});
+        } catch (_) {}
       }
 
       const queryParams = new URLSearchParams({
         track:      state.track || 'tech',
-        role:       state.role || 'Software Engineer',
-        level:      state.experienceTier || 'mid-level',
+        role:       state.role || state.profileRole || 'Software Engineer',
+        level:      state.experienceTier || state.profileExperience || 'mid-level',
         candidate:  state.name || state.profileName || 'Candidate',
         panel:      'recommended',
         difficulty: state.difficulty || 'auto',
         resume:     state.resumeChoice || 'quick'
       });
 
+      try {
+        if (state.resumeChoice === 'quick') {
+          sessionStorage.setItem('rolepilot_resume_source', 'quick');
+          sessionStorage.setItem('rolepilot_resume_summary', '');
+        } else if (state.resumeChoice === 'saved' && state.savedResumes && state.savedResumes.length > 0) {
+          const sel = state.savedResumes.find(r => r.id === state.selectedResumeId) || state.savedResumes[0];
+          sessionStorage.setItem('rolepilot_resume_source', `Saved: ${sel.title}`);
+        }
+      } catch (_) {}
+
       setTimeout(() => {
-        window.location.href = `${BACKEND_URL}?${queryParams.toString()}`;
-      }, 600);
+        let interviewBase = '/interview';
+        if (isLocal && window.location.port !== '3000') {
+          interviewBase = 'http://localhost:3000/interview';
+        }
+        window.location.href = `${interviewBase}?${queryParams.toString()}`;
+      }, 400);
     };
 
     window.startVoiceSession = startVoiceSession;
@@ -2619,6 +2916,29 @@
 
     async function initPage() {
       await loadSupabaseContext();
+      
+      // Parse track parameter if provided from dashboard
+      const params = new URLSearchParams(window.location.search);
+      const urlTrack = params.get('track');
+      if (urlTrack) {
+        state.track = urlTrack;
+        const trackNames = {
+          'fullstack': 'Full-Stack & Systems Panel (David Chen, Alex Rivera, Marcus Vance)',
+          'tech': 'Engineering Panel (Alex Rivera, David Chen)',
+          'product': 'Product Architecture Panel (Mark Davis, Marcus Vance)',
+          'cloud': 'Enterprise Cloud & Infra Panel (David Chen, Marcus Vance)',
+          'leadership': 'Leadership & Behavioral Panel (Alex Rivera, Mark Davis)'
+        };
+        const panelText = trackNames[urlTrack] || `${urlTrack.toUpperCase()} Panel`;
+        const valPanel = document.getElementById('val-panel');
+        if (valPanel) {
+          valPanel.textContent = panelText;
+          valPanel.classList.remove('empty');
+        }
+        const chkPanel = document.getElementById('chk-panel');
+        if (chkPanel) chkPanel.classList.add('valid');
+      }
+
       updateGuidanceAndProgress();
       renderChatMessages();
     }

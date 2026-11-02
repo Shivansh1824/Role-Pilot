@@ -32,7 +32,7 @@ export function QuickstartPreCallCard({
       {/* EchoSphere Architecture Badge */}
       <div className="flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary shadow-sm">
         <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-        <span>Agora Conversational AI • EchoSphere PS11</span>
+        <span>Agora Real-Time Voice • Multi-Agent Committee</span>
       </div>
 
       {/* Main Title */}

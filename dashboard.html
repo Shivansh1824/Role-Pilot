@@ -3,15 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
       (function() {
-          const currentTheme = localStorage.getItem('theme') || 'dark';
-          if (currentTheme === 'light') {
-              document.documentElement.classList.add('light-theme');
-          } else {
-              document.documentElement.classList.remove('light-theme');
-          }
+          document.documentElement.classList.add('light-theme');
+          localStorage.setItem('theme', 'light');
       })();
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -22,7 +18,6 @@
 </head>
 <body class="dashboard-page">
     <div class="bg-layers">
-        <div class="bg-layer dark-bg"></div>
         <div class="bg-layer light-bg"></div>
     </div>
     <div class="landing-overlay"></div>
@@ -52,11 +47,9 @@
         <div class="header-center">
             <nav class="header-nav">
                 <ul class="dashboard-nav-tabs">
-                    <li><a href="#" class="nav-tab-link active">Dashboard</a></li>
-                    <li><a href="#" class="nav-tab-link">Coding Arena</a></li>
-                    <li><a href="gear-up.html" class="nav-tab-link"><i class="fa-solid fa-microphone-lines" style="color: var(--primary); margin-right: 4px;"></i> Mock Interviews</a></li>
-                    <li><a href="ats-tailor.html" class="nav-tab-link">ATS Tailor</a></li>
-                    <li><a href="#" class="nav-tab-link">Leaderboard</a></li>
+                    <li><a href="dashboard.html" class="nav-tab-link active"><i class="fa-solid fa-chart-pie" style="margin-right: 6px;"></i> Dashboard</a></li>
+                    <li><a href="gear-up.html" class="nav-tab-link"><i class="fa-solid fa-play" style="color: var(--primary); margin-right: 6px;"></i> Start Your Interview</a></li>
+                    <li><a href="#scorecards-section" class="nav-tab-link"><i class="fa-solid fa-clipboard-check" style="color: var(--primary); margin-right: 6px;"></i> Scorecards & History</a></li>
                 </ul>
             </nav>
         </div>
@@ -67,13 +60,11 @@
                 <span id="header-xp">XP: 4,250 • Master Tier</span>
             </div>
             
-            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
-            
             <div class="profile-dropdown-wrapper">
                 <div class="profile-trigger" id="profile-trigger">SR</div>
                 <div class="dropdown-menu" id="profile-dropdown">
                     <a href="#" class="dropdown-item"><i class="fa-solid fa-user-gear"></i> Profile Settings</a>
-                    <a href="#" class="dropdown-item"><i class="fa-solid fa-credit-card"></i> Billing</a>
+                    <a href="gear-up.html" class="dropdown-item"><i class="fa-solid fa-play"></i> Start Your Interview</a>
                     <div style="height: 1px; background: var(--glass-border); margin: 4px 0;"></div>
                     <a href="#" class="dropdown-item" id="logout-btn" style="color: var(--error);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
                 </div>
@@ -91,262 +82,278 @@
         <section class="dashboard-hero">
             <div class="greeting-content">
                 <h1 id="greeting-title">Welcome back, <span id="user-firstname">Shivansh</span> 👋</h1>
-                <p id="greeting-subtitle">Target Role: Senior Full-Stack Engineer • Adaptive Multi-Role Panel Active</p>
+                <p id="greeting-subtitle">Target Role: Senior Full-Stack Engineer • Adaptive Multi-Role Committee Active</p>
             </div>
             <div class="hero-actions">
-                <a href="gear-up.html" class="btn btn-primary-gradient"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right: 6px;"></i> Voice Gear Up (Nova)</a>
-                <a href="interview-setup.html" class="btn btn-secondary-outline"><i class="fa-solid fa-sliders" style="margin-right: 6px;"></i> Manual Wizard</a>
+                <a href="gear-up.html" class="btn btn-primary-gradient" style="display: inline-flex; align-items: center; gap: 10px; padding: 0 28px; height: 50px; font-size: 1.05rem; font-weight: 700; border-radius: 14px; text-decoration: none; box-shadow: 0 8px 24px -4px rgba(124, 58, 237, 0.35);">
+                    <i class="fa-solid fa-play"></i> Start Your Interview
+                </a>
             </div>
         </section>
 
-        <!-- North Star Performance Matrix -->
+        <!-- North Star Performance Matrix (Clean, Airy & Benchmark-Driven) -->
         <section class="metrics-grid">
-            <div class="metric-card-glass">
-                <div class="metric-header">
-                    <span>ATS Fit Score</span>
-                    <div class="metric-icon"><i class="fa-solid fa-file-shield"></i></div>
+            <!-- Metric 1: Overall Readiness Score -->
+            <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #7c3aed, #6366f1);">
+                <div class="metric-header-top">
+                    <div class="metric-icon-badge" style="background: rgba(124, 58, 237, 0.1); color: var(--primary);">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <span class="metric-benchmark-tag" style="background: rgba(124, 58, 237, 0.1); color: var(--primary);">
+                        <i class="fa-solid fa-award"></i> Top 10% Candidate
+                    </span>
                 </div>
-                <div class="metric-value">
-                    82%
-                    <span class="metric-trend trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +5%</span>
+                
+                <div class="metric-title-group">
+                    <span class="metric-title-label">Overall Readiness Score</span>
                 </div>
-                <div class="metric-sub">Current resume match rate</div>
-                <div class="micro-badges">
-                    <span class="micro-badge">Node.js Match: High</span>
+
+                <div class="metric-score-row">
+                    <div class="metric-main-val">
+                        88%
+                        <span class="metric-trend trend-up" style="font-size: 0.85rem; margin-left: 6px;"><i class="fa-solid fa-arrow-trend-up"></i> +6%</span>
+                    </div>
+                    <span class="metric-verdict-pill" style="background: rgba(16, 185, 129, 0.12); color: var(--success);">
+                        <i class="fa-solid fa-circle-check"></i> Strong Hire
+                    </span>
+                </div>
+
+                <p class="metric-info-explain">
+                    Weighted composite readiness across technical architecture, behavioral precision, and voice telemetry.
+                </p>
+
+                <div class="submetric-track-bar">
+                    <div class="submetric-fill-bar" style="width: 88%; background: #7c3aed;"></div>
                 </div>
             </div>
 
-            <div class="metric-card-glass">
-                <div class="metric-header">
-                    <span>STAR Communication</span>
-                    <div class="metric-icon"><i class="fa-solid fa-comments"></i></div>
+            <!-- Metric 2: STAR Behavioral Structure -->
+            <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #06b6d4, #3b82f6);">
+                <div class="metric-header-top">
+                    <div class="metric-icon-badge" style="background: rgba(6, 182, 212, 0.1); color: var(--accent);">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <span class="metric-benchmark-tag" style="background: rgba(6, 182, 212, 0.1); color: #0891b2;">
+                        <i class="fa-solid fa-bullseye"></i> High Precision
+                    </span>
                 </div>
-                <div class="metric-value">
-                    B+ <span style="font-size: 1rem; color: var(--text-secondary);">(85%)</span>
+
+                <div class="metric-title-group">
+                    <span class="metric-title-label">STAR Behavioral Structure</span>
                 </div>
-                <div class="metric-sub">Behavioral round average</div>
-                <div class="micro-badges">
-                    <span class="micro-badge">Fluent</span>
-                    <span class="micro-badge" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">Fillers: Low</span>
+
+                <div class="metric-score-row">
+                    <div class="metric-main-val">
+                        A- <span style="font-size: 1.1rem; color: var(--text-muted); font-weight: 600;">(92%)</span>
+                    </div>
+                    <span class="metric-verdict-pill" style="background: rgba(6, 182, 212, 0.12); color: #0891b2;">
+                        <i class="fa-solid fa-sparkles"></i> Structured
+                    </span>
+                </div>
+
+                <p class="metric-info-explain">
+                    Adherence to Situation-Task-Action-Result format with clear personal ownership and quantified ROI.
+                </p>
+
+                <div class="submetric-track-bar">
+                    <div class="submetric-fill-bar" style="width: 92%; background: #06b6d4;"></div>
                 </div>
             </div>
 
-            <div class="metric-card-glass">
-                <div class="metric-header">
-                    <span>Coding Arena Tier</span>
-                    <div class="metric-icon"><i class="fa-solid fa-code"></i></div>
+            <!-- Metric 3: Technical Architecture Depth -->
+            <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #10b981, #059669);">
+                <div class="metric-header-top">
+                    <div class="metric-icon-badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                        <i class="fa-solid fa-network-wired"></i>
+                    </div>
+                    <span class="metric-benchmark-tag" style="background: rgba(16, 185, 129, 0.1); color: #059669;">
+                        <i class="fa-solid fa-microchip"></i> Staff Tier
+                    </span>
                 </div>
-                <div class="metric-value">
-                    Tier 3
+
+                <div class="metric-title-group">
+                    <span class="metric-title-label">Technical Architecture Depth</span>
                 </div>
-                <div class="metric-sub">Advanced Arrays & Hashing</div>
-                <div class="micro-badges">
-                    <span class="micro-badge">32 Challenges Completed</span>
+
+                <div class="metric-score-row">
+                    <div class="metric-main-val">
+                        91%
+                    </div>
+                    <span class="metric-verdict-pill" style="background: rgba(16, 185, 129, 0.12); color: var(--success);">
+                        <i class="fa-solid fa-shield-halved"></i> Trade-offs Defended
+                    </span>
+                </div>
+
+                <p class="metric-info-explain">
+                    Distributed system scalability, failure mode trade-off justification, and edge-case composure.
+                </p>
+
+                <div class="submetric-track-bar">
+                    <div class="submetric-fill-bar" style="width: 91%; background: #10b981;"></div>
                 </div>
             </div>
 
-            <div class="metric-card-glass">
-                <div class="metric-header">
-                    <span>Global Rank</span>
-                    <div class="metric-icon"><i class="fa-solid fa-trophy"></i></div>
+            <!-- Metric 4: Agora Real-Time Voice Flow -->
+            <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #f59e0b, #ea580c);">
+                <div class="metric-header-top">
+                    <div class="metric-icon-badge" style="background: rgba(245, 158, 11, 0.1); color: #d97706;">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <span class="metric-benchmark-tag" style="background: rgba(245, 158, 11, 0.1); color: #d97706;">
+                        <i class="fa-solid fa-gauge-high"></i> 185ms Latency
+                    </span>
                 </div>
-                <div class="metric-value">
-                    #42
-                    <span class="metric-trend trend-up"><i class="fa-solid fa-caret-up"></i> 3</span>
+
+                <div class="metric-title-group">
+                    <span class="metric-title-label">Agora Real-Time Voice Flow</span>
                 </div>
-                <div class="metric-sub">Top 5% of Frontend Candidates</div>
-                <div class="micro-badges">
-                    <span class="micro-badge"><i class="fa-solid fa-fire"></i> 7 Day Streak</span>
+
+                <div class="metric-score-row">
+                    <div class="metric-main-val">
+                        94%
+                        <span class="metric-trend trend-up" style="font-size: 0.85rem; margin-left: 6px;"><i class="fa-solid fa-caret-up"></i> Optimal</span>
+                    </div>
+                    <span class="metric-verdict-pill" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
+                        <i class="fa-solid fa-microphone"></i> Natural Cadence
+                    </span>
+                </div>
+
+                <p class="metric-info-explain">
+                    Sub-250ms conversational latency over Agora SD-RTN with graceful barge-in recovery.
+                </p>
+
+                <div class="submetric-track-bar">
+                    <div class="submetric-fill-bar" style="width: 94%; background: #f59e0b;"></div>
                 </div>
             </div>
         </section>
 
-        <!-- Main Two-Column Work Layout -->
-        <section class="dashboard-work-area">
-            
-            <!-- Left Column: Roadmap & History -->
-            <div class="panel-section">
-                <!-- Personalized AI Study Roadmap Card -->
-                <div class="glass-panel">
-                    <h2 class="panel-title"><i class="fa-solid fa-map-location-dot" style="color: var(--primary);"></i> AI Study Roadmap</h2>
-                    <div class="timeline">
-                        <div class="timeline-item active">
-                            <div class="timeline-dot"></div>
-                            <div class="timeline-content">
-                                <h4>Optimize Resume for Node.js</h4>
-                                <p class="metric-sub">Missing key backend terminology identified in target roles.</p>
-                                <div class="timeline-action">
-                                    <button class="btn btn-secondary-outline btn-sm">Analyze Resume</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-dot"></div>
-                            <div class="timeline-content">
-                                <h4>Solve 3 Arrays Challenges</h4>
-                                <p class="metric-sub">Coding Arena • Recommended to pass Tier 3.</p>
-                            </div>
-                        </div>
-                        <div class="timeline-item locked">
-                            <div class="timeline-dot"></div>
-                            <div class="timeline-content">
-                                <h4>STAR Interview Prep: Systems Design</h4>
-                                <p class="metric-sub">Unlocks after Tier 3 completion.</p>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Committee Scorecard Deck (Full-Width 2-Column Spacious Grid) -->
+        <section class="dashboard-deck-section" id="scorecards-section">
+            <div class="scorecards-header-bar">
+                <div class="scorecards-title-block">
+                    <h2><i class="fa-solid fa-clipboard-check" style="color: var(--primary);"></i> Committee Scorecard Deck</h2>
+                    <p>Interactive multi-agent evaluation cards. Select any session to review panelist rubrics, cited performance quotes, and transcripts.</p>
                 </div>
 
-                <!-- Session History Tabbed System -->
-                <div class="glass-panel">
-                    <div class="tabs-header">
-                        <button class="tab-btn active" data-target="tab-mock">Mock Interviews</button>
-                        <button class="tab-btn" data-target="tab-coding">Coding Arena</button>
-                        <button class="tab-btn" data-target="tab-ats">ATS Uploads</button>
-                    </div>
-
-                    <div class="tab-content active" id="tab-mock">
-                        <div class="table-responsive">
-                            <table class="dashboard-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Topic</th>
-                                        <th>Status</th>
-                                        <th>Score</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Jun 09, 2026</td>
-                                        <td>Frontend Architecture</td>
-                                        <td><span class="status-badge status-completed">Completed</span></td>
-                                        <td>88/100</td>
-                                        <td><a href="#" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">View Feedback</a></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Jun 05, 2026</td>
-                                        <td>Behavioral: Conflict Res.</td>
-                                        <td><span class="status-badge status-review">Proctoring Review</span></td>
-                                        <td>Pending</td>
-                                        <td><a href="#" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">Processing</a></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="tab-content" id="tab-coding">
-                        <div class="table-responsive">
-                            <table class="dashboard-table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Challenge Title</th>
-                                        <th>Status</th>
-                                        <th>Time</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Jun 10, 2026</td>
-                                        <td>Two Sum (Optimized)</td>
-                                        <td><span class="status-badge status-completed">Completed</span></td>
-                                        <td>12m 45s</td>
-                                        <td><a href="#" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">Review Code</a></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Jun 11, 2026</td>
-                                        <td>LRU Cache Implementation</td>
-                                        <td><span class="status-badge status-progress">In Progress</span></td>
-                                        <td>--</td>
-                                        <td><a href="#" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">Resume</a></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="tab-content" id="tab-ats">
-                        <div class="empty-state">
-                            <i class="fa-solid fa-file-pdf"></i>
-                            <p>No past ATS analysis logs found. Upload your first resume to get started.</p>
-                            <button class="btn btn-secondary-outline btn-sm">Scan Resume</button>
-                        </div>
-                    </div>
-
+                <!-- Category Filter Bar -->
+                <div class="scorecards-filter-bar">
+                    <button class="scorecard-filter-btn active" data-filter="all"><i class="fa-solid fa-border-all"></i> All Panels (4)</button>
+                    <button class="scorecard-filter-btn" data-filter="systems"><i class="fa-solid fa-laptop-code"></i> Engineering (2)</button>
+                    <button class="scorecard-filter-btn" data-filter="product"><i class="fa-solid fa-cubes"></i> Product (1)</button>
+                    <button class="scorecard-filter-btn" data-filter="leadership"><i class="fa-solid fa-people-group"></i> Leadership (1)</button>
                 </div>
             </div>
 
-            <!-- Right Column: Utilities -->
-            <div class="panel-section">
-                <!-- ATS Resume Hub -->
-                <div class="glass-panel">
-                    <h2 class="panel-title"><i class="fa-solid fa-file-contract" style="color: var(--accent);"></i> ATS Tailoring Hub</h2>
+            <!-- Dynamic 2-Column Cards Grid Container -->
+            <div class="scorecard-cards-grid" id="scorecards-grid">
+                <!-- Rendered dynamically by js/dashboard.js -->
+            </div>
+        </section>
+
+        <!-- Bottom Launchpad Deck (Start Your Interview & Select Track) -->
+        <section class="launchpad-deck">
+            <!-- Start Your Interview Card -->
+            <div class="glass-panel" style="background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 20px; padding: 2rem; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03); display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h2 class="panel-title" style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-play" style="color: var(--primary);"></i> Start Your Interview
+                        </h2>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--success); background: rgba(16, 185, 129, 0.12); padding: 4px 10px; border-radius: 20px;">
+                            <i class="fa-solid fa-circle-check"></i> Live Voice Ready
+                        </span>
+                    </div>
                     
-                    <div class="file-info">
-                        <i class="fa-regular fa-file-pdf file-icon"></i>
-                        <div class="file-details">
-                            <div class="file-name">Shivansh_Rana_CV.pdf</div>
-                            <div class="file-date">Uploaded on Jun 10, 2026</div>
-                        </div>
-                        <div class="file-actions">
-                            <button class="btn btn-secondary-outline btn-sm" title="View"><i class="fa-regular fa-eye"></i></button>
-                            <button class="btn btn-secondary-outline btn-sm" style="color: var(--error); border-color: rgba(248, 113, 113, 0.3);" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
-                        </div>
-                    </div>
-
-                    <button class="btn btn-primary-gradient" style="width: 100%; margin-bottom: 1.5rem; height: 40px; font-size: 0.9rem;">Optimize ATS</button>
-
-                    <div class="drop-zone">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <p style="font-size: 0.95rem; color: var(--text-secondary);">Drag & drop a new resume to scan or replace</p>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Supports PDF, DOCX (Max 5MB)</p>
-                    </div>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.55; margin-bottom: 1.5rem;">
+                        Launch directly into voice preparation. Calibrate audio levels with Nova, confirm your target role, and enter the live multi-role committee room.
+                    </p>
                 </div>
 
-                <!-- Recruiter Screening Gateway Card -->
-                <div class="glass-panel">
-                    <h2 class="panel-title"><i class="fa-solid fa-building-user" style="color: var(--success);"></i> Recruiter Gateway</h2>
-                    <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.5;">Received an invitation link code from an employer? Enter it below to begin your verified screening.</p>
-                    
-                    <div class="input-with-btn">
-                        <input type="text" placeholder="E.G. TRU-8X2A" id="recruiter-code">
-                        <button class="btn btn-primary-gradient" style="padding: 0 16px; border-radius: 10px;">Launch</button>
-                    </div>
-                </div>
+                <a href="gear-up.html" class="btn btn-primary-gradient" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; padding: 14px 0; font-weight: 700; font-size: 0.95rem;">
+                    <i class="fa-solid fa-play"></i> Start Your Interview
+                </a>
             </div>
 
+            <!-- Available Interview Tracks Card -->
+            <div class="glass-panel" style="background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 20px; padding: 2rem; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03);">
+                <h2 class="panel-title" style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-users-viewfinder" style="color: var(--accent);"></i> Available Interview Tracks
+                </h2>
+                <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;">Select a committee track to start your interview:</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <a href="gear-up.html?track=fullstack" class="track-fast-selector">
+                        <div class="track-fast-left">
+                            <i class="fa-solid fa-laptop-code"></i>
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Full-Stack & Systems</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">David Chen &bull; Alex Rivera</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+
+                    <a href="gear-up.html?track=product" class="track-fast-selector">
+                        <div class="track-fast-left">
+                            <i class="fa-solid fa-cubes"></i>
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Product Architecture & Execution</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Mark Davis &bull; Marcus Vance</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+
+                    <a href="gear-up.html?track=cloud" class="track-fast-selector">
+                        <div class="track-fast-left">
+                            <i class="fa-solid fa-cloud-bolt"></i>
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Enterprise Cloud & Infra</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">David Chen &bull; Marcus Vance</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+
+                    <a href="gear-up.html?track=leadership" class="track-fast-selector">
+                        <div class="track-fast-left">
+                            <i class="fa-solid fa-people-group"></i>
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Leadership & Behavioral</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Alex Rivera &bull; Mark Davis</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+                </div>
+            </div>
         </section>
     </main>
 
-    <!-- TruGen AI Live Mentor Widget -->
-    <aside class="trugen-widget" id="trugen-widget">
-        <div class="widget-header-bar" id="trugen-header">
-            <div class="avatar-container">
-                <i class="fa-solid fa-robot" style="font-size: 1.2rem; color: var(--primary);"></i>
-                <div class="live-indicator"></div>
+    <!-- Detailed Scorecard & Full Transcript Modal -->
+    <div class="scorecard-modal-backdrop" id="scorecard-modal" aria-hidden="true">
+        <div class="scorecard-modal-dialog">
+            <div class="modal-header-strip">
+                <div class="modal-header-title-group">
+                    <h3 id="modal-panel-title">Full-Stack Systems Architecture Panel</h3>
+                    <p id="modal-panel-subtitle">Conducted on Jun 12, 2026 &bull; Duration: 24 mins &bull; Committee Consensus: Strong Hire (91/100)</p>
+                </div>
+                <button class="modal-close-btn" id="modal-close-btn" aria-label="Close Modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
-            <div class="header-text">
-                <h5>AI Coach Elara</h5>
-                <span>Live Mentor • Agora Conversational AI</span>
+
+            <div class="modal-tab-bar">
+                <button class="modal-tab-btn active" data-tab="feedback"><i class="fa-solid fa-user-check" style="margin-right: 6px;"></i> Panelist Rubrics & Feedback</button>
+                <button class="modal-tab-btn" data-tab="transcript"><i class="fa-solid fa-receipt" style="margin-right: 6px;"></i> Full Chronological Transcript</button>
             </div>
-            <div class="header-actions">
-                <button class="widget-action-btn" id="trugen-collapse-btn"><i class="fa-solid fa-chevron-down"></i></button>
+
+            <div class="modal-scrollable-body" id="modal-content-area">
+                <!-- Injected dynamically by js/dashboard.js -->
             </div>
         </div>
-        <div class="widget-body">
-            <div class="chat-msg">
-                "Hi Shivansh! Great progress on Tier 3 Arrays. Do you want to review the two-pointer technique before your next challenge?"
-            </div>
-        </div>
-        <div class="widget-footer">
-            <input type="text" placeholder="Ask your AI mentor...">
-            <button class="widget-send-btn"><i class="fa-solid fa-paper-plane" style="font-size: 0.8rem;"></i></button>
-        </div>
-    </aside>
+    </div>
 
     <script type="module" src="js/dashboard.js"></script>
 </body>

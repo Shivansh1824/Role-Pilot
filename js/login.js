@@ -688,10 +688,14 @@ if (googleSigninBtn) {
         if (!db) return;
         hideAlert();
         try {
+            const redirectUrl = window.location.origin.includes('localhost')
+                ? window.location.origin + '/dashboard.html'
+                : 'https://voice-engine-kappa.vercel.app/dashboard.html';
+
             const { error } = await db.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: window.location.origin + '/form.html'
+                    redirectTo: redirectUrl
                 }
             });
             if (error) throw error;

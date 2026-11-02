@@ -7,12 +7,10 @@
     <!-- Inline Theme Script -->
     <script>
       (function() {
-          const currentTheme = localStorage.getItem('theme') || 'dark';
-          if (currentTheme === 'light') {
-              document.documentElement.classList.add('light-theme');
-          } else {
-              document.documentElement.classList.remove('light-theme');
-          }
+          document.documentElement.classList.add('light-theme');
+          try {
+              localStorage.setItem('theme', 'light');
+          } catch (e) {}
       })();
     </script>
     <script src="js/theme.js"></script>
@@ -23,7 +21,6 @@
 </head>
 <body class="login-page">
     <div class="bg-layers">
-        <div class="bg-layer dark-bg"></div>
         <div class="bg-layer light-bg"></div>
     </div>
     <div class="landing-overlay"></div>
@@ -51,7 +48,6 @@
         <div class="header-center"></div>
         <div class="header-actions">
             <a href="index.html" class="back-home-btn"><i class="fa-solid fa-arrow-left"></i> <span>Back to Home</span></a>
-            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
         </div>
     </header>
 
@@ -60,70 +56,79 @@
         <div class="login-left-panel">
             <div class="login-brand-content">
                 <div class="hero-badge">
-                    <i class="fa-solid fa-robot"></i> AI Interview Copilot
+                    <i class="fa-solid fa-users-viewfinder"></i> Enterprise AI Voice Committee
                 </div>
-                <h1>Accelerate your career with <br><span>real-time AI feedback.</span></h1>
-                <p>Bypass ATS filters, write optimal code, and master behavioral loops. Practice in a realistic, low-stakes environment powered by voice-adaptive AI agents.</p>
+                <h1>Master high-stakes interviews with <br><span>a 3-agent voice panel.</span></h1>
+                <p>Warm up with Nova, your conversational prep agent, then enter a live committee room with David and specialist leaders across Tech, Product, Sales, or HR. Experience real-time turn-taking and natural barge-in.</p>
                 
-                <!-- 2026 Glassmorphic Live Preview Widget -->
+                <!-- Glassmorphic Live Preview Widget -->
                 <div class="login-preview-widget">
                     <div class="widget-header">
                         <div class="widget-title">
                             <span class="status-pulse-dot"></span>
-                            <span>Live Interview Simulation</span>
+                            <span>Live Committee Simulation</span>
                         </div>
-                        <span class="widget-mode">Coding Round</span>
+                        <span class="widget-mode">Tech & Systems Track</span>
                     </div>
                     <div class="widget-body">
                         <div class="chat-bubbles">
                             <div class="bubble coach-bubble">
-                                <div class="bubble-meta">AI Coach Elara</div>
-                                <div class="bubble-text">"Your explanation of closures is clear. Let's optimize memory usage in your solution now."</div>
+                                <div class="bubble-meta" style="color: var(--accent);"><i class="fa-solid fa-user-tie"></i> David · Chairperson</div>
+                                <div class="bubble-text">"Welcome! Let's explore your distributed systems architecture. Alex, take the lead on their database decisions."</div>
+                            </div>
+                            <div class="bubble coach-bubble" style="background: rgba(6, 182, 212, 0.1); border-color: rgba(6, 182, 212, 0.25);">
+                                <div class="bubble-meta" style="color: #38bdf8;"><i class="fa-solid fa-microchip"></i> Alex · Technical Lead</div>
+                                <div class="bubble-text">"Walk me through how you prevent write contention and handle failovers across your read replicas."</div>
                             </div>
                             <div class="bubble candidate-bubble">
-                                <div class="bubble-meta">You</div>
-                                <div class="bubble-text">"I can optimize this by avoiding nested loops and using a Hash Map."</div>
+                                <div class="bubble-meta"><i class="fa-solid fa-user"></i> Candidate</div>
+                                <div class="bubble-text">"We implemented optimistic locking with distributed Redis leases and exponential backoff retry queues."</div>
                             </div>
                         </div>
-                        <div class="voice-wave-container">
-                            <span class="wave-bar"></span>
-                            <span class="wave-bar"></span>
-                            <span class="wave-bar"></span>
-                            <span class="wave-bar"></span>
-                            <span class="wave-bar"></span>
-                            <span class="wave-bar"></span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div class="voice-wave-container" style="margin-top: 0;">
+                                <span class="wave-bar"></span>
+                                <span class="wave-bar"></span>
+                                <span class="wave-bar"></span>
+                                <span class="wave-bar"></span>
+                                <span class="wave-bar"></span>
+                                <span class="wave-bar"></span>
+                            </div>
+                            <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 500;">
+                                <i class="fa-solid fa-bolt" style="color: var(--accent); margin-right: 4px;"></i> 160ms WebRTC Barge-In Active
+                            </span>
                         </div>
                     </div>
                     
                     <!-- Floating metrics badges -->
                     <div class="floating-metric metric-ats">
-                        <i class="fa-solid fa-file-shield"></i>
+                        <i class="fa-solid fa-headset" style="color: #ec4899;"></i>
                         <div>
-                            <span class="metric-label">ATS Match</span>
-                            <span class="metric-value">91%</span>
+                            <span class="metric-label">Prep Agent</span>
+                            <span class="metric-value">Nova Ready</span>
                         </div>
                     </div>
                     <div class="floating-metric metric-xp">
-                        <i class="fa-solid fa-trophy"></i>
+                        <i class="fa-solid fa-users-line" style="color: var(--accent);"></i>
                         <div>
-                            <span class="metric-label">Leaderboard</span>
-                            <span class="metric-value">Top 5</span>
+                            <span class="metric-label">4 Panels Active</span>
+                            <span class="metric-value">7 Leaders</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="login-trust-metrics-cards">
                     <div class="metric-card">
-                        <i class="fa-solid fa-file-circle-check"></i>
-                        <span>Instant ATS Diagnostics</span>
+                        <i class="fa-solid fa-headset" style="color: #ec4899;"></i>
+                        <span>Nova Voice Prep</span>
                     </div>
                     <div class="metric-card">
-                        <i class="fa-solid fa-microphone-lines"></i>
-                        <span>Voice-Interactive Mock</span>
+                        <i class="fa-solid fa-users-gear" style="color: var(--accent);"></i>
+                        <span>4 Domain Panels</span>
                     </div>
                     <div class="metric-card">
-                        <i class="fa-solid fa-trophy"></i>
-                        <span>Global Leaderboard</span>
+                        <i class="fa-solid fa-chart-pie" style="color: var(--success);"></i>
+                        <span>Evidence Scorecards</span>
                     </div>
                 </div>
             </div>

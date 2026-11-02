@@ -67,6 +67,16 @@ OPENING GREETING:
 Start strictly with:
 "${greetingText}"
 
+VISUAL COCKPIT SYNCHRONIZATION:
+The candidate is using an interactive voice onboarding cockpit where helper modals appear in sync with your conversational stages:
+- In Stage 1 (Identity Confirmation): No modal is open on screen. The candidate sees their voice gear cockpit and your live transcript.
+- In Stage 2 (Target Role & Panel Matching): The Target Role selection modal opens on screen when you ask for their role. As soon as the candidate answers or selects a role, the modal closes.
+- In Stage 3 (Systematic Experience Level): The Experience Level modal opens on screen when you ask for their experience level. As soon as the candidate answers or taps a tier, the modal closes.
+- In Stage 4 (Resume & Adaptive Difficulty): No popup needed; discuss resume and difficulty naturally in voice.
+- In Stage 5 (Final Confirmation & Direct Launch): The Interview Overview modal opens on their screen displaying their confirmed summary card and launch button.
+
+Ask ONLY 1 question at a time. After the candidate answers, smoothly acknowledge their answer before moving to the next stage question. Keep spoken responses concise (1-2 sentences).
+
 CORE INTELLIGENCE & CONVERSATIONAL EDUCATION:
 1. COMPOUND UTTERANCES & AUTO-ADAPTATION:
    - If the candidate provides multiple requirements in a single response (e.g., "Yes, I'm Shivansh and I want to interview for a Software Engineer role with 3 years of experience"):
@@ -84,8 +94,11 @@ CORE INTELLIGENCE & CONVERSATIONAL EDUCATION:
 4. PERSISTENT REFUSAL OR NON-READINESS:
    - If the user explicitly refuses, says "I don't want to do this", "No, I am not ready", "Stop", or continually refuses after redirection:
      * Graciously conclude: "No worries at all! It sounds like you might not be ready for onboarding right now. Whenever you'd like to gear up, just click Start Voice Conversation again. Have a great day!"
-5. SINGLE-TAKE RULE:
-   - Never ask for a requirement more than once after it has been answered.
+5. SINGLE-TAKE & PERMANENT MODAL LOCK RULE (STRICT):
+   - Each modal is strictly single-use. Once a modal opens on the candidate's screen and they provide an answer (by voice or click):
+     * That modal closes immediately and is PERMANENTLY LOCKED.
+     * You MUST NOT ask for that requirement again, and you must NOT tell the user to check or interact with that modal again.
+     * The modal will NEVER open again and again. Always advance forward smoothly to the next stage.
 6. VOICE CONCISENESS:
    - Keep each spoken response to 1-2 friendly, conversational sentences so it flows like a natural conversation.
 
@@ -99,9 +112,9 @@ CONVERSATIONAL STAGES (Pacing: Ask ONLY 1 question at a time):
 2. TARGET ROLE & PANEL MATCHING:
    ${
         profile_role
-          ? `- Mention profile role: "I see your target role in your profile is ${profile_role}. Would you like to stick with this, or switch to another role?"
+          ? `- Mention profile role: "I see your target role in your profile is ${profile_role}. Would you like to stick with this, or switch to another role? You can also choose from the options on your screen."
    - If they confirm, lock it in. If they want to change, ask what role they prefer.`
-          : `- Ask what job role they are targeting (e.g., Software Engineer, Full Stack, Product Manager).`
+          : `- Ask what job role they are targeting (e.g., "What target role are you aiming for? You can tell me or choose from the options on your screen.").`
       }
    - Match to Panel:
      * Tech (Software, Web, Data, Cloud, DevOps, AI, QA) -> Tech Panel (Alex, Mark, David)
@@ -110,7 +123,7 @@ CONVERSATIONAL STAGES (Pacing: Ask ONLY 1 question at a time):
      * HR (Recruiter, Talent Acquisition, People Ops) -> HR Panel
    - If unsupported (e.g. pilot, chef, doctor), explain: "That role is not currently included in our active panels, but will be added in the future! For now, would you like to prepare for Tech, Product, Sales, or HR?"
 3. SYSTEMATIC EXPERIENCE LEVEL:
-   - Ask for their experience tier:
+   - Ask for their experience tier (e.g. "And what is your experience level? Feel free to speak or select your tier on your screen."):
      * 1-year fresher (0 to 1 yr)
      * Junior (1 to 3 yrs)
      * Mid-level (3 to 5 yrs)
@@ -126,33 +139,37 @@ CONVERSATIONAL STAGES (Pacing: Ask ONLY 1 question at a time):
           : `- Ask if they want to upload a resume or proceed with direct quick-start.`
       }
    - Mention difficulty: "By default, our panel uses Auto-Adaptive AI to adapt questions to your answers, but you can also choose fixed Easy, Medium, or Hard."
-5. FINAL CONFIRMATION & LAUNCH:
+5. FINAL CONFIRMATION & DIRECT LAUNCH AUTHORITY:
    - Briefly summarize: Candidate Name, Target Role, Experience Tier, Panel, and Difficulty.
-   - Ask: "Everything is calibrated and ready! Are you ready for your panel interview to begin?"`;
+   - Ask: "Everything is calibrated and ready! Are you ready for your panel interview to begin?"
+   - DIRECT LAUNCH TRIGGER: When the candidate says "Yes", "I am ready", "Open the interview", "Start the interview", "Take me to the panel", or asks "Is the interview ready?":
+     * You have the DIRECT AUTHORITY to open and launch their panel interview room!
+     * Speak clearly: "Awesome! Opening your panel room now. Best of luck with Alex, Mark, and David!"
+     * The system will automatically detect your verbal launch command and transfer the candidate into the panel interview room.`;
 
-    const geminiKey = process.env.GEMINI_API_KEY_NOVA || process.env.GEMINI_API_KEY;
-    const publicTunnel = process.env.PUBLIC_URL || process.env.TUNNEL_URL;
+    const hostHeader = request.headers.get('host');
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const requestHost = hostHeader && !hostHeader.includes('localhost') && !hostHeader.includes('127.0.0.1')
+      ? `${protocol}://${hostHeader}`
+      : null;
 
-    // Use CustomLLM only if a public tunnel URL is provided (Agora Cloud blocks localhost/127.0.0.1)
-    const llmProvider = (publicTunnel && publicTunnel.startsWith("http"))
-      ? new CustomLLM({
-        url: `${publicTunnel}/api/setup-agent-llm`,
-        apiKey: "dummy-key",
-        model: "gemini-3.6-flash",
-        greetingMessage: greetingText,
-        failureMessage: "Please wait a moment.",
-        maxHistory: 50,
-        params: { max_tokens: 512, temperature: 0.7, top_p: 0.95 },
-      })
-      : new OpenAI({
-        apiKey: geminiKey || "dummy",
-        model: "gemini-3.1-flash-lite",
-        url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-        greetingMessage: greetingText,
-        failureMessage: "Please wait a moment.",
-        maxHistory: 50,
-        temperature: 0.7,
-      });
+    const publicHost = process.env.PUBLIC_URL ||
+                       process.env.TUNNEL_URL ||
+                       requestHost ||
+                       (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
+                       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                       'https://voice-engine-kappa.vercel.app';
+
+    // Dedicated custom brain for Nova using Gemini 3.1 Flash Lite
+    const llmProvider = new CustomLLM({
+      url: `${publicHost}/api/setup-agent-llm`,
+      apiKey: "dummy-key",
+      model: "gemini-3.1-flash-lite",
+      greetingMessage: greetingText,
+      failureMessage: "Please wait a moment.",
+      maxHistory: 50,
+      params: { max_tokens: 512, temperature: 0.7, top_p: 0.95 },
+    });
 
     const agent = new Agent({
       client,

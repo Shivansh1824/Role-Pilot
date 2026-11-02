@@ -82,8 +82,8 @@ export const TRACK_EVALUATIONS: Record<string, TrackEvaluationConfig> = {
       keywords: /user|customer|metric|conversion|retention|impact|ux|tradeoff|business|product|checkout|sla/i,
       strengthTitle: 'Customer Value & Impact Articulation',
       strengthDesc: 'Explicitly connected engineering implementation to user experience and measurable business KPIs.',
-      gapTitle: 'Customer UX & Business Metric Gap (PS11)',
-      gapDesc: 'Identified gap (PS11): Technical solution was accepted, but candidate omitted proactive explanation of customer checkout drop-offs and SLA guarantees.',
+      gapTitle: 'Customer UX & Business Metric Gap',
+      gapDesc: 'Identified gap: Technical solution was accepted, but candidate omitted proactive explanation of customer checkout drop-offs and SLA guarantees.',
       cardBlurb: 'Adapted well after challenge, but could proactively highlight user checkout friction earlier.',
     },
     panelist3: {

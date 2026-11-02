@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+          document.documentElement.classList.add('light-theme');
+          localStorage.setItem('theme', 'light');
+      })();
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/theme.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Candidate Dashboard - Role-Pilot</title>
+</head>
+<body class="dashboard-page">
+    <div class="bg-layers">
+        <div class="bg-layer light-bg"></div>
+    </div>
+    <div class="landing-overlay"></div>
+    
+    <!-- Global App Header -->
+    <header class="app-header dashboard-header">
+        <div class="header-left">
+            <a href="index.html" class="logo-wrapper">
+                <svg class="logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="var(--primary)" />
+                            <stop offset="100%" stop-color="var(--accent)" />
+                        </linearGradient>
+                    </defs>
+                    <rect class="step-1" x="12" y="66" width="13" height="18" rx="3" fill="url(#logo-grad)" opacity="0.35" />
+                    <rect class="step-2" x="30" y="48" width="13" height="36" rx="3" fill="url(#logo-grad)" opacity="0.6" />
+                    <rect class="step-3" x="48" y="30" width="13" height="54" rx="3" fill="url(#logo-grad)" opacity="0.8" />
+                    <path class="plane-body" d="M30,22 L92,12 L58,51 L44,46 Z" fill="url(#logo-grad)" />
+                    <path class="plane-shade" d="M44,46 L92,12 L52,58 Z" fill="url(#logo-grad)" opacity="0.85" />
+                    <path class="plane-fold" d="M52,58 L92,12 L72,36 Z" fill="url(#logo-grad)" opacity="0.7" />
+                </svg>
+                <span class="logo-text">Role<span>Pilot</span></span>
+            </a>
+        </div>
+        
+        <div class="header-center">
+            <nav class="header-nav">
+                <ul class="dashboard-nav-tabs">
+                    <li><a href="dashboard.html" class="nav-tab-link active"><i class="fa-solid fa-chart-pie" style="margin-right: 6px;"></i> Dashboard</a></li>
+                    <li><a href="gear-up.html" class="nav-tab-link"><i class="fa-solid fa-play" style="color: var(--primary); margin-right: 6px;"></i> Start Your Interview</a></li>
+                    <li><a href="#scorecards-section" class="nav-tab-link"><i class="fa-solid fa-clipboard-check" style="color: var(--primary); margin-right: 6px;"></i> Scorecards & History</a></li>
+                </ul>
+            </nav>
+        </div>
+        
+        <div class="header-actions header-user-actions">
+            <div class="xp-badge">
+                <i class="fa-solid fa-bolt"></i>
+                <span id="header-xp">XP: 4,250 • Master Tier</span>
+            </div>
+            
+            <div class="profile-dropdown-wrapper">
+                <div class="profile-trigger" id="profile-trigger">SR</div>
+                <div class="dropdown-menu" id="profile-dropdown">
+                    <a href="#" class="dropdown-item"><i class="fa-solid fa-user-gear"></i> Profile Settings</a>
+                    <a href="gear-up.html" class="dropdown-item"><i class="fa-solid fa-play"></i> Start Your Interview</a>
+                    <div style="height: 1px; background: var(--glass-border); margin: 4px 0;"></div>
+                    <a href="#" class="dropdown-item" id="logout-btn" style="color: var(--error);"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</a>
+                </div>
+            </div>
+            
+            <button class="mobile-menu-toggle" id="mobile-menu-btn">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        
+        <!-- Dashboard Hero Greeting Banner -->
+        <section class="dashboard-hero">
+            <div class="greeting-content">
+                <h1 id="greeting-title">Welcome back, <span id="user-firstname">Shivansh</span> 👋</h1>
+                <p id="greeting-subtitle">Target Role: Senior Full-Stack Engineer • Adaptive Multi-Role Committee Active</p>
+            </div>
+            <div class="hero-actions">
+                <a href="gear-up.html" class="btn btn-primary-gradient" style="display: inline-flex; align-items: center; gap: 10px; padding: 0 28px; height: 50px; font-size: 1.05rem; font-weight: 700; border-radius: 14px; text-decoration: none; box-shadow: 0 8px 24px -4px rgba(124, 58, 237, 0.35);">
+                    <i class="fa-solid fa-play"></i> Start Your Interview
+                </a>
+            </div>
+        </section>
+
+        <!-- North Star Performance Matrix (Clean, Airy & Benchmark-Driven) -->
+        <section class="metrics-grid">
+            <!-- Metric 1: Overall Readiness Score -->
+            <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #7c3aed, #6366f1);">
+                <div class="metric-header-top">
+                    <div class="metric-icon-badge" style="background: rgba(124, 58, 237, 0.1); color: var(--primary);">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <span class="metric-benchmark-tag" style="background: rgba(124, 58, 237, 0.1); color: var(--primary);">
+                        <i class="fa-solid fa-award"></i> Top 10% Candidate
+                    </span>
+                </div>
+                
+                <div class="metric-title-group">
+                    <span class="metric-title-label">Overall Readiness Score</span>
+                </div>
+
+                <div class="metric-score-row">
+                    <div class="metric-main-val">
+                        88%
+                        <span class="metric-trend trend-up" style="font-size: 0.85rem; margin-left: 6px;"><i class="fa-solid fa-arrow-trend-up"></i> +6%</span>
+                    </div>
+                    <span class="metric-verdict-pill" style="background: rgba(16, 185, 129, 0.12); color: var(--success);">
+                        <i class="fa-solid fa-circle-check"></i> Strong Hire
+                    </span>
+                </div>
+
+                <p class="metric-info-explain">
+                    Weighted composite readiness across technical architecture, behavioral precision, and voice telemetry.
+                </p>
+
+                <div class="submetric-track-bar">
+                    <div class="submetric-fill-bar" style="width: 88%; background: #7c3aed;"></div>
+                </div>
+            </div>
+
+            <!-- Metric 2: STAR Behavioral Structure -->
+            <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #06b6d4, #3b82f6);">
+                <div class="metric-header-top">
+                    <div class="metric-icon-badge" style="background: rgba(6, 182, 212, 0.1); color: var(--accent);">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <span class="metric-benchmark-tag" style="background: rgba(6, 182, 212, 0.1); color: #0891b2;">
+                        <i class="fa-solid fa-bullseye"></i> High Precision
+                    </span>
+                </div>
+
+                <div class="metric-title-group">
+                    <span class="metric-title-label">STAR Behavioral Structure</span>
+                </div>
+
+                <div class="metric-score-row">
+                    <div class="metric-main-val">
+                        A- <span style="font-size: 1.1rem; color: var(--text-muted); font-weight: 600;">(92%)</span>
+                    </div>
+                    <span class="metric-verdict-pill" style="background: rgba(6, 182, 212, 0.12); color: #0891b2;">
+                        <i class="fa-solid fa-sparkles"></i> Structured
+                    </span>
+                </div>
+
+                <p class="metric-info-explain">
+                    Adherence to Situation-Task-Action-Result format with clear personal ownership and quantified ROI.
+                </p>
+
+                <div class="submetric-track-bar">
+                    <div class="submetric-fill-bar" style="width: 92%; background: #06b6d4;"></div>
+                </div>
+            </div>
+
+            <!-- Metric 3: Technical Architecture Depth -->
+            <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #10b981, #059669);">
+                <div class="metric-header-top">
+                    <div class="metric-icon-badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success);">
+                        <i class="fa-solid fa-network-wired"></i>
+                    </div>
+                    <span class="metric-benchmark-tag" style="background: rgba(16, 185, 129, 0.1); color: #059669;">
+                        <i class="fa-solid fa-microchip"></i> Staff Tier
+                    </span>
+                </div>
+
+                <div class="metric-title-group">
+                    <span class="metric-title-label">Technical Architecture Depth</span>
+                </div>
+
+                <div class="metric-score-row">
+                    <div class="metric-main-val">
+                        91%
+                    </div>
+                    <span class="metric-verdict-pill" style="background: rgba(16, 185, 129, 0.12); color: var(--success);">
+                        <i class="fa-solid fa-shield-halved"></i> Trade-offs Defended
+                    </span>
+                </div>
+
+                <p class="metric-info-explain">
+                    Distributed system scalability, failure mode trade-off justification, and edge-case composure.
+                </p>
+
+                <div class="submetric-track-bar">
+                    <div class="submetric-fill-bar" style="width: 91%; background: #10b981;"></div>
+                </div>
+            </div>
+
+            <!-- Metric 4: Agora Real-Time Voice Flow -->
+            <div class="metric-card-glass" style="--metric-top-gradient: linear-gradient(90deg, #f59e0b, #ea580c);">
+                <div class="metric-header-top">
+                    <div class="metric-icon-badge" style="background: rgba(245, 158, 11, 0.1); color: #d97706;">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <span class="metric-benchmark-tag" style="background: rgba(245, 158, 11, 0.1); color: #d97706;">
+                        <i class="fa-solid fa-gauge-high"></i> 185ms Latency
+                    </span>
+                </div>
+
+                <div class="metric-title-group">
+                    <span class="metric-title-label">Agora Real-Time Voice Flow</span>
+                </div>
+
+                <div class="metric-score-row">
+                    <div class="metric-main-val">
+                        94%
+                        <span class="metric-trend trend-up" style="font-size: 0.85rem; margin-left: 6px;"><i class="fa-solid fa-caret-up"></i> Optimal</span>
+                    </div>
+                    <span class="metric-verdict-pill" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
+                        <i class="fa-solid fa-microphone"></i> Natural Cadence
+                    </span>
+                </div>
+
+                <p class="metric-info-explain">
+                    Sub-250ms conversational latency over Agora SD-RTN with graceful barge-in recovery.
+                </p>
+
+                <div class="submetric-track-bar">
+                    <div class="submetric-fill-bar" style="width: 94%; background: #f59e0b;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Committee Scorecard Deck (Full-Width 2-Column Spacious Grid) -->
+        <section class="dashboard-deck-section" id="scorecards-section">
+            <div class="scorecards-header-bar">
+                <div class="scorecards-title-block">
+                    <h2><i class="fa-solid fa-clipboard-check" style="color: var(--primary);"></i> Committee Scorecard Deck</h2>
+                    <p>Interactive multi-agent evaluation cards. Select any session to review panelist rubrics, cited performance quotes, and transcripts.</p>
+                </div>
+
+                <!-- Category Filter Bar -->
+                <div class="scorecards-filter-bar">
+                    <button class="scorecard-filter-btn active" data-filter="all"><i class="fa-solid fa-border-all"></i> All Panels (4)</button>
+                    <button class="scorecard-filter-btn" data-filter="systems"><i class="fa-solid fa-laptop-code"></i> Engineering (2)</button>
+                    <button class="scorecard-filter-btn" data-filter="product"><i class="fa-solid fa-cubes"></i> Product (1)</button>
+                    <button class="scorecard-filter-btn" data-filter="leadership"><i class="fa-solid fa-people-group"></i> Leadership (1)</button>
+                </div>
+            </div>
+
+            <!-- Dynamic 2-Column Cards Grid Container -->
+            <div class="scorecard-cards-grid" id="scorecards-grid">
+                <!-- Rendered dynamically by js/dashboard.js -->
+            </div>
+        </section>
+
+        <!-- Bottom Launchpad Deck (Start Your Interview & Select Track) -->
+        <section class="launchpad-deck">
+            <!-- Start Your Interview Card -->
+            <div class="glass-panel" style="background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 20px; padding: 2rem; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03); display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h2 class="panel-title" style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-play" style="color: var(--primary);"></i> Start Your Interview
+                        </h2>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--success); background: rgba(16, 185, 129, 0.12); padding: 4px 10px; border-radius: 20px;">
+                            <i class="fa-solid fa-circle-check"></i> Live Voice Ready
+                        </span>
+                    </div>
+                    
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.55; margin-bottom: 1.5rem;">
+                        Launch directly into voice preparation. Calibrate audio levels with Nova, confirm your target role, and enter the live multi-role committee room.
+                    </p>
+                </div>
+
+                <a href="gear-up.html" class="btn btn-primary-gradient" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; padding: 14px 0; font-weight: 700; font-size: 0.95rem;">
+                    <i class="fa-solid fa-play"></i> Start Your Interview
+                </a>
+            </div>
+
+            <!-- Available Interview Tracks Card -->
+            <div class="glass-panel" style="background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 20px; padding: 2rem; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03);">
+                <h2 class="panel-title" style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-users-viewfinder" style="color: var(--accent);"></i> Available Interview Tracks
+                </h2>
+                <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;">Select a committee track to start your interview:</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <a href="gear-up.html?track=fullstack" class="track-fast-selector">
+                        <div class="track-fast-left">
+                            <i class="fa-solid fa-laptop-code"></i>
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Full-Stack & Systems</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">David Chen &bull; Alex Rivera</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+
+                    <a href="gear-up.html?track=product" class="track-fast-selector">
+                        <div class="track-fast-left">
+                            <i class="fa-solid fa-cubes"></i>
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Product Architecture & Execution</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Mark Davis &bull; Marcus Vance</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+
+                    <a href="gear-up.html?track=cloud" class="track-fast-selector">
+                        <div class="track-fast-left">
+                            <i class="fa-solid fa-cloud-bolt"></i>
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Enterprise Cloud & Infra</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">David Chen &bull; Marcus Vance</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+
+                    <a href="gear-up.html?track=leadership" class="track-fast-selector">
+                        <div class="track-fast-left">
+                            <i class="fa-solid fa-people-group"></i>
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.9rem;">Leadership & Behavioral</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Alex Rivera &bull; Mark Davis</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem; color: var(--text-muted);"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Detailed Scorecard & Full Transcript Modal -->
+    <div class="scorecard-modal-backdrop" id="scorecard-modal" aria-hidden="true">
+        <div class="scorecard-modal-dialog">
+            <div class="modal-header-strip">
+                <div class="modal-header-title-group">
+                    <h3 id="modal-panel-title">Full-Stack Systems Architecture Panel</h3>
+                    <p id="modal-panel-subtitle">Conducted on Jun 12, 2026 &bull; Duration: 24 mins &bull; Committee Consensus: Strong Hire (91/100)</p>
+                </div>
+                <button class="modal-close-btn" id="modal-close-btn" aria-label="Close Modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="modal-tab-bar">
+                <button class="modal-tab-btn active" data-tab="feedback"><i class="fa-solid fa-user-check" style="margin-right: 6px;"></i> Panelist Rubrics & Feedback</button>
+                <button class="modal-tab-btn" data-tab="transcript"><i class="fa-solid fa-receipt" style="margin-right: 6px;"></i> Full Chronological Transcript</button>
+            </div>
+
+            <div class="modal-scrollable-body" id="modal-content-area">
+                <!-- Injected dynamically by js/dashboard.js -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

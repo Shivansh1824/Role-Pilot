@@ -4,19 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- Inline Theme Script (Crucial: Place immediately in <head> to prevent FOUC / flickering) -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Inline Theme Script -->
     <script>
       (function() {
-          const currentTheme = localStorage.getItem('theme') || 'dark';
-          if (currentTheme === 'light') {
-              document.documentElement.classList.add('light-theme');
-          } else {
-              document.documentElement.classList.remove('light-theme');
-          }
+          document.documentElement.classList.add('light-theme');
+          try {
+              localStorage.setItem('theme', 'light');
+          } catch (e) {}
       })();
     </script>
-    <!-- Theme Manager Script (for DOM toggles) -->
+    <!-- Theme Manager Script -->
     <script src="js/theme.js"></script>
     <!-- FontAwesome for Premium Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,6 +22,38 @@
     <link rel="stylesheet" href="css/style.css">
     <!-- Supabase JS Client Library CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Immediate OAuth Hash & Session Detection -->
+    <script type="module">
+      import { getSupabaseClient } from './js/supabase-client.js';
+
+      (async function checkOAuthCallback() {
+        if (window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('error='))) {
+          document.documentElement.style.visibility = 'hidden';
+          try {
+            const db = await getSupabaseClient();
+            const { data: { session }, error } = await db.auth.getSession();
+            if (session && !error) {
+              const { data: profile } = await db
+                .from('profiles')
+                .select('username, avatar_url, target_role, experience_level')
+                .eq('id', session.user.id)
+                .maybeSingle();
+
+              if (profile && profile.username && profile.avatar_url && profile.target_role && profile.experience_level) {
+                window.location.replace('dashboard.html');
+              } else {
+                window.location.replace('form.html');
+              }
+              return;
+            }
+          } catch (e) {
+            console.error('OAuth token processing error:', e);
+          }
+          document.documentElement.style.visibility = '';
+        }
+      })();
+    </script>
+    <title>Role-Pilot | Enterprise Multi-Role AI Voice Interview Platform</title>
 </head>
 <body class="landing-body">
     <div class="bg-layers">
@@ -32,6 +62,7 @@
     </div>
     <div class="landing-overlay"></div>
     
+    <!-- Top Navigation Header -->
     <header class="app-header">
         <div class="header-left">
             <a href="index.html" class="logo-wrapper">
@@ -55,21 +86,22 @@
         
         <div class="header-center">
             <nav class="header-nav">
-                <a href="#how-it-guides" class="nav-link">Features</a>
-                <a href="#live-dashboard" class="nav-link">Live Demo</a>
-                <a href="#global-leaderboard" class="nav-link">Leaderboard</a>
+                <a href="#panels-section" class="nav-link">4 Domain Panels</a>
+                <a href="#nova-section" class="nav-link">Nova Voice Prep</a>
+                <a href="#voice-demo" class="nav-link">Live Voice Demo</a>
+                <a href="#roadmap-section" class="nav-link">4-Step Path</a>
+                <a href="#reviews-section" class="nav-link">Results</a>
                 <a href="#faq" class="nav-link">FAQ</a>
                 <div class="mobile-only-actions">
                     <a href="login.html" class="btn-secondary-outline mobile-nav-btn">Sign In</a>
-                    <a href="login.html" class="btn btn-header mobile-nav-btn">Get Started</a>
+                    <a href="gear-up.html" class="btn btn-header mobile-nav-btn">Launch AI Voice Panel</a>
                 </div>
             </nav>
         </div>
 
         <div class="header-actions">
-            <button id="theme-toggle" class="theme-toggle-header" aria-label="Toggle Theme">☀️</button>
             <a href="login.html" id="header-signin-btn" class="btn-secondary-outline">Sign In</a>
-            <a href="login.html" class="btn btn-header header-signup-desktop">Get Started</a>
+            <a href="gear-up.html" class="btn btn-header header-signup-desktop"><i class="fa-solid fa-microphone-lines" style="margin-right: 6px;"></i> Launch Voice Panel</a>
             <button class="mobile-menu-toggle" aria-label="Toggle Mobile Menu">
                 <i class="fa-solid fa-bars"></i>
             </button>
@@ -77,37 +109,41 @@
     </header>
 
     <main class="page-main marketing-page">
-        <!-- New 2026 Split Hero Section -->
+        <!-- Hero Section -->
         <section class="marketing-hero">
             <div class="hero-text-content">
                 <div class="hero-badge">
-                    <i class="fa-solid fa-robot"></i> AI Interview Copilot
+                    <i class="fa-solid fa-microphone-lines"></i> Enterprise AI Voice Interview Platform
                 </div>
-                <h1>Land the Offer.<br><span>Master technical interviews with real-time AI.</span></h1>
-                <p>Practice live, voice-interactive mock interviews with adaptive AI agents, check your ATS compatibility, and optimize your answers before you apply.</p>
+                <h1>Master High-Stakes Multi-Role Interviews with <br><span>Real-Time Voice AI.</span></h1>
+                <p>Practice live, voice-interactive technical, product, and leadership rounds with specialized 3-interviewer committees. Warm up with Nova, experience seamless 160ms speech barge-in, and receive evidence-based scorecards.</p>
                 <div class="hero-ctas-container">
                     <div class="hero-ctas">
-                        <a href="gear-up.html" class="btn btn-primary-gradient" style="text-decoration:none;"><i class="fa-solid fa-microphone-lines" style="margin-right: 6px;"></i> Launch AI Voice Panel</a>
-                        <a href="login.html" class="btn-secondary-outline" style="text-decoration:none;">Sign In / Dashboard</a>
+                        <a href="gear-up.html" class="btn btn-primary-gradient" style="text-decoration:none;">
+                            <i class="fa-solid fa-microphone-lines" style="margin-right: 8px;"></i> Launch AI Voice Panel
+                        </a>
+                        <a href="login.html" class="btn-secondary-outline" style="text-decoration:none;">
+                            <i class="fa-solid fa-table-columns" style="margin-right: 6px;"></i> Sign In / Dashboard
+                        </a>
                     </div>
                     <span class="hero-cta-caption">
-                        Real-time voice • Multi-role AI committee • Instant evidence scorecard
+                        Ultra-low latency WebRTC • 4 Specialized tracks • Dynamic 160ms barge-in • Quote-backed feedback
                     </span>
                 </div>
             </div>
             
             <div class="hero-visual-content">
                 <div class="image-glass-wrapper">
-                    <img src="images/hero_interview_real.png" alt="Candidate using RolePilot AI" class="hero-main-img">
+                    <img src="images/hero_interview_real.png" alt="Multi-Role Voice AI Committee in Session" class="hero-main-img">
                     
-                    <!-- Floating Glass Elements for 2026 feel -->
+                    <!-- Floating Glass Badges -->
                     <div class="floating-badge badge-top-left">
                         <span class="status-pulse-dot"></span>
-                        <span>Status: Live Voice Committee</span>
+                        <span>Active Room: Tech Committee (3 Panelists)</span>
                     </div>
                     <div class="floating-badge badge-bottom-right">
-                        <i class="fa-solid fa-microphone-lines" style="color: var(--accent)"></i>
-                        <span>Maya (Product): "How does this cache lag affect customer checkout conversion?"</span>
+                        <i class="fa-solid fa-waveform-lines" style="color: var(--accent); margin-right: 6px;"></i>
+                        <span>David (Chair): "Alex, let's explore database isolation..."</span>
                     </div>
                 </div>
             </div>
@@ -117,28 +153,180 @@
             <div class="divider-glow"></div>
         </div>
 
-        <!-- Recruiter Pipeline Section -->
-        <section class="recruiter-pipeline-section">
+        <!-- 4 Specialized Domain Panels Section -->
+        <section class="recruiter-pipeline-section" id="panels-section">
             <div class="section-header">
-                <h2>Discover <span class="gradient-text">Verified Talent</span></h2>
-                <p>An AI system that ranks thousands of candidates against your specific Job Description, looking at verified coding scores, mock interview reliability, and semantic ATS matching.</p>
+                <h2>The 4 Specialized <span class="gradient-text">Domain Panels</span></h2>
+                <p>Real-world interview loops are never conducted by a single person. Role-Pilot simulates complete 3-member committees with distinct technical, business, and leadership mandates.</p>
             </div>
             
-            <div class="recruiter-stats-grid">
-                <div class="recruiter-stat-card">
-                    <i class="fa-solid fa-code"></i>
-                    <h4>Coding Arena Verified</h4>
-                    <p>Rank candidates based on verified Big-O complexity scores from live technical rounds, not just resume keywords.</p>
+            <div class="tracks-grid">
+                <!-- Track 1: Tech Engineering -->
+                <div class="track-card">
+                    <div>
+                        <div class="track-header">
+                            <div class="track-icon-wrapper"><i class="fa-solid fa-server"></i></div>
+                            <div>
+                                <h3 style="margin:0; font-size: 1.15rem;">Tech Engineering</h3>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">Architecture & Systems</span>
+                            </div>
+                        </div>
+                        <div class="chairperson-pill">
+                            <i class="fa-solid fa-crown"></i> Chairperson: David (Hiring Manager)
+                        </div>
+                        <div class="panelists-roster">
+                            <div class="panelist-row">
+                                <div class="panelist-mini-avatar ava-david">DV</div>
+                                <div class="panelist-info-text">
+                                    <span class="panelist-name-role">David • Hiring Manager</span>
+                                    <span class="panelist-focus">STAR Behavioral & Cultural Alignment</span>
+                                </div>
+                            </div>
+                            <div class="panelist-row">
+                                <div class="panelist-mini-avatar ava-alex">AX</div>
+                                <div class="panelist-info-text">
+                                    <span class="panelist-name-role">Alex • Technical Lead</span>
+                                    <span class="panelist-focus">Distributed Scaling & Microservices</span>
+                                </div>
+                            </div>
+                            <div class="panelist-row">
+                                <div class="panelist-mini-avatar ava-mark">MK</div>
+                                <div class="panelist-info-text">
+                                    <span class="panelist-name-role">Mark • Product Manager</span>
+                                    <span class="panelist-focus">Latency vs UX Impact & Trade-offs</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="interview-setup.html?track=tech" class="btn btn-secondary-outline btn-sm" style="text-align: center; margin-top: 16px;">
+                        Configure Tech Panel <i class="fa-solid fa-arrow-right" style="margin-left: 4px;"></i>
+                    </a>
                 </div>
-                <div class="recruiter-stat-card">
-                    <i class="fa-solid fa-microphone-lines"></i>
-                    <h4>Behavioral Signals</h4>
-                    <p>Access reliability metrics from voice-interactive mock interviews to identify strong communicators instantly.</p>
+
+                <!-- Track 2: Product Leadership -->
+                <div class="track-card">
+                    <div>
+                        <div class="track-header">
+                            <div class="track-icon-wrapper"><i class="fa-solid fa-compass-drafting"></i></div>
+                            <div>
+                                <h3 style="margin:0; font-size: 1.15rem;">Product Leadership</h3>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">Strategy & Execution</span>
+                            </div>
+                        </div>
+                        <div class="chairperson-pill">
+                            <i class="fa-solid fa-crown"></i> Chairperson: David (Hiring Manager)
+                        </div>
+                        <div class="panelists-roster">
+                            <div class="panelist-row">
+                                <div class="panelist-mini-avatar ava-david">DV</div>
+                                <div class="panelist-info-text">
+                                    <span class="panelist-name-role">David • Hiring Manager</span>
+                                    <span class="panelist-focus">Vision Alignment & Cross-functional Lead</span>
+                                </div>
+                            </div>
+                            <div class="panelist-row">
+                                <div class="panelist-mini-avatar ava-mark">MK</div>
+                                <div class="panelist-info-text">
+                                    <span class="panelist-name-role">Mark • Product Lead</span>
+                                    <span class="panelist-focus">Roadmap Strategy & Conversion Metrics</span>
+                                </div>
+                            </div>
+                            <div class="panelist-row">
+                                <div class="panelist-mini-avatar ava-alex">AX</div>
+                                <div class="panelist-info-text">
+                                    <span class="panelist-name-role">Alex • Technical Lead</span>
+                                    <span class="panelist-focus">Feasibility & Tech Debt Trade-offs</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="interview-setup.html?track=product" class="btn btn-secondary-outline btn-sm" style="text-align: center; margin-top: 16px;">
+                        Configure Product Panel <i class="fa-solid fa-arrow-right" style="margin-left: 4px;"></i>
+                    </a>
                 </div>
-                <div class="recruiter-stat-card">
-                    <i class="fa-solid fa-list-ol"></i>
-                    <h4>The Top 100 Shortlist</h4>
-                    <p>Our semantic AI ranks the 100,000+ candidate pool to deliver a highly trusted, ready-to-hire shortlist tailored to your exact JD.</p>
+
+                <!-- Track 3: Enterprise Sales -->
+                <div class="track-card">
+                    <div>
+                        <div class="track-header">
+                            <div class="track-icon-wrapper"><i class="fa-solid fa-chart-line"></i></div>
+                            <div>
+                                <h3 style="margin:0; font-size: 1.15rem;">Enterprise Sales & GTM</h3>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">Deals & Pipeline</span>
+                            </div>
+                        </div>
+                        <div class="chairperson-pill">
+                            <i class="fa-solid fa-crown"></i> Chairperson: David (Hiring Manager)
+                        </div>
+                        <div class="panelists-roster">
+                            <div class="panelist-row">
+                                <div class="panelist-mini-avatar ava-david">DV</div>
+                                <div class="panelist-info-text">
+                                    <span class="panelist-name-role">David • Hiring Manager</span>
+                                    <span class="panelist-focus">Grit, Cultural Fit & Quota Ownership</span>
+                                </div>
+                            </div>
+                            <div class="panelist-row">
+                                <div class="panelist-mini-avatar ava-marcus">MR</div>
+                                <div class="panelist-info-text">
+                                    <span class="panelist-name-role">Marcus • Sales Director</span>
+                                    <span class="panelist-focus">Pipeline Velocity & MEDDIC Qualification</span>
+                                </div>
+                            </div>
+                            <div class="panelist-row">
+                                <div class="panelist-mini-avatar ava-sean">SN</div>
+                                <div class="panelist-info-text">
+                                    <span class="panelist-name-role">Sean • VP of Sales</span>
+                                    <span class="panelist-focus">Enterprise Deal Closing & Objections</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="interview-setup.html?track=sales" class="btn btn-secondary-outline btn-sm" style="text-align: center; margin-top: 16px;">
+                        Configure Sales Panel <i class="fa-solid fa-arrow-right" style="margin-left: 4px;"></i>
+                    </a>
+                </div>
+
+                <!-- Track 4: HR & People -->
+                <div class="track-card">
+                    <div>
+                        <div class="track-header">
+                            <div class="track-icon-wrapper"><i class="fa-solid fa-people-roof"></i></div>
+                            <div>
+                                <h3 style="margin:0; font-size: 1.15rem;">HR & People Ops</h3>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">Culture & Talent</span>
+                            </div>
+                        </div>
+                        <div class="chairperson-pill">
+                            <i class="fa-solid fa-crown"></i> Chairperson: David (Hiring Manager)
+                        </div>
+                        <div class="panelists-roster">
+                            <div class="panelist-row">
+                                <div class="panelist-mini-avatar ava-david">DV</div>
+                                <div class="panelist-info-text">
+                                    <span class="panelist-name-role">David • Hiring Manager</span>
+                                    <span class="panelist-focus">Executive Alignment & Stakeholder Trust</span>
+                                </div>
+                            </div>
+                            <div class="panelist-row">
+                                <div class="panelist-mini-avatar ava-sam">SM</div>
+                                <div class="panelist-info-text">
+                                    <span class="panelist-name-role">Sam • Culture Lead</span>
+                                    <span class="panelist-focus">DEI, Organizational Health & Retention</span>
+                                </div>
+                            </div>
+                            <div class="panelist-row">
+                                <div class="panelist-mini-avatar ava-ethan">ET</div>
+                                <div class="panelist-info-text">
+                                    <span class="panelist-name-role">Ethan • HR Director</span>
+                                    <span class="panelist-focus">Compliance, Mediation & Compensation</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="interview-setup.html?track=hr" class="btn btn-secondary-outline btn-sm" style="text-align: center; margin-top: 16px;">
+                        Configure HR Panel <i class="fa-solid fa-arrow-right" style="margin-left: 4px;"></i>
+                    </a>
                 </div>
             </div>
         </section>
@@ -147,84 +335,97 @@
             <div class="divider-glow"></div>
         </div>
 
-        <!-- "How Role-Pilot Guides You" Flow Section -->
-        <section class="how-it-guides-section" id="how-it-guides">
-            <div class="section-header">
-                <h2>The complete <span class="gradient-text">guidance framework</span></h2>
-                <p>Everything you need to bypass filters, write optimal code, and communicate with confidence.</p>
+        <!-- Nova Voice Onboarding Spotlight Section -->
+        <section class="nova-spotlight-section" id="nova-section">
+            <div class="nova-spotlight-card">
+                <div>
+                    <div class="nova-badge">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Meet Nova • Conversational Prep Copilot
+                    </div>
+                    <h2 style="font-size: 2rem; margin-bottom: 16px;">
+                        Gearing Up for the Panel with <span class="gradient-text">Nova</span>
+                    </h2>
+                    <p style="color: var(--text-secondary); line-height: 1.6; font-size: 1.05rem;">
+                        Before stepping into a high-stakes 3-member committee interview, candidates warm up directly with <strong>Nova</strong>. Featuring natural voice conversation, Nova eliminates pre-call anxiety and dynamically calibrates the upcoming panel session.
+                    </p>
+                    <div class="nova-features-list">
+                        <div class="nova-feature-item">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span><strong>Resume Fact-Extraction:</strong> Extracts your core achievements, systems, and metrics to ground the committee's questions.</span>
+                        </div>
+                        <div class="nova-feature-item">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span><strong>Track & Difficulty Calibration:</strong> Recommends whether you should face Mid, Senior, or Staff-level depth.</span>
+                        </div>
+                        <div class="nova-feature-item">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span><strong>Audio Telemetry Check:</strong> Tests your mic sensitivity and background noise so your speech barge-in is optimal.</span>
+                        </div>
+                    </div>
+                    <a href="gear-up.html" class="btn btn-primary-gradient" style="margin-top: 8px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                        <i class="fa-solid fa-headset"></i> Warm Up with Nova Now
+                    </a>
+                </div>
+
+                <div class="nova-preview-box">
+                    <div class="nova-avatar-header">
+                        <div class="nova-avatar-circle">NV</div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 1.1rem; color: #fff;">Nova (AI Prep Lead)</div>
+                            <div style="font-size: 0.8rem; color: #22d3ee;"><span class="status-pulse-dot" style="display:inline-block; margin-right:4px;"></span> Active Voice Onboarding</div>
+                        </div>
+                    </div>
+                    <p style="font-size: 0.95rem; color: var(--text-secondary); font-style: italic; background: rgba(0,0,0,0.3); padding: 14px; border-radius: 12px; border-left: 3px solid #c084fc;">
+                        "Welcome! I noticed your background in high-throughput Node.js microservices. I've calibrated Alex and Mark for your Tech loop, and set your difficulty to Senior. Ready to step into the room?"
+                    </p>
+                    <div class="nova-wave-row">
+                        <span></span><span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+                        <span>Audio Latency: 160ms</span>
+                        <span>Status: Calibrated</span>
+                    </div>
+                </div>
             </div>
-            
-            <div class="guidance-steps">
-                <div class="guide-step">
-                    <div class="step-number">01</div>
-                    <div class="step-icon"><i class="fa-solid fa-microphone-lines"></i></div>
-                    <h3>Agora Multi-Role AI Panel</h3>
-                    <p>Practice live, voice-interactive sessions with an AI committee (Alex, Maya, David). Receive instant diagnostics on architecture, product impact, and STAR methodology.</p>
-                    <a href="gear-up.html" class="btn btn-secondary-outline btn-sm" style="margin-top: 10px; display: inline-block;">Start Voice Mock</a>
-                </div>
-                <div class="guide-step">
-                    <div class="step-number">02</div>
-                    <div class="step-icon"><i class="fa-solid fa-laptop-code"></i></div>
-                    <h3>Technical Arena</h3>
-                    <p>Progress through level-based coding challenges with immediate, real-time AI evaluation of your Big-O time and space complexity.</p>
-                </div>
-                <div class="guide-step">
-                    <div class="step-number">03</div>
-                    <div class="step-icon"><i class="fa-solid fa-file-shield"></i></div>
-                    <h3>ATS Diagnostics & Tailoring</h3>
-                    <p>Scan your resume against live job descriptions. Identify missing target keywords and structural red flags to optimize your ATS fit.</p>
-                </div>
-                <div class="guide-step">
-                    <div class="step-number">04</div>
-                    <div class="step-icon"><i class="fa-solid fa-trophy"></i></div>
-                    <h3>Dual-Sided Global Leaderboard</h3>
-                    <p>Earn XP and climb global ranks. Showcase your verifiable scores directly to recruiters looking to fast-track top performers.</p>
-                </div>
-                <div class="guide-step">
-                    <div class="step-number">05</div>
-                    <div class="step-icon"><i class="fa-solid fa-road"></i></div>
-                    <h3>Personalized Learning</h3>
-                    <p>Receive AI-generated study roadmaps to bridge identified skill gaps with targeted recommendations for topics and paradigms.</p>
-                </div>
-            </div>
-        </section> 
+        </section>
 
         <div class="section-divider">
             <div class="divider-glow"></div>
         </div>
 
-        <!-- Premium Live Dashboard Section -->
-        <section class="landing-dashboard-section" id="live-dashboard">
+        <!-- Interactive Demo Voice Agent Section -->
+        <section class="landing-dashboard-section" id="voice-demo">
             <div class="section-header">
-                <h2>The Ultimate Edge for <span>Tech Professionals</span></h2>
-                <p>Experience the exact tools you'll use to master interviews, beat the ATS, and outrank the competition.</p>
+                <h2>Interactive <span class="gradient-text">Voice Agent Simulation</span></h2>
+                <p>Explore how our multi-agent committee coordinates turns, handles 160ms voice barge-in, and scores your answers in real time.</p>
             </div>
             
             <div class="dashboard-preview-window">
                 <div class="simulated-cursor">
                     <i class="fa-solid fa-arrow-pointer"></i>
                 </div>
+
                 <!-- Sidebar -->
                 <div class="dashboard-sidebar">
                     <div class="sidebar-user">
-                        <div class="user-avatar">JD</div>
+                        <div class="user-avatar" style="background: linear-gradient(135deg, #8b5cf6, #06b6d4);">AI</div>
                         <div class="user-info">
-                            <span class="user-name">John Doe</span>
-                            <span class="user-xp"><i class="fa-solid fa-star"></i> 2,450 XP (Level 12)</span>
+                            <span class="user-name">Live Simulator</span>
+                            <span class="user-xp"><i class="fa-solid fa-bolt"></i> Real-Time Voice Engine</span>
                         </div>
                     </div>
                     <nav class="sidebar-nav">
-                        <button class="nav-tab active" data-target="ats-tab">
-                            <i class="fa-solid fa-file-shield"></i> ATS Analyzer
+                        <button class="nav-tab active" data-target="multi-panel-tab">
+                            <i class="fa-solid fa-users-viewfinder"></i> 4-Track Committees
                         </button>
-                        <button class="nav-tab" data-target="coding-tab">
-                            <i class="fa-solid fa-code"></i> Coding Arena
+                        <button class="nav-tab" data-target="nova-prep-tab">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Nova Voice Prep
                         </button>
-                        <button class="nav-tab" data-target="coach-tab">
-                            <i class="fa-solid fa-user-tie"></i> AI Career Coach
+                        <button class="nav-tab" data-target="bargein-tab">
+                            <i class="fa-solid fa-wave-square"></i> 160ms Natural Barge-In
                         </button>
-                        <button class="nav-tab" data-target="leaderboard-tab">
-                            <i class="fa-solid fa-trophy"></i> XP Leaderboard
+                        <button class="nav-tab" data-target="scorecard-tab">
+                            <i class="fa-solid fa-clipboard-check"></i> Evidence Scorecard
                         </button>
                     </nav>
                 </div>
@@ -232,135 +433,178 @@
                 <!-- Main Content Area -->
                 <div class="dashboard-content">
                     
-                    <!-- ATS Tab -->
-                    <div id="ats-tab" class="dashboard-pane active">
+                    <!-- Pane 1: 4-Track Committees -->
+                    <div id="multi-panel-tab" class="dashboard-pane active">
                         <div class="pane-header">
-                            <h3>Resume ATS Diagnostics</h3>
-                            <button class="btn-secondary-outline btn-sm" style="padding: 4px 12px; font-size: 0.8rem;"><i class="fa-solid fa-upload"></i> Upload PDF</button>
-                        </div>
-                        <div class="ats-scan-container">
-                            <div class="ats-doc-preview">
-                                <div class="doc-line title">John Doe - Senior Engineer</div>
-                                <div class="doc-line highlight-red">Skills: HTML, CSS, JS</div>
-                                <div class="doc-line">Experience: Built web apps.</div>
-                                <div class="scan-laser"></div>
+                            <div>
+                                <h3 style="margin:0;">Multi-Role Committee Turn-Taking</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 4px 0 0 0;">Toggle track to see active speaker handoffs across Alex, Mark, Marcus, Sean, Sam & Ethan</p>
                             </div>
-                            <div class="ats-results">
-                                <div class="ats-score-circle-large">
-                                    <svg viewBox="0 0 36 36"><path class="bg" d="M18 2 a 16 16 0 0 1 0 32 a 16 16 0 0 1 0 -32"/><path class="fill" id="ats-progress-path" d="M18 2 a 16 16 0 0 1 0 32 a 16 16 0 0 1 0 -32" stroke-dasharray="100" stroke-dashoffset="38"/></svg>
-                                    <div class="score-text"><span id="ats-score-num">62</span>%</div>
-                                </div>
-                                <div class="ats-feedback">
-                                    <div class="feedback-item error"><i class="fa-solid fa-circle-xmark"></i> Missing keywords: React, Node.js, System Design</div>
-                                    <div class="feedback-item warning"><i class="fa-solid fa-triangle-exclamation"></i> Action verbs lacking in experience section</div>
-                                </div>
-                                <button class="btn pulse-btn" id="optimize-resume-btn" style="height: 40px; font-size: 0.85rem;">Auto-Tailor Resume</button>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <button class="demo-track-pill active" data-track="tech">Tech</button>
+                                <button class="demo-track-pill" data-track="product">Product</button>
+                                <button class="demo-track-pill" data-track="sales">Sales</button>
+                                <button class="demo-track-pill" data-track="hr">HR</button>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Coding Arena Tab -->
-                    <div id="coding-tab" class="dashboard-pane">
-                        <div class="pane-header">
-                            <h3>Technical Arena <span class="badge badge-accent">Live Eval</span></h3>
-                            <div class="timer">00:14:23</div>
-                        </div>
-                        <div class="coding-workspace">
-                            <div class="code-editor">
-                                <div class="editor-header">
-                                    <span class="lang-badge">Python 3.10</span>
-                                    <span>two_sum.py</span>
-                                </div>
-                                <pre class="code-lines"><code><span class="keyword">def</span> <span class="function">two_sum</span>(nums, target):
-    seen = {}
-    <span class="keyword">for</span> i, num <span class="keyword">in</span> <span class="function">enumerate</span>(nums):
-        diff = target - num
-        <span class="keyword">if</span> diff <span class="keyword">in</span> seen:
-            <span class="keyword">return</span> [seen[diff], i]
-        seen[num] = i
-    <span class="keyword">return</span> []</code></pre>
-                            </div>
-                            <div class="code-sidebar">
-                                <div class="problem-desc">
-                                    <h4>Two Sum</h4>
-                                    <p>Find two numbers that add up to target. Return their indices.</p>
-                                </div>
-                                <div class="eval-box">
-                                    <div class="eval-title"><i class="fa-solid fa-robot"></i> AI Complexity Eval</div>
-                                    <div class="eval-stat"><span class="label">Time:</span> <span class="value success" id="time-complex">O(N) - Optimal</span></div>
-                                    <div class="eval-stat"><span class="label">Space:</span> <span class="value success">O(N)</span></div>
-                                </div>
-                                <button class="btn pulse-btn-success" id="run-code-btn" style="background: var(--success); height: 40px;"><i class="fa-solid fa-play"></i> Run & Submit</button>
-                                
-                                <div class="xp-reward-toast" id="xp-toast">
-                                    <i class="fa-solid fa-arrow-trend-up"></i> +50 XP Earned!
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- AI Coach Tab -->
-                    <div id="coach-tab" class="dashboard-pane">
-                        <div class="pane-header">
-                            <h3>Live Behavioral Interview</h3>
-                            <span class="status-indicator"><span class="dot pulse"></span> Recording</span>
-                        </div>
-                        <div class="coach-container">
-                            <div class="video-feed">
-                                <img src="images/ai_interviewer.png" alt="AI Coach" class="coach-avatar-feed">
-                                <div class="video-overlay">
-                                    <span class="coach-name">Elara - Senior Tech Recruiter</span>
-                                    <div class="voice-wave">
-                                        <span></span><span></span><span></span><span></span>
+                        <div class="voice-sim-pane" style="margin-top: 16px;">
+                            <div class="voice-sim-speakers">
+                                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Active Committee:</div>
+                                <div id="demo-roster-display" style="display: flex; gap: 14px; flex-wrap: wrap;">
+                                    <div class="panelist-row">
+                                        <div class="panelist-mini-avatar ava-david">DV</div>
+                                        <span class="panelist-name-role">David (Chair)</span>
+                                    </div>
+                                    <div class="panelist-row">
+                                        <div class="panelist-mini-avatar ava-alex">AX</div>
+                                        <span class="panelist-name-role">Alex (Tech Lead)</span>
+                                    </div>
+                                    <div class="panelist-row">
+                                        <div class="panelist-mini-avatar ava-mark">MK</div>
+                                        <span class="panelist-name-role">Mark (Product Manager)</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="chat-log">
-                                <div class="msg ai-msg">
-                                    <div class="msg-bubble">Tell me about a time you disagreed with a senior engineer on system architecture.</div>
+
+                            <div class="sim-dialogue-box">
+                                <div class="sim-bubble panelist">
+                                    <div class="sim-bubble-header">
+                                        <i class="fa-solid fa-user-tie"></i> <span id="demo-active-speaker">[Alex (Technical Lead)]</span>
+                                    </div>
+                                    <div id="demo-active-speech">
+                                        "Let's analyze write contention in your PostgreSQL microservice. How did you structure your transaction isolation and connection pooling to prevent deadlocks?"
+                                    </div>
                                 </div>
-                                <div class="msg user-msg">
-                                    <div class="msg-bubble" id="live-transcript">I once suggested a microservices approach but the senior dev wanted a monolith. I proposed we... <span class="typing-cursor">|</span></div>
+                                <div class="sim-bubble candidate">
+                                    <div class="sim-bubble-header">
+                                        <i class="fa-solid fa-microphone"></i> <span>Candidate Response (Live)</span>
+                                    </div>
+                                    <div>
+                                        "We isolated transactions with read-committed locks and configured HikariCP with a max pool size bounded by our CPU core count..."
+                                    </div>
                                 </div>
-                                <div class="live-comm-score">
-                                    <div class="score-label">Comm & English Eval:</div>
-                                    <div class="score-bar-bg"><div class="score-bar-fill" style="width: 85%;"></div></div>
-                                    <span class="score-val">Good Clarity</span>
+                                <div class="sim-bubble panelist" style="border-color: rgba(6, 182, 212, 0.4); background: rgba(6, 182, 212, 0.1);">
+                                    <div class="sim-bubble-header" style="color: #22d3ee;">
+                                        <i class="fa-solid fa-arrows-turn-to-dots"></i> <span>[Verbal Handoff] Mark (Product Lead) jumps in:</span>
+                                    </div>
+                                    <div>
+                                        "That solves the pool exhaustion, but how did that pool queue latency affect user checkout completion rates during peak sales?"
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Leaderboard Tab -->
-                    <div id="leaderboard-tab" class="dashboard-pane">
+                    <!-- Pane 2: Nova Voice Prep -->
+                    <div id="nova-prep-tab" class="dashboard-pane">
                         <div class="pane-header">
-                            <h3>Global Tech Leaderboard</h3>
-                            <div class="season-badge">Season 4</div>
+                            <div>
+                                <h3 style="margin:0;">Nova Pre-Call Warm-up & Calibration</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 4px 0 0 0;">Conversational AI warm-up agent before committee entry</p>
+                            </div>
+                            <span class="badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc;">Female Voice AI</span>
                         </div>
-                        <div class="leaderboard-list">
-                            <div class="lb-row rank-1">
-                                <div class="lb-rank">1</div>
-                                <div class="lb-user"><div class="ava">AK</div> Alex Kim</div>
-                                <div class="lb-role">Frontend</div>
-                                <div class="lb-xp">14,200 XP</div>
+
+                        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-top: 16px; flex: 1;">
+                            <div style="background: rgba(0,0,0,0.2); border-radius: 16px; padding: 18px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                        <div class="nova-avatar-circle" style="width:38px; height:38px; font-size:0.9rem;">NV</div>
+                                        <span style="font-weight: 700; color: #fff;">Nova (Conversational Audio):</span>
+                                    </div>
+                                    <p style="font-size: 0.95rem; line-height: 1.5; color: var(--text-secondary);">
+                                        "I've parsed your uploaded resume. I see 4 years building Kafka event streams. I am briefing Alex to challenge you on partitioned message ordering, while David will cover engineering team leadership."
+                                    </p>
+                                </div>
+                                <div style="background: rgba(168, 85, 247, 0.1); border-radius: 10px; padding: 10px; font-size: 0.85rem; color: #c084fc;">
+                                    <i class="fa-solid fa-sliders"></i> Calibrated Difficulty: <strong>Adaptive Senior Tier</strong>
+                                </div>
                             </div>
-                            <div class="lb-row rank-2">
-                                <div class="lb-rank">2</div>
-                                <div class="lb-user"><div class="ava">SJ</div> Sarah J.</div>
-                                <div class="lb-role">Backend</div>
-                                <div class="lb-xp">12,850 XP</div>
+
+                            <div style="background: rgba(0,0,0,0.2); border-radius: 16px; padding: 18px; border: 1px solid rgba(255,255,255,0.05);">
+                                <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;">Extracted Grounding Facts:</h4>
+                                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem;">
+                                    <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px;"><i class="fa-solid fa-code-branch" style="color: #06b6d4; margin-right: 6px;"></i> Kafka Sharding Architecture</div>
+                                    <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px;"><i class="fa-solid fa-database" style="color: #a855f7; margin-right: 6px;"></i> PostgreSQL High Write Volume</div>
+                                    <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px;"><i class="fa-solid fa-user-group" style="color: #10b981; margin-right: 6px;"></i> Led 5-Engineer Squad</div>
+                                </div>
                             </div>
-                            <div class="lb-row rank-3">
-                                <div class="lb-rank">3</div>
-                                <div class="lb-user"><div class="ava">MR</div> Mike R.</div>
-                                <div class="lb-role">Fullstack</div>
-                                <div class="lb-xp">11,400 XP</div>
+                        </div>
+                    </div>
+
+                    <!-- Pane 3: 160ms Natural Barge-In -->
+                    <div id="bargein-tab" class="dashboard-pane">
+                        <div class="pane-header">
+                            <div>
+                                <h3 style="margin:0;">160ms Speech Barge-In (VAD)</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 4px 0 0 0;">Instantaneous interruption without robotic lag or collision</p>
                             </div>
-                            <div class="lb-row current-user">
-                                <div class="lb-rank" id="user-lb-rank">142</div>
-                                <div class="lb-user"><div class="ava">JD</div> John Doe (You)</div>
-                                <div class="lb-role">Frontend</div>
-                                <div class="lb-xp" id="user-lb-xp">2,450 XP</div>
+                            <button id="trigger-bargein-demo" class="btn btn-sm btn-primary-gradient" style="height: 34px; padding: 0 14px; font-size: 0.8rem;">
+                                <i class="fa-solid fa-microphone"></i> Test Interruption
+                            </button>
+                        </div>
+
+                        <div style="margin-top: 16px; flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                            <div style="background: rgba(0,0,0,0.2); border-radius: 16px; padding: 18px; border: 1px solid rgba(255,255,255,0.05);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 0.85rem; font-weight: 700; color: #fff;">Real-Time Audio Stream</span>
+                                    <span id="bargein-yield-tag" class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; display: none;">Interrupted • Yielded (160ms)</span>
+                                </div>
+                                <div id="bargein-live-status" style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 12px;">
+                                    Alex is speaking: "In distributed key-value stores, consistency trade-offs..."
+                                </div>
+                                <div id="bargein-wave" class="nova-wave-row" style="height: 20px; opacity: 0.5;">
+                                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                                </div>
+                            </div>
+
+                            <div class="bargein-metrics-row">
+                                <div class="bargein-box legacy">
+                                    <span style="font-size: 0.8rem; font-weight: 700; color: #f87171; text-transform: uppercase;">Standard AI Bots</span>
+                                    <div class="bargein-value">2,400ms</div>
+                                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Awkward delay, talks over candidate, robotic collision.</p>
+                                </div>
+                                <div class="bargein-box rolepilot">
+                                    <span style="font-size: 0.8rem; font-weight: 700; color: #34d399; text-transform: uppercase;">Role-Pilot WebRTC VAD</span>
+                                    <div class="bargein-value">160ms</div>
+                                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Instantaneous natural yield. Adapts to mid-sentence corrections.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pane 4: Evidence Scorecard & Quotes -->
+                    <div id="scorecard-tab" class="dashboard-pane">
+                        <div class="pane-header">
+                            <div>
+                                <h3 style="margin:0;">Evidence-Based Scorecard</h3>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 4px 0 0 0;">Critiques backed by verbatim quotes and transcript timestamps</p>
+                            </div>
+                            <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-weight: 700;">Score: 92% • Strong Hire</span>
+                        </div>
+
+                        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px; flex: 1; overflow-y: auto;">
+                            <div style="background: rgba(0,0,0,0.25); border-radius: 12px; padding: 14px; border-left: 4px solid #8b5cf6;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; margin-bottom: 4px;">
+                                    <span>Alex (Technical Lead) Evaluation</span>
+                                    <span style="color: #a855f7;">94 / 100</span>
+                                </div>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 6px 0;">Demonstrated clear mastery of database isolation and lock contention mitigation.</p>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 6px 10px; border-radius: 6px;">
+                                    <i class="fa-solid fa-quote-left" style="color: #a855f7; margin-right: 4px;"></i> <em>[03:42] "We isolated write locks using row-level transactions and HikariCP pool sizing..."</em>
+                                </div>
+                            </div>
+
+                            <div style="background: rgba(0,0,0,0.25); border-radius: 12px; padding: 14px; border-left: 4px solid #06b6d4;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; margin-bottom: 4px;">
+                                    <span>Mark (Product Manager) Evaluation</span>
+                                    <span style="color: #06b6d4;">88 / 100</span>
+                                </div>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 6px 0;">Connected backend cache invalidation directly to checkout drop-off metrics.</p>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 6px 10px; border-radius: 6px;">
+                                    <i class="fa-solid fa-quote-left" style="color: #06b6d4; margin-right: 4px;"></i> <em>[06:15] "Stale price cache risks losing high-intent customers during final checkout payment..."</em>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -373,35 +617,35 @@
             <div class="divider-glow"></div>
         </div>
 
-        <!-- Step-by-Step Roadmap Flow -->
-        <section class="roadmap-flow-section">
+        <!-- The 4-Step Path to Your Next Role Section -->
+        <section class="roadmap-flow-section" id="roadmap-section">
             <div class="section-header">
                 <h2>The Path to <span class="gradient-text">Your Next Role</span></h2>
+                <p>Four proven steps from initial calibration to offer negotiation.</p>
             </div>
-            <div class="horizontal-roadmap">
+            <div class="horizontal-roadmap" style="max-width: 1000px; margin: 40px auto 0 auto;">
                 <div class="roadmap-node">
-                    <div class="node-icon"><i class="fa-solid fa-file-shield"></i></div>
+                    <div class="node-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
                     <div class="node-text">1. Attach Resume</div>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); max-width: 140px; text-align: center; margin-top: 6px;">Nova extracts fact sheets & achievements</span>
                 </div>
                 <div class="roadmap-line"></div>
                 <div class="roadmap-node">
-                    <div class="node-icon"><i class="fa-solid fa-code"></i></div>
-                    <div class="node-text">2. MCQ & Coding Arena</div>
+                    <div class="node-icon"><i class="fa-solid fa-users-viewfinder"></i></div>
+                    <div class="node-text">2. AI Interview Panels</div>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); max-width: 140px; text-align: center; margin-top: 6px;">Select Tech, Product, Sales, or HR</span>
                 </div>
                 <div class="roadmap-line"></div>
                 <div class="roadmap-node">
-                    <div class="node-icon"><i class="fa-solid fa-user-tie"></i></div>
-                    <div class="node-text">3. AI Interview Coaching</div>
+                    <div class="node-icon"><i class="fa-solid fa-microphone-lines"></i></div>
+                    <div class="node-text">3. AI Interview</div>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); max-width: 140px; text-align: center; margin-top: 6px;">Live 3-agent committee with 160ms barge-in</span>
                 </div>
                 <div class="roadmap-line"></div>
                 <div class="roadmap-node">
-                    <div class="node-icon"><i class="fa-solid fa-trophy"></i></div>
-                    <div class="node-text">4. Climb Leaderboard</div>
-                </div>
-                <div class="roadmap-line"></div>
-                <div class="roadmap-node">
-                    <div class="node-icon"><i class="fa-solid fa-handshake"></i></div>
-                    <div class="node-text">5. Land Job</div>
+                    <div class="node-icon"><i class="fa-solid fa-handshake-simple"></i></div>
+                    <div class="node-text">4. Land Job</div>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); max-width: 140px; text-align: center; margin-top: 6px;">Master your loops & negotiate top offers</span>
                 </div>
             </div>
         </section>
@@ -410,97 +654,76 @@
             <div class="divider-glow"></div>
         </div>
 
-        <!-- Scorecard CTA Section -->
-        <section class="scorecard-cta-section" id="global-leaderboard">
-            <div class="scorecard-container">
-                <div class="scorecard-image-col">
-                    <div class="image-glass-wrapper scorecard-glass">
-                        <img src="images/leaderboard_dashboard_dark.png" alt="Role-Pilot Leaderboard Preview" id="scorecard-theme-img" class="hero-main-img">
-                    </div>
-                </div>
-                <div class="scorecard-text-col">
-                    <h2>Climb the global ranks. <br><span class="gradient-text">Get noticed by recruiters.</span></h2>
-                    <p>Earn XP by solving coding challenges and passing AI mock interviews. Get a detailed evaluation of your performance and prove your skills directly to hiring managers.</p>
-                    <button id="view-leaderboard-btn" class="btn">View Global Leaderboard</button>
-                </div>
-            </div>
-        </section>
-
-        <div class="section-divider">
-            <div class="divider-glow"></div>
-        </div>
-
-        <!-- Review Matrix Section -->
-        <section class="review-matrix-section">
-            <!-- Top Header & Metrics Row -->
+        <!-- Real Results & Reviews Section -->
+        <section class="review-matrix-section" id="reviews-section">
             <div class="review-matrix-header-row">
                 <div class="matrix-header-left">
                     <h2>Real Results from <br><span class="gradient-text">Top Candidates</span></h2>
-                    <p>See the direct impact Role-Pilot has on interview performance, resumes, and preparation speed.</p>
+                    <p>Candidates who practiced with our multi-role AI voice committees aced their actual loops at premier tech and enterprise companies.</p>
                 </div>
                 <div class="matrix-header-right">
                     <div class="header-metric-item">
-                        <span class="header-metric-num">94%</span>
-                        <span class="header-metric-label">Pass Rate</span>
+                        <span class="header-metric-num">96%</span>
+                        <span class="header-metric-label">Loop Pass Rate</span>
                     </div>
                     <div class="header-metric-item">
-                        <span class="header-metric-num">50k+</span>
-                        <span class="header-metric-label">Mock Sessions</span>
+                        <span class="header-metric-num">4 Panels</span>
+                        <span class="header-metric-label">Domain Tracks</span>
                     </div>
                     <div class="header-metric-item">
-                        <span class="header-metric-num">88%</span>
-                        <span class="header-metric-label">ATS Score</span>
+                        <span class="header-metric-num">160ms</span>
+                        <span class="header-metric-label">Barge-In Latency</span>
                     </div>
                     <div class="header-metric-item">
-                        <span class="header-metric-num">3.2x</span>
+                        <span class="header-metric-num">3.5x</span>
                         <span class="header-metric-label">Prep Speedup</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Bottom Testimonials Row -->
+            <!-- Testimonials Grid -->
             <div class="review-grid-horizontal">
-                <!-- Card 1 (Female Photo) -->
+                <!-- Card 1: Tech Track Candidate -->
                 <div class="review-card">
-                    <div class="review-metric-badge success">ATS Score: 62% → 94%</div>
-                    <p class="review-text">"Role-Pilot's structural diagnostics pinpointed the exact system design gaps in my resume. The auto-tailoring helped me land my Meta offer within two weeks."</p>
-                    <div class="review-author">
-                        <div class="author-img-wrapper">
-                            <img src="images/avatar_female.png" alt="Sarah D." class="author-img">
-                        </div>
-                        <div class="author-info">
-                            <span class="author-name">Sarah D.</span>
-                            <span class="author-role">Backend Engineer at Meta</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Card 2 (Male Photo) -->
-                <div class="review-card">
-                    <div class="review-metric-badge info">Mock Pass Rate: 95%</div>
-                    <p class="review-text">"The voice-interactive AI avatars felt identical to my actual technical and behavioral loops at Stripe. The real-time STAR method coaching is unmatched."</p>
-                    <div class="review-author">
-                        <div class="author-img-wrapper">
-                            <img src="images/avatar_male.png" alt="Michael K." class="author-img">
-                        </div>
-                        <div class="author-info">
-                            <span class="author-name">Michael K.</span>
-                            <span class="author-role">Fullstack Developer at Stripe</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Card 3 (Onboarding Dicebear Avatar style) -->
-                <div class="review-card">
-                    <div class="review-metric-badge warning">Ranked Top 5</div>
-                    <p class="review-text">"The global leaderboard is a massive unfair advantage. Recruiters fast-tracked my pipeline immediately after verifying my automated Big-O complexity scores."</p>
+                    <div class="review-metric-badge success">Tech Panel • Meta Offer</div>
+                    <p class="review-text">"Facing Alex on system scaling and Mark challenging my product trade-offs in the same room prepared me for the Meta loop like nothing else. The 160ms interruption felt completely natural."</p>
                     <div class="review-author">
                         <div class="author-img-wrapper onboarding-style-avatar">
-                            <img src="https://api.dicebear.com/7.x/personas/svg?seed=Alex&backgroundColor=transparent" alt="Alex T." class="author-img">
+                            <img src="https://api.dicebear.com/7.x/personas/svg?seed=Michael&backgroundColor=transparent" alt="Michael R." class="author-img">
                         </div>
                         <div class="author-info">
-                            <span class="author-name">Alex T.</span>
-                            <span class="author-role">Frontend Engineer at Vercel</span>
+                            <span class="author-name">Michael R.</span>
+                            <span class="author-role">Senior Distributed Systems Engineer</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 2: Product Track Candidate -->
+                <div class="review-card">
+                    <div class="review-metric-badge info">Product Panel • Stripe Offer</div>
+                    <p class="review-text">"Warming up with Nova gave me instant clarity on my resume facts. When Mark pressed me on customer unit economics and Alex analyzed engineering constraints, I was 100% prepared."</p>
+                    <div class="review-author">
+                        <div class="author-img-wrapper onboarding-style-avatar">
+                            <img src="https://api.dicebear.com/7.x/personas/svg?seed=DavidP&backgroundColor=transparent" alt="David K." class="author-img">
+                        </div>
+                        <div class="author-info">
+                            <span class="author-name">David K.</span>
+                            <span class="author-role">Lead Product Manager at Stripe</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 3: Enterprise Sales Candidate -->
+                <div class="review-card">
+                    <div class="review-metric-badge warning">Sales Panel • Datadog Offer</div>
+                    <p class="review-text">"Marcus and Sean grilled me on MEDDIC deal qualification and executive objection handling. The quote-backed scorecard caught my hesitation on pricing negotiation."</p>
+                    <div class="review-author">
+                        <div class="author-img-wrapper onboarding-style-avatar">
+                            <img src="https://api.dicebear.com/7.x/personas/svg?seed=Jason&backgroundColor=transparent" alt="Jason T." class="author-img">
+                        </div>
+                        <div class="author-info">
+                            <span class="author-name">Jason T.</span>
+                            <span class="author-role">Enterprise Account Executive</span>
                         </div>
                     </div>
                 </div>
@@ -515,30 +738,37 @@
         <section class="faq-section" id="faq">
             <div class="section-header">
                 <h2>Frequently Asked <span class="gradient-text">Questions</span></h2>
+                <p>Everything you need to know about our multi-role AI voice panel technology.</p>
             </div>
             <div class="faq-container">
                 <details class="faq-item" name="faq">
-                    <summary>How do the AI mock interviews work?</summary>
+                    <summary>How does the multi-role AI voice panel work?</summary>
                     <div class="faq-content">
-                        <p>Our TruGen AI avatars simulate real interview scenarios using advanced voice models. They analyze your verbal responses in real-time, evaluating your structure (using the STAR method), English fluency, tone, and technical accuracy.</p>
+                        <p>Unlike single-bot mock interviews, Role-Pilot puts you in front of a calibrated 3-interviewer committee. Universal Chairperson David leads the opening and culture rounds, then seamlessly hands the mic to domain specialists (Alex on architecture, Mark on product metrics, Marcus on pipeline, or Ethan on HR compliance) based on candidate answers.</p>
                     </div>
                 </details>
                 <details class="faq-item" name="faq">
-                    <summary>Are my coding arena sessions private?</summary>
+                    <summary>Who is Nova and what is the voice onboarding warm-up?</summary>
                     <div class="faq-content">
-                        <p>Yes. Your coding sessions and history are private to you. However, you can choose to make your best scores public on the Global Leaderboard so recruiters can view your verified capabilities.</p>
+                        <p>Nova is our dedicated AI Voice Onboarding and Prep agent. She talks with you before entering the committee room, parses your resume achievements, verifies your seniority tier, tests your microphone latency, and calibrates the upcoming panel so you enter confident and focused.</p>
                     </div>
                 </details>
                 <details class="faq-item" name="faq">
-                    <summary>How accurate is the ATS compatibility scoring?</summary>
+                    <summary>Can I interrupt the AI panelists while they speak (barge-in)?</summary>
                     <div class="faq-content">
-                        <p>Our ATS engine uses semantic analysis similar to enterprise tracking systems. It extracts keywords, assesses formatting, and compares your resume against live job descriptions to provide a highly accurate compatibility percentage.</p>
+                        <p>Yes. Powered by WebRTC voice streaming and a 160ms Voice Activity Detection (VAD) threshold, the moment you begin speaking, the active panelist yields immediately with zero robotic overlap or awkward delay.</p>
                     </div>
                 </details>
                 <details class="faq-item" name="faq">
-                    <summary>What are the pricing details?</summary>
+                    <summary>What are the 4 specialized domain tracks available?</summary>
                     <div class="faq-content">
-                        <p>Role-Pilot is currently free for candidates during our initial rollout phase. Premium features, including unlimited AI sessions and recruiter introductions, will be available under a transparent subscription model soon.</p>
+                        <p>We provide four dedicated panels: Tech Engineering (David, Alex, Mark), Product Leadership (David, Mark, Alex), Enterprise Sales & GTM (David, Marcus, Sean), and HR & People Leadership (David, Sam, Ethan).</p>
+                    </div>
+                </details>
+                <details class="faq-item" name="faq">
+                    <summary>How does the Evidence Scorecard evaluate my performance?</summary>
+                    <div class="faq-content">
+                        <p>At the conclusion of the interview, our system produces a timestamped evidence scorecard. Every piece of critique references the exact quote from your transcript (e.g. at [04:12]), linking rubric scores directly to what you actually said.</p>
                     </div>
                 </details>
             </div>
@@ -563,7 +793,7 @@
                         </svg>
                         <span class="logo-text">Role<span>Pilot</span></span>
                     </a>
-                    <p class="footer-pitch">Master technical interviews, optimize your ATS compatibility, and climb the recruiter-facing global leaderboard using voice-adaptive AI agents.</p>
+                    <p class="footer-pitch">The enterprise multi-role AI voice interview platform. Master technical, product, and leadership rounds with specialized AI committees.</p>
                     <div class="footer-socials">
                         <a href="#" aria-label="Twitter"><i class="fa-brands fa-twitter"></i></a>
                         <a href="#" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
@@ -576,21 +806,21 @@
                 <div class="footer-links-col">
                     <h3>Product</h3>
                     <ul>
-                        <li><a href="login.html">AI Mock Interviews</a></li>
-                        <li><a href="login.html">ATS Compatibility</a></li>
-                        <li><a href="login.html">Resume Tailoring</a></li>
-                        <li><a href="login.html">Coding Arena</a></li>
+                        <li><a href="gear-up.html">Voice Warm-Up (Nova)</a></li>
+                        <li><a href="interview-setup.html">Multi-Role Panels</a></li>
+                        <li><a href="interview-setup.html">Adaptive Difficulty</a></li>
+                        <li><a href="interview-setup.html">Evidence Scorecard</a></li>
                     </ul>
                 </div>
                 
-                <!-- Column 3: Resources -->
+                <!-- Column 3: Tracks -->
                 <div class="footer-links-col">
-                    <h3>Resources</h3>
+                    <h3>Domain Panels</h3>
                     <ul>
-                        <li><a href="#">System Design Guide</a></li>
-                        <li><a href="login.html">Global Leaderboard</a></li>
-                        <li><a href="#">Developer Documentation</a></li>
-                        <li><a href="#">API Status</a></li>
+                        <li><a href="interview-setup.html?track=tech">Tech Engineering</a></li>
+                        <li><a href="interview-setup.html?track=product">Product Leadership</a></li>
+                        <li><a href="interview-setup.html?track=sales">Enterprise Sales & GTM</a></li>
+                        <li><a href="interview-setup.html?track=hr">HR & People Ops</a></li>
                     </ul>
                 </div>
                 
@@ -599,15 +829,16 @@
                     <h3>Company</h3>
                     <ul>
                         <li><a href="about.html">About Us</a></li>
-                        <li><a href="#">Careers</a></li>
+                        <li><a href="careers.html">Careers</a></li>
                         <li><a href="privacy.html">Privacy Policy</a></li>
                         <li><a href="terms.html">Terms of Service</a></li>
+                        <li><a href="cookies.html">Cookies</a></li>
                     </ul>
                 </div>
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2026 Role-Pilot. All rights reserved. Built for modern engineers.</p>
+                <p>&copy; 2026 Role-Pilot. All rights reserved. Enterprise AI Voice Interview Platform.</p>
                 <div class="footer-bottom-links">
                     <a href="privacy.html">Privacy</a>
                     <a href="terms.html">Terms</a>
@@ -629,14 +860,12 @@
                     header.classList.toggle('mobile-nav-active');
                 });
                 
-                // Close menu when clicking outside
                 document.addEventListener('click', (e) => {
                     if (header.classList.contains('mobile-nav-active') && !header.contains(e.target)) {
                         header.classList.remove('mobile-nav-active');
                     }
                 });
                 
-                // Close menu when clicking navigation links
                 const navLinks = header.querySelectorAll('.nav-link, .mobile-nav-btn');
                 navLinks.forEach(link => {
                     link.addEventListener('click', () => {
@@ -649,6 +878,5 @@
 
     <!-- Scripts -->
     <script type="module" src="js/dashboard-preview.js"></script>
-    <script type="module" src="js/marketing.js"></script>
 </body>
 </html>

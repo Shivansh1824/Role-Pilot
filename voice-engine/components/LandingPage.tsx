@@ -27,8 +27,11 @@ const ConversationComponent = dynamic(() => import('./ConversationComponent'), {
 // the RTC join succeeds, so this wrapper only needs to provide the RTC client.
 const AgoraProvider = dynamic(
   async () => {
-    const { AgoraRTCProvider, default: AgoraRTC } =
-      await import('agora-rtc-react');
+    const agoraModule = await import('agora-rtc-react');
+    const AgoraRTCProvider =
+      agoraModule.AgoraRTCProvider ||
+      (agoraModule.default as any)?.AgoraRTCProvider;
+    const AgoraRTC = (agoraModule.default || agoraModule) as any;
     return {
       default: function AgoraProviders({
         children,
@@ -299,8 +302,9 @@ export default function LandingPage() {
               transcript={finalTranscript}
               agentUID={agoraData?.agentId || '123456'}
               onRestart={() => setShowScorecard(false)}
-              onReturnToDashboard={() => (window.location.href = 'http://localhost:8000/dashboard.html')}
+              onReturnToDashboard={() => (window.location.href = '/dashboard.html')}
               role={setupConfig.role}
+              level={setupConfig.level}
               difficulty={setupConfig.difficulty}
               track={setupConfig.track}
               candidateName={setupConfig.candidate}
@@ -315,7 +319,7 @@ export default function LandingPage() {
               difficulty={setupConfig.difficulty}
               candidateName={setupConfig.candidate}
             />
-          ) : agoraData && rtmClient ? (
+          ) : agoraData ? (
             <>
               {agentJoinError && (
                 <div className="m-3 p-3 bg-destructive/10 border border-destructive/25 rounded-2xl text-destructive text-xs max-w-md mx-auto">

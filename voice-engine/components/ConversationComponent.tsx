@@ -21,8 +21,8 @@ import {
   type UserTranscription,
   type AgentTranscription,
 } from 'agora-agent-client-toolkit';
-import { AgentVisualizer } from 'agora-agent-uikit';
-import { MicButtonWithVisualizer } from 'agora-agent-uikit/rtc';
+import { RolePilotVisualizer } from './RolePilotVisualizer';
+import { RolePilotMicButton } from './RolePilotMicButton';
 import { DEFAULT_AGENT_UID, isAgentUid } from '@/lib/agora';
 import {
   getCurrentInProgressMessage,
@@ -43,6 +43,7 @@ import {
   type QuickstartAgentMetric,
 } from './QuickstartPipelineMetrics';
 import { QuickstartTranscriptPanel } from './QuickstartTranscriptPanel';
+import { Sparkles } from 'lucide-react';
 import type { ConversationComponentProps } from '@/types/conversation';
 
 // Cap the displayed issues list to avoid overwhelming the UI during a cascade of errors.
@@ -103,6 +104,7 @@ export default function ConversationComponent({
   const [isEnabled, setIsEnabled] = useState(true);
   const [isAgentConnected, setIsAgentConnected] = useState(false);
   const [isConnectionDetailsOpen, setIsConnectionDetailsOpen] = useState(false);
+  const [isEndingSession, setIsEndingSession] = useState(false);
 
   // Tracks granular RTC connection state for the status dot.
   // Agora states: DISCONNECTED | CONNECTING | CONNECTED | DISCONNECTING | RECONNECTING
@@ -368,8 +370,8 @@ export default function ConversationComponent({
   // so the transcript panel renders user messages on the correct side.
   // Also normalize punctuation spacing for display when upstream text arrives compacted.
   const transcript = useMemo(() => {
-    return normalizeTranscript(rawTranscript, String(client.uid));
-  }, [rawTranscript, client.uid]);
+    return normalizeTranscript(rawTranscript, String(client?.uid ?? ''));
+  }, [rawTranscript, client?.uid]);
 
   // Completed (END + INTERRUPTED) messages shown as history.
   // INTERRUPTED must be included — if the agent's first turn is cut off,
@@ -381,8 +383,11 @@ export default function ConversationComponent({
     return getCurrentInProgressMessage(transcript);
   }, [transcript]);
 
-  // Publish local mic once the track exists; usePublish waits for RTC connection.
-  usePublish([localMicrophoneTrack]);
+  // Publish local mic once the track exists AND the RTC connection is confirmed.
+  usePublish(
+    localMicrophoneTrack ? [localMicrophoneTrack] : [],
+    Boolean(localMicrophoneTrack && joinSuccess),
+  );
 
   useClientEvent(client, 'user-joined', (user) => {
     if (isAgentUid(user.uid, client?.uid) || user.uid.toString() === agentUID) setIsAgentConnected(true);
@@ -497,21 +502,21 @@ export default function ConversationComponent({
   const activeSpeaker = useMemo<string | null>(() => {
     // Check in-progress agent turn first
     if (currentInProgressMessage) {
+      const activeText = currentInProgressMessage.text || '';
+      const allMatches = [...activeText.matchAll(/\[([A-Za-z]+)/g)];
+      if (allMatches.length > 0) return allMatches[allMatches.length - 1][1];
       const byUid = getPanelistNameByUid(currentInProgressMessage.uid);
       if (byUid) return byUid;
-      const activeText = currentInProgressMessage.text || '';
-      const match = activeText.match(/\[([A-Za-z]+)/);
-      if (match) return match[1];
     }
     // Scan backwards through completed messages for the last agent utterance
     for (let i = messageList.length - 1; i >= 0; i--) {
       const msg = messageList[i];
       if (isAgentUid(msg.uid, client.uid)) {
+        const t = msg.text || '';
+        const allMatches = [...t.matchAll(/\[([A-Za-z]+)/g)];
+        if (allMatches.length > 0) return allMatches[allMatches.length - 1][1];
         const byUid = getPanelistNameByUid(msg.uid);
         if (byUid) return byUid;
-        const t = msg.text || '';
-        const match = t.match(/\[([A-Za-z]+)/);
-        if (match) return match[1];
       }
     }
     return null;
@@ -588,16 +593,30 @@ export default function ConversationComponent({
     const isAgentFinishAnnouncement =
       isAgent &&
       (text.includes('interview is now finished') ||
+        text.includes('interview is finished') ||
         text.includes('interview is now over') ||
-        text.includes('conclude the interview here') ||
-        text.includes('interview is now concluded'));
+        text.includes('interview is over') ||
+        text.includes('interview is now concluded') ||
+        text.includes('interview is concluded') ||
+        text.includes('conclude the interview') ||
+        text.includes('concludes our interview') ||
+        text.includes('conclude our interview') ||
+        text.includes('that wraps up our interview') ||
+        text.includes('that concludes our interview') ||
+        text.includes('we will conclude here') ||
+        text.includes('interview is terminated') ||
+        text.includes('session is now finished') ||
+        text.includes('session is now concluded') ||
+        text.includes('session is now over') ||
+        text.includes('process your evaluation now'));
 
     // 3. 3 strikes reached
     const isMaxHits = hitCount >= 3;
 
     if (isAgentFinishAnnouncement || isCandidateFinishRequest || isMaxHits) {
-      // Allow TTS audio to finish speaking to candidate before switching to scorecard
-      const delay = isAgentFinishAnnouncement ? 4000 : isMaxHits ? 4500 : 6000;
+      setIsEndingSession(true);
+      // Allow the final concluding spoken sentence to finish before opening scorecard
+      const delay = isAgentFinishAnnouncement ? 1800 : isMaxHits ? 2000 : 3500;
       const timer = setTimeout(() => {
         handleEndConversation();
       }, delay);
@@ -606,67 +625,81 @@ export default function ConversationComponent({
   }, [messageList, currentInProgressMessage, hitCount, client.uid, handleEndConversation]);
 
   return (
-    <QuickstartConversationLayout
-      track={track}
-      candidateName={candidateName}
-      activeSpeaker={activeSpeaker}
-      isSpeaking={isAgentSpeaking}
-      hitCount={hitCount}
-      statusPanel={
-        <ConnectionStatusPanel
-          connectionState={connectionState}
-          connectionSeverity={connectionSeverity}
-          connectionIssues={connectionIssues}
-          isOpen={isConnectionDetailsOpen}
-          onToggle={() => setIsConnectionDetailsOpen((open) => !open)}
-        />
-      }
-      pipelineMetrics={<QuickstartPipelineMetrics metrics={agentMetrics} />}
-      transcriptPanel={
-        <QuickstartTranscriptPanel
-          messageList={messageList}
-          currentInProgressMessage={currentInProgressMessage}
-          agentUID={agentUID}
-          candidateName={candidateName}
-          candidateUid={agoraData.uid || client?.uid}
-        />
-      }
-      visualizer={
-        <div
-          className="relative flex h-full min-h-[20rem] w-full max-w-4xl items-center justify-center"
-          role="region"
-          aria-label="AI agent status visualization"
-        >
-          <AgentVisualizer state={visualizerState} size="lg" />
-          {remoteUsers.map((user) => (
-            <div key={user.uid} className="hidden">
-              <RemoteUser user={user} />
-            </div>
-          ))}
-        </div>
-      }
-      controls={
-        <div
-          className="mx-auto flex w-fit items-center gap-3 rounded-full border border-border bg-card/80 px-4 py-2 backdrop-blur-md"
-          role="group"
-          aria-label="Audio controls"
-        >
-          <div className="conversation-mic-host flex items-center justify-center">
-            <MicButtonWithVisualizer
-              isEnabled={isEnabled}
-              setIsEnabled={setIsEnabled}
-              track={localMicrophoneTrack}
-              onToggle={handleMicToggle}
-              className="overflow-visible"
-              aria-label={isEnabled ? 'Mute microphone' : 'Unmute microphone'}
-              enabledColor="hsl(var(--primary))"
-              disabledColor="hsl(var(--destructive))"
-            />
+    <div className="relative h-full w-full">
+      {isEndingSession && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in text-center p-6 space-y-4">
+          <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/20 border border-primary/40 text-primary shadow-xl shadow-primary/20">
+            <Sparkles className="h-8 w-8 animate-spin text-primary" />
           </div>
-          <MicrophoneSelector localMicrophoneTrack={localMicrophoneTrack} />
+          <div className="space-y-1">
+            <h3 className="text-xl font-bold text-foreground">
+              Interview Concluded by Panel
+            </h3>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              Closing interview panel room and opening candidate evaluation scorecard...
+            </p>
+          </div>
         </div>
-      }
-      onEndConversation={handleEndConversation}
-    />
+      )}
+      <QuickstartConversationLayout
+        track={track}
+        candidateName={candidateName}
+        activeSpeaker={activeSpeaker}
+        isSpeaking={isAgentSpeaking}
+        hitCount={hitCount}
+        statusPanel={
+          <ConnectionStatusPanel
+            connectionState={connectionState}
+            connectionSeverity={connectionSeverity}
+            connectionIssues={connectionIssues}
+            isOpen={isConnectionDetailsOpen}
+            onToggle={() => setIsConnectionDetailsOpen((open) => !open)}
+          />
+        }
+        pipelineMetrics={<QuickstartPipelineMetrics metrics={agentMetrics} />}
+        transcriptPanel={
+          <QuickstartTranscriptPanel
+            messageList={messageList}
+            currentInProgressMessage={currentInProgressMessage}
+            agentUID={agentUID}
+            candidateName={candidateName}
+            candidateUid={agoraData.uid || client?.uid}
+          />
+        }
+        visualizer={
+          <div
+            className="relative flex h-full min-h-[20rem] w-full max-w-4xl items-center justify-center"
+            role="region"
+            aria-label="AI agent status visualization"
+          >
+            <RolePilotVisualizer state={visualizerState} size="lg" />
+            {remoteUsers.map((user) => (
+              <div key={user.uid} className="hidden">
+                <RemoteUser user={user} />
+              </div>
+            ))}
+          </div>
+        }
+        controls={
+          <div
+            className="mx-auto flex w-fit items-center gap-3 rounded-full border border-border bg-card/80 px-4 py-2 backdrop-blur-md"
+            role="group"
+            aria-label="Audio controls"
+          >
+            <div className="conversation-mic-host flex items-center justify-center">
+              <RolePilotMicButton
+                isEnabled={isEnabled}
+                setIsEnabled={setIsEnabled}
+                track={localMicrophoneTrack}
+                onToggle={handleMicToggle}
+                className="overflow-visible"
+              />
+            </div>
+            <MicrophoneSelector localMicrophoneTrack={localMicrophoneTrack} />
+          </div>
+        }
+        onEndConversation={handleEndConversation}
+      />
+    </div>
   );
 }

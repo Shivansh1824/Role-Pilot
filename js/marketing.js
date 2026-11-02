@@ -90,29 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Theme swap for Scorecard Image
-    const themeToggleBtn = document.getElementById('theme-toggle');
+    // Theme lock for Scorecard Image (Permanent Light Theme)
     const scorecardImg = document.getElementById('scorecard-theme-img');
-    
     if (scorecardImg) {
-        // Initial set based on current theme
-        if (document.documentElement.classList.contains('light-theme')) {
-            scorecardImg.src = 'images/leaderboard_dashboard_light.png';
-        } else {
-            scorecardImg.src = 'images/leaderboard_dashboard_dark.png';
-        }
-    }
-
-    if (themeToggleBtn && scorecardImg) {
-        themeToggleBtn.addEventListener('click', () => {
-            // Small delay to ensure the theme class has been toggled by theme.js
-            setTimeout(() => {
-                if (document.documentElement.classList.contains('light-theme')) {
-                    scorecardImg.src = 'images/leaderboard_dashboard_light.png';
-                } else {
-                    scorecardImg.src = 'images/leaderboard_dashboard_dark.png';
-                }
-            }, 10);
-        });
+        scorecardImg.src = 'images/leaderboard_dashboard_light.png';
     }
 });
