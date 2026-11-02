@@ -1,0 +1,14 @@
+# Keep local credentials and generated files out of deployment source uploads.
+.env*
+**/.env*
+.git
+.git/**
+.vercel
+.vercel/**
+.vscode
+node_modules
+**/node_modules/**
+.next
+**/.next/**
+**/*.tsbuildinfo
+**/.DS_Store

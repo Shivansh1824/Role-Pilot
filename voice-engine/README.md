@@ -198,3 +198,17 @@ Please do **not** open public issues for security reports. Email security@agora.
 ## License
 
 Released under the [MIT License](./LICENSE).
+
+## Role-Pilot voice assistants
+
+Nova (`/api/invite-setup-agent`) and the interview panel (`/api/invite-agent`) use custom Gemini reply endpoints, rather than the managed LLM described in the upstream quickstart. Set valid server-side `GEMINI_API_KEY_NOVA`, `GEMINI_API_KEY_INTERVIEW`, and `GEMINI_API_KEY_APP` credentials; `GEMINI_API_KEY` is the shared fallback. APP powers onboarding state parsing, role matching, resume extraction and interview evaluation.
+
+Run `pnpm run doctor:ai` to test actual text generation with every configured key (uses the network and a small number of tokens). A greeting and live transcription only verify STT/RTC/TTS, not Gemini. If replies stop, check the reply endpoints: they must return nonempty text. Provider failures return HTTP 502 with `GEMINI_UNAVAILABLE`; missing credentials return 503. Restart local Next.js after updating `.env.local`; update the Vercel environment and redeploy for hosted sessions. Never paste keys into chat or commit them.
+
+`PUBLIC_URL` or `TUNNEL_URL` must point to a publicly reachable voice-engine deployment when testing local changes with Agora cloud. Without either setting, local agent invitations call the hosted production reply endpoint. Local fixes and local keys do not change that hosted endpoint.
+
+`pnpm run verify:voice` checks both assistants' shared response contract, key fallback, empty replies, interrupted streams and OpenAI SSE framing without live credentials. `pnpm run verify` includes this check; `doctor:ai` remains an explicit live diagnostic.
+
+The optional OpenAI proxy factory lives in `app/api/chat/completions/handler.ts`; its route exports only the HTTP handler to satisfy Next.js route validation.
+
+For Git-triggered production deployments, the Vercel `voice-engine` project uses the `Role-Pilot` repository, production branch `main`, Root Directory `voice-engine`, and Include source files outside the Root Directory enabled so static assets can sync from the repository root. Provider credentials are stored as encrypted Vercel environment variables.

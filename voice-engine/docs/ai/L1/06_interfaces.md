@@ -99,3 +99,9 @@ From `types/conversation.ts` (high-use):
 
 - [conversation_lifecycle.md](L2/conversation_lifecycle.md) — How route contracts are used in sequence.
 - [transcript_pipeline.md](L2/transcript_pipeline.md) — Event-level contract mapping.
+
+## Role-Pilot Gemini voice contract
+
+The setup and interview reply routes (including their `/chat/completions` aliases) use `lib/gemini-voice.ts`. They require server-side Gemini credentials (NOVA/INTERVIEW preferred per assistant, shared/APP fallback). JSON and SSE success must contain text. Failed/empty provider attempts are retried only before output begins; all attempts failing returns 502 `GEMINI_UNAVAILABLE`, missing keys returns 503 `GEMINI_NOT_CONFIGURED`, and malformed input returns 400. SSE chunks share one id and timestamp per response. Supporting APP features also require valid Gemini credentials.
+
+The optional OpenAI proxy route exports only POST. Its dependency-injected factory is in the adjacent `handler.ts`, which the API verification script imports directly.

@@ -46,3 +46,6 @@ Thumbs.db
 
 # Large datasets / challenge files
 India_runs_data_and_ai_challenge/
+
+# Local Vercel project binding
+.vercel/

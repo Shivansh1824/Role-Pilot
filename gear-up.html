@@ -2250,6 +2250,14 @@
       console.log('[Agora Live Transcript Event]:', message);
 
       const obj = message.object || '';
+      if (obj === 'message.error' || obj === 'agent.error') {
+        console.error('[Nova] Voice pipeline error', message);
+        setNovaSpeaking(false);
+        updateStatus('', 'AI reply unavailable — please restart the conversation');
+        setSpeakerIndicator('Nova could not generate a reply', false, false);
+        showDialogue('System', 'Nova could not generate a reply. Please restart the conversation. If this continues, contact support.');
+        return;
+      }
       const isUser = obj === 'user.transcription' ||
                      message.role === 'user' ||
                      message.sender === 'user';

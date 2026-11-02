@@ -80,3 +80,7 @@
 
 - [conversation_lifecycle.md](L2/conversation_lifecycle.md) — Start/stop race and lifecycle ownership details.
 - [transcript_pipeline.md](L2/transcript_pipeline.md) — Transcript edge cases and failure surfaces.
+
+## Silent replies after an idle period
+
+A greeting can play and speech can transcribe even when Gemini credentials are invalid. Run `pnpm run doctor:ai`; it tests text generation without logging secrets. Check both hosted reply endpoints as local `.env.local` and hosted credentials are independent. Local invitations without PUBLIC_URL/TUNNEL_URL send Gemini callbacks to production. Nova displays incoming pipeline errors, and the reply routes must never finish an empty HTTP 200 stream after all providers fail.

@@ -104,3 +104,7 @@ As we scale Role-Pilot from a functional MVP to an industry-leading hiring hub, 
    python3 -m http.server 8000
    ```
    Open your browser and navigate to `http://localhost:8000`.
+
+## Voice assistant troubleshooting
+
+Run the full app from `voice-engine/` with `pnpm dev` (Node.js 22+). Nova and the interview panel require valid Gemini server credentials as well as Agora credentials. Use `pnpm run doctor:ai` in that directory to check key validity, billing/quota and text generation. See [voice-engine troubleshooting](voice-engine/README.md#role-pilot-voice-assistants) for hosted/local callback configuration. Working greetings and transcripts do not establish that the AI reply provider is healthy.
